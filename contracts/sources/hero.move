@@ -79,7 +79,7 @@ module contracts::hero {
         attributes: vector<String>, 
         values: vector<u64>) {
         let i = 0;
-        while(i < vector::length(&heroes)) {
+        while(i <= vector::length(&heroes)) {
             let hero_pop = vector::pop_back(&mut heroes);
             assert!(hero.rarity == hero_pop.rarity, ENotSameHeroRarity);
             burn_hero(hero_pop);
@@ -88,7 +88,7 @@ module contracts::hero {
 
         let i = 0;
         while(i < vector::length(&attributes)) {
-            dfield::add<String, u64>(&mut hero.id, *vector::borrow(&attributes, i), *vector::borrow(&values, i));
+            edit_df(&mut hero.id, *vector::borrow(&attributes, i), *vector::borrow(&values, i));
             i = i + 1;
         };
 
@@ -107,6 +107,137 @@ module contracts::hero {
         shop::pay<ARCA>(hero_shop, cost, coin);
 
         upgrade_hero(hero, heroes, attributes, values);
+    }
+
+    // Accessors
+    public fun get_heroId(hero: &mut Hero): &UID {
+        &hero.id
+    }
+
+    #[test_only]
+    friend contracts::hero_tests;
+
+}
+
+#[test_only]
+module contracts::hero_tests {
+    
+    use contracts::shop;
+    use contracts::hero;
+    use contracts::arca::ARCA;
+
+    use sui::test_scenario as ts;
+    use sui::transfer;
+    use sui::dynamic_field as dfield;
+    use sui::coin;
+
+    use std::string;
+
+    const EUpgradeFailed: u64 = 0;
+
+    const PLAYER: address = @0xABCD;    
+
+    #[test]
+    fun test_flow_upgrade_hero() {
+        let scenario = ts::begin(PLAYER);
+
+        ts::next_tx(&mut scenario, PLAYER);
+        {
+            let hero1: hero::Hero = hero::mint_hero(b"name1", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            transfer::public_transfer(hero1, PLAYER);
+            let hero2: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            transfer::public_transfer(hero2, PLAYER);
+            let hero3: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            transfer::public_transfer(hero3, PLAYER);
+        };
+
+        ts::next_tx(&mut scenario, PLAYER);
+        {
+            let hero1 = ts::take_from_sender<hero::Hero>(&mut scenario);
+            let hero2 = ts::take_from_sender<hero::Hero>(&mut scenario);
+            let hero3 = ts::take_from_sender<hero::Hero>(&mut scenario);
+            hero::upgrade_hero(&mut hero1, vector[hero2, hero3], vector[string::utf8(b"Health"), string::utf8(b"Magic_Attack"), string::utf8(b"Defense")], vector[27, 10, 30]);
+            
+            assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Health")) == 27, EUpgradeFailed);
+            assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Hit_Rate")) == 0, EUpgradeFailed);
+
+            transfer::public_transfer(hero1, PLAYER);
+        };
+
+        ts::end(scenario);
+    }
+
+    #[test, expected_failure]
+    fun test_flow_upgrade_hero_fail() {
+        let scenario = ts::begin(PLAYER);
+
+        ts::next_tx(&mut scenario, PLAYER);
+        {
+            let hero1: hero::Hero = hero::mint_hero(b"name1", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            transfer::public_transfer(hero1, PLAYER);
+            let hero2: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            transfer::public_transfer(hero2, PLAYER);
+            let hero3: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"SR", ts::ctx(&mut scenario));
+            transfer::public_transfer(hero3, PLAYER);
+        };
+
+        ts::next_tx(&mut scenario, PLAYER);
+        {
+            let hero1 = ts::take_from_sender<hero::Hero>(&mut scenario);
+            let hero2 = ts::take_from_sender<hero::Hero>(&mut scenario);
+            let hero3 = ts::take_from_sender<hero::Hero>(&mut scenario);
+            hero::upgrade_hero(&mut hero1, vector[hero2, hero3], vector[string::utf8(b"Health"), string::utf8(b"Magic_Attack"), string::utf8(b"Defense")], vector[27, 10, 30]);
+            
+            transfer::public_transfer(hero1, PLAYER);
+        };
+
+        ts::end(scenario);
+    }
+
+    #[test]
+    fun test_flow_power_upgrade_hero() {
+        let scenario = ts::begin(PLAYER);
+
+        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
+
+        ts::next_tx(&mut scenario, PLAYER);
+        {
+            shop::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        ts::next_tx(&mut scenario, PLAYER);
+        {
+            let hero1: hero::Hero = hero::mint_hero(b"name1", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            transfer::public_transfer(hero1, PLAYER);
+            let hero2: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            transfer::public_transfer(hero2, PLAYER);
+            let hero3: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            transfer::public_transfer(hero3, PLAYER);
+        };
+
+        ts::next_tx(&mut scenario, PLAYER);
+        {
+            let shop = ts::take_shared<shop::Shop>(&mut scenario);
+            let hero1 = ts::take_from_sender<hero::Hero>(&mut scenario);
+            let hero2 = ts::take_from_sender<hero::Hero>(&mut scenario);
+            let hero3 = ts::take_from_sender<hero::Hero>(&mut scenario);
+            hero::power_upgrade_hero(
+                &mut shop,
+                &mut hero1, 
+                vector[hero2, hero3], 
+                vector[string::utf8(b"Health"), string::utf8(b"Magic_Attack"), string::utf8(b"Defense")], 
+                vector[27, 10, 30],
+                10_000,
+                user_coin);
+            
+            assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Health")) == 27, EUpgradeFailed);
+            assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Hit_Rate")) == 0, EUpgradeFailed);
+
+            transfer::public_transfer(hero1, PLAYER);
+            ts::return_shared(shop);
+        };
+
+        ts::end(scenario);
     }
 
 }
