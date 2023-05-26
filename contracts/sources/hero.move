@@ -109,6 +109,20 @@ module contracts::hero {
         upgrade_hero(hero, heroes, attributes, values);
     }
 
+    //This function will be called when the hero's apperance is updating.
+    // It burns the heroes included in the makeover.
+    public(friend) fun hero_makeover(hero: &Hero, heroes: vector<Hero>) {
+        let i = 0;
+        while(i <= vector::length(&heroes)) {
+            let hero_pop = vector::pop_back(&mut heroes);
+            assert!(hero.rarity == hero_pop.rarity, ENotSameHeroRarity);
+            burn_hero(hero_pop);
+            i = i + 1;
+        };
+
+        vector::destroy_empty(heroes);
+    }
+
     // Accessors
     public fun get_heroId(hero: &mut Hero): &UID {
         &hero.id
@@ -231,6 +245,7 @@ module contracts::hero_tests {
                 user_coin);
             
             assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Health")) == 27, EUpgradeFailed);
+            assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Defense")) == 30, EUpgradeFailed);
             assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Hit_Rate")) == 0, EUpgradeFailed);
 
             transfer::public_transfer(hero1, PLAYER);
