@@ -1,10 +1,13 @@
 module contracts::hero {
 
     use sui::object::{Self, UID, ID};
-    use sui::tx_context::{TxContext};
+    use sui::tx_context::{Self, TxContext};
     use sui::dynamic_field as dfield;
     use sui::coin::Coin;
     use sui::event;
+    use sui::transfer;
+    use sui::display;
+    use sui::package;
 
     use std::string::{Self, String, utf8};
     use std::vector;
@@ -12,7 +15,12 @@ module contracts::hero {
     use contracts::arca::ARCA;
     use contracts::shop;
 
+    friend contracts::demo;
+
     const ENotSameHeroRarity: u64 = 0;
+
+    // One Time Witness
+    struct HERO has drop {}
     
 
     struct Hero has key, store {
@@ -22,6 +30,7 @@ module contracts::hero {
         factions: String,
         skill: String,
         rarity: String,
+        external_id: String
     }
 
     struct HeroMinted has copy, drop {
@@ -36,16 +45,53 @@ module contracts::hero {
         id: ID
     }
 
-    public(friend) fun mint_hero(name: vector<u8>, class: vector<u8>, factions: vector<u8>, skill: vector<u8>, rarity: vector<u8>, ctx: &mut TxContext): Hero {
+    fun init(otw: HERO, ctx: &mut TxContext) {
+        let publisher = package::claim(otw, ctx);
+
+        let keys = vector[
+            string::utf8(b"name"),
+            string::utf8(b"image_url"),
+            string::utf8(b"link"),
+            string::utf8(b"description"),
+            string::utf8(b"project_url")
+        ];
+
+        let values = vector[
+            string::utf8(b"Hero"),
+            // string::utf8(b"https://legendofarcadia.io/heroes/images/{external_id}"),
+            string::utf8(b"{external_id}"), // this is just for the demo
+            string::utf8(b"https://legendofarcadia.io/heroes/{external_id}"),
+            string::utf8(b"Heroes of Arcadia"),
+            string::utf8(b"https://legendofarcadia.io")
+        ];
+
+        let display = display::new_with_fields<Hero>(&publisher, keys, values, ctx);
+
+        display::update_version<Hero>(&mut display);
+
+        transfer::public_transfer(publisher, tx_context::sender(ctx));
+        transfer::public_transfer(display, tx_context::sender(ctx));    
+    }
+
+    public(friend) fun mint_hero(
+        name: String,
+        class: String,
+        factions: String,
+        skill: String,
+        rarity: String,
+        external_id: String,
+        ctx: &mut TxContext
+        ): Hero {
         
         let id = object::new(ctx);
         let hero = Hero{
             id, 
-            name: string::utf8(name), 
-            class: string::utf8(class), 
-            factions: string::utf8(factions), 
-            skill: string::utf8(skill), 
-            rarity: string::utf8(rarity)
+            name, 
+            class, 
+            factions, 
+            skill, 
+            rarity,
+            external_id
         };
 
         dfield::add(&mut hero.id, utf8(b"Health"), 0);
@@ -62,13 +108,13 @@ module contracts::hero {
         hero
     }
 
-    fun edit_df(heroId: &mut UID, name: String, new_value: u64) {
-        let _ = dfield::remove<String, u64>(heroId, name);
-        dfield::add<String, u64>(heroId, name, new_value);
+    fun edit_df(hero: &mut Hero, name: String, new_value: u64) {
+        let value = dfield::borrow_mut<String, u64>(&mut hero.id, name);
+        *value = new_value;
     }    
 
     public(friend) fun burn_hero(hero: Hero) {
-        let Hero {id, name: _, class: _, factions: _, skill: _, rarity: _} = hero;
+        let Hero {id, name: _, class: _, factions: _, skill: _, rarity: _, external_id: _} = hero;
         event::emit(HeroBurned {id: object::uid_to_inner(&id)});
         object::delete(id);
     }
@@ -88,7 +134,7 @@ module contracts::hero {
 
         let i = 0;
         while(i < vector::length(&attributes)) {
-            edit_df(&mut hero.id, *vector::borrow(&attributes, i), *vector::borrow(&values, i));
+            edit_df(hero, *vector::borrow(&attributes, i), *vector::borrow(&values, i));
             i = i + 1;
         };
 
@@ -124,7 +170,7 @@ module contracts::hero {
     }
 
     // Accessors
-    public fun get_heroId(hero: &mut Hero): &UID {
+    public fun get_hero_id(hero: &mut Hero): &UID {
         &hero.id
     }
 
@@ -157,11 +203,32 @@ module contracts::hero_tests {
 
         ts::next_tx(&mut scenario, PLAYER);
         {
-            let hero1: hero::Hero = hero::mint_hero(b"name1", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            let hero1: hero::Hero = hero::mint_hero(
+                string::utf8(b"name1"),
+                string::utf8(b"class"),
+                string::utf8(b"faction"),
+                string::utf8(b"skill"),
+                string::utf8(b"N"),
+                string::utf8(b"111"),
+                ts::ctx(&mut scenario));
             transfer::public_transfer(hero1, PLAYER);
-            let hero2: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            let hero2: hero::Hero = hero::mint_hero(
+                string::utf8(b"name2"),
+                string::utf8(b"class"),
+                string::utf8(b"faction"),
+                string::utf8(b"skill"),
+                string::utf8(b"N"),
+                string::utf8(b"222"),
+                ts::ctx(&mut scenario));
             transfer::public_transfer(hero2, PLAYER);
-            let hero3: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            let hero3: hero::Hero = hero::mint_hero(
+                string::utf8(b"name2"),
+                string::utf8(b"class"),
+                string::utf8(b"faction"),
+                string::utf8(b"skill"),
+                string::utf8(b"N"),
+                string::utf8(b"333"),
+                ts::ctx(&mut scenario));
             transfer::public_transfer(hero3, PLAYER);
         };
 
@@ -172,8 +239,8 @@ module contracts::hero_tests {
             let hero3 = ts::take_from_sender<hero::Hero>(&mut scenario);
             hero::upgrade_hero(&mut hero1, vector[hero2, hero3], vector[string::utf8(b"Health"), string::utf8(b"Magic_Attack"), string::utf8(b"Defense")], vector[27, 10, 30]);
             
-            assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Health")) == 27, EUpgradeFailed);
-            assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Hit_Rate")) == 0, EUpgradeFailed);
+            assert!(*dfield::borrow<string::String, u64>(hero::get_hero_id(&mut hero1), string::utf8(b"Health")) == 27, EUpgradeFailed);
+            assert!(*dfield::borrow<string::String, u64>(hero::get_hero_id(&mut hero1), string::utf8(b"Hit_Rate")) == 0, EUpgradeFailed);
 
             transfer::public_transfer(hero1, PLAYER);
         };
@@ -187,11 +254,32 @@ module contracts::hero_tests {
 
         ts::next_tx(&mut scenario, PLAYER);
         {
-            let hero1: hero::Hero = hero::mint_hero(b"name1", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            let hero1: hero::Hero = hero::mint_hero(
+                string::utf8(b"name1"),
+                string::utf8(b"class"),
+                string::utf8(b"faction"),
+                string::utf8(b"skill"),
+                string::utf8(b"N"),
+                string::utf8(b"111"),
+                ts::ctx(&mut scenario));
             transfer::public_transfer(hero1, PLAYER);
-            let hero2: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            let hero2: hero::Hero = hero::mint_hero(
+                string::utf8(b"name2"),
+                string::utf8(b"class"),
+                string::utf8(b"faction"),
+                string::utf8(b"skill"),
+                string::utf8(b"N"),
+                string::utf8(b"222"),
+                ts::ctx(&mut scenario));
             transfer::public_transfer(hero2, PLAYER);
-            let hero3: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"SR", ts::ctx(&mut scenario));
+            let hero3: hero::Hero = hero::mint_hero(
+                string::utf8(b"name2"),
+                string::utf8(b"class"),
+                string::utf8(b"faction"),
+                string::utf8(b"skill"),
+                string::utf8(b"SR"),
+                string::utf8(b"333"),
+                ts::ctx(&mut scenario));
             transfer::public_transfer(hero3, PLAYER);
         };
 
@@ -221,11 +309,32 @@ module contracts::hero_tests {
 
         ts::next_tx(&mut scenario, PLAYER);
         {
-            let hero1: hero::Hero = hero::mint_hero(b"name1", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            let hero1: hero::Hero = hero::mint_hero(
+                string::utf8(b"name1"),
+                string::utf8(b"class"),
+                string::utf8(b"faction"),
+                string::utf8(b"skill"),
+                string::utf8(b"N"),
+                string::utf8(b"111"),
+                ts::ctx(&mut scenario));
             transfer::public_transfer(hero1, PLAYER);
-            let hero2: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            let hero2: hero::Hero = hero::mint_hero(
+                string::utf8(b"name2"),
+                string::utf8(b"class"),
+                string::utf8(b"faction"),
+                string::utf8(b"skill"),
+                string::utf8(b"N"),
+                string::utf8(b"222"),
+                ts::ctx(&mut scenario));
             transfer::public_transfer(hero2, PLAYER);
-            let hero3: hero::Hero = hero::mint_hero(b"name2", b"class", b"faction", b"skill", b"N", ts::ctx(&mut scenario));
+            let hero3: hero::Hero = hero::mint_hero(
+                string::utf8(b"name2"),
+                string::utf8(b"class"),
+                string::utf8(b"faction"),
+                string::utf8(b"skill"),
+                string::utf8(b"N"),
+                string::utf8(b"333"),
+                ts::ctx(&mut scenario));
             transfer::public_transfer(hero3, PLAYER);
         };
 
@@ -244,9 +353,9 @@ module contracts::hero_tests {
                 10_000,
                 user_coin);
             
-            assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Health")) == 27, EUpgradeFailed);
-            assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Defense")) == 30, EUpgradeFailed);
-            assert!(*dfield::borrow<string::String, u64>(hero::get_heroId(&mut hero1), string::utf8(b"Hit_Rate")) == 0, EUpgradeFailed);
+            assert!(*dfield::borrow<string::String, u64>(hero::get_hero_id(&mut hero1), string::utf8(b"Health")) == 27, EUpgradeFailed);
+            assert!(*dfield::borrow<string::String, u64>(hero::get_hero_id(&mut hero1), string::utf8(b"Defense")) == 30, EUpgradeFailed);
+            assert!(*dfield::borrow<string::String, u64>(hero::get_hero_id(&mut hero1), string::utf8(b"Hit_Rate")) == 0, EUpgradeFailed);
 
             transfer::public_transfer(hero1, PLAYER);
             ts::return_shared(shop);
