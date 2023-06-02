@@ -21,7 +21,7 @@ module contracts::arca {
 
     struct ARCA has drop {}
 
-    struct VeARCA has key {
+    struct VeARCA has key, store {
         id: UID,
         staked_amount: u64,
         //appended_amount
@@ -40,7 +40,7 @@ module contracts::arca {
     fun init(witness: ARCA, ctx: &mut TxContext) {
         let (treasury, metadata) = coin::create_currency(witness, 18, b"ARCA", b"", b"", option::none(), ctx);
         transfer::public_freeze_object(metadata);
-        transfer::public_transfer(treasury, tx_context::sender(ctx))
+        transfer::public_transfer(treasury, tx_context::sender(ctx));
     }
 
     fun create_pool(ctx: &mut TxContext) {
@@ -122,5 +122,67 @@ module contracts::arca {
         
     // }
 
+    public fun get_total_supply_VeARCA(sp: &StakingPool): u64 {
+        sp.total_supply_VeARCA
+    }
+
+    #[test_only]
+    public fun init_for_testing(ctx: &mut TxContext) {
+        create_pool(ctx);
+    }
+
+}
+
+#[test_only]
+module contracts::staking_tests {
+
+    use contracts::arca::{Self, ARCA};
+
+    use sui::test_scenario as ts;
+    use sui::transfer;
+    use sui::coin;
+    use sui::clock;
+
+    use std::string;
+
+    const EVeARCAAmountNotMuch: u64 = 0;
+
+    const USER_ADDRESS: address = @0xABCD;
+
+    #[test]
+    fun test_staking() {
+        let scenario = ts::begin(USER_ADDRESS);
+
+        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
+
+        let c = clock::create_for_testing(ts::ctx(&mut scenario));
+        clock::share_for_testing(c);
+
+        ts::next_tx(&mut scenario, USER_ADDRESS);
+        {
+            arca::init_for_testing(ts::ctx(&mut scenario));
+        };
+
+        ts::next_tx(&mut scenario, USER_ADDRESS);
+        {   
+            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+
+            let veARCA = arca::stake(
+                &mut staking_pool, 
+                user_coin, 
+                &clock, 
+                string::utf8(b"1y"), 
+                ts::ctx(&mut scenario));
+            transfer::public_transfer(veARCA, USER_ADDRESS);
+
+            assert!(arca::get_total_supply_VeARCA(&staking_pool) == 10_000, EVeARCAAmountNotMuch);
+
+            ts::return_shared(staking_pool);
+            ts::return_shared(clock);
+        };
+
+        ts::end(scenario);
+    }
 
 }
