@@ -16,6 +16,7 @@ module contracts::hero {
     use contracts::shop;
 
     friend contracts::demo;
+    friend contracts::game;
 
     const ENotSameHeroRarity: u64 = 0;
 
