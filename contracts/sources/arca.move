@@ -2,15 +2,16 @@ module contracts::arca {
 
     use std::option;
     use std::string::{Self, String};
+    use std::vector;
+    use std::debug;
 
     use sui::coin::{Self, Coin};
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
-    use sui::object::{Self, UID};
+    use sui::object::{Self, UID, ID};
     use sui::balance::{Self, Balance};
     use sui::clock::{Self, Clock};
-    use sui::dynamic_field as dfield;
-    // use std::debug;
+    use sui::linked_table::{Self, LinkedTable};
 
 //  https://www.advancedconverter.com/unit-conversions/time-conversion/weeks-to-milliseconds
     const DAY_TO_UNIX_SECONDS: u64 = 86_400;
@@ -24,58 +25,72 @@ module contracts::arca {
     const EDenominatorIsZero: u64 = 3;
     const ENotCorrectStakingPeriod: u64 = 4;
     const ENotAppendActionAvaialble: u64 = 5;
+    const ENoActiveStakes: u64 = 6;
 
     struct ARCA has drop {}
 
+    struct StakingAdmin has key {
+        id: UID
+    }
+
     struct VeARCA has key {
         id: UID,
-        staked_amount: u64,
-        amount: u64,
+        staked_amount: u64, // ARCA
+        initial: u64, // initial_veARCA
+        amount: u64, // current amount_veARCA
         start_date: u64,
         end_date: u64,
+        locking_period_sec: u64,
         decimals: u64,
     }
 
     struct StakingPool has key, store {
         id: UID,
         liquidity: Balance<ARCA>,
-        total_supply_VeARCA: u64,
         rewards: Balance<ARCA>,
         next_distribution_timestamp: u64,
+        veARCA_holders: LinkedTable<address, vector<u64>>,
     }
 
     fun init(witness: ARCA, ctx: &mut TxContext) {
         let (treasury, metadata) = coin::create_currency(witness, 18, b"ARCA", b"", b"", option::none(), ctx);
         transfer::public_freeze_object(metadata);
         transfer::public_transfer(treasury, tx_context::sender(ctx));
+        create_pool(ctx);
     }
 
     fun create_pool(ctx: &mut TxContext) {
+        let cap = StakingAdmin {
+            id: object::new(ctx),
+        };
+        transfer::transfer(cap, tx_context::sender(ctx));
         let staking_pool = StakingPool{
             id: object::new(ctx),
             liquidity: balance::zero<ARCA>(),
-            total_supply_VeARCA: 0,
+            rewards: balance::zero<ARCA>(),
             next_distribution_timestamp: 0,
-            rewards: balance::zero<ARCA>()
+            veARCA_holders: linked_table::new<address, vector<u64>>(ctx),
         };
         transfer::share_object(staking_pool);
     }
 
-    fun mint_ve(staked_amount: u64, amount: u64, start_date: u64, end_date: u64, ctx: &mut TxContext): VeARCA {
+    fun mint_ve(staked_amount: u64, initial: u64, amount: u64, start_date: u64, end_date: u64, locking_period_sec: u64, ctx: &mut TxContext): VeARCA {
         let id = object::new(ctx);
         let veARCA = VeARCA{
             id,
             staked_amount,
+            initial,
             amount,
             start_date,
             end_date,
+            locking_period_sec,
             decimals: 100
         };
 
         veARCA
     }
 
-    fun calc_veARCA(staked_arca_amount: u64, denominator: u64): u64 {
+    fun calc_initial_veARCA(staked_arca_amount: u64, denominator: u64): u64 {
 
         assert!(denominator !=0, EDenominatorIsZero);
 
@@ -84,36 +99,104 @@ module contracts::arca {
         veARCA_amount
     }
 
-    public fun stake(sp: &mut StakingPool, arca: Coin<ARCA>, clock: &Clock, staking_period: String, ctx: &mut TxContext) {
+    fun calc_veARCA(initial: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {
+
+        // debug::print(&initial);
+        // debug::print(&locking_period_sec);
         
-        assert!(!dfield::exists_(&sp.id, tx_context::sender(ctx)), EOngoingStaking);
+        initial * (end_date - (clock::timestamp_ms(clock)/1000)) / locking_period_sec
+    }
+
+    fun calc_vip_level_veARCA( veARCA_amount: u64, decimals: u64): u64 {
+        let vip_level = 0;
+        if(veARCA_amount >= (3*decimals) && veARCA_amount < (35*decimals)) {
+            vip_level = 1;
+        } else if(veARCA_amount >= (35*decimals) && veARCA_amount < (170*decimals)) {
+            vip_level = 2;
+        } else if(veARCA_amount >= (170*decimals) && veARCA_amount < (670*decimals)) {
+            vip_level = 3;
+        } else if(veARCA_amount >= (670*decimals) && veARCA_amount < (1_400*decimals)) {
+            vip_level = 4;
+        } else if(veARCA_amount >= (1_400*decimals) && veARCA_amount < (2_700*decimals)) {
+            vip_level = 5;
+        } else if(veARCA_amount >= (2_700*decimals) && veARCA_amount < (4_700*decimals)) {
+            vip_level = 6;
+        } else if(veARCA_amount >= (4_700*decimals) && veARCA_amount < (6_700*decimals)) {
+            vip_level = 7;
+        } else if(veARCA_amount >= (6_700*decimals) && veARCA_amount < (14_000*decimals)) {
+            vip_level = 8;
+        } else if(veARCA_amount >= (14_000*decimals) && veARCA_amount < (17_000*decimals)) {
+            vip_level = 9;
+        } else if(veARCA_amount >= (17_000*decimals) && veARCA_amount < (20_000*decimals)) {
+            vip_level = 10;
+        } else if(veARCA_amount >= (20_000*decimals) && veARCA_amount < (27_000*decimals)) {
+            vip_level = 11;
+        } else if(veARCA_amount >= (27_000*decimals) && veARCA_amount < (34_000*decimals)) {
+            vip_level = 12;
+        } else if(veARCA_amount >= (34_000*decimals) && veARCA_amount < (67_000*decimals)) {
+            vip_level = 13;
+        } else if(veARCA_amount >= (67_000*decimals) && veARCA_amount < (140_000*decimals)) {
+            vip_level = 14;
+        } else if(veARCA_amount >= (140_000*decimals) && veARCA_amount < (270_000*decimals)) {
+            vip_level = 15;
+        } else if(veARCA_amount >= (270_000*decimals) && veARCA_amount < (400_000*decimals)) {
+            vip_level = 16;
+        } else if(veARCA_amount >= (400_000*decimals) && veARCA_amount < (670_000*decimals)) {
+            vip_level = 17;
+        } else if(veARCA_amount >= (670_000*decimals) && veARCA_amount < (1_700_000*decimals)) {
+            vip_level = 18;
+        } else if(veARCA_amount >= (1_700_000*decimals) && veARCA_amount < (3_400_000*decimals)) {
+            vip_level = 19;
+        } else if(veARCA_amount >= (3_400_000*decimals)) {
+            vip_level = 20;
+        };
+
+        vip_level
+    }
+
+    public fun stake(sp: &mut StakingPool, arca: Coin<ARCA>, clock: &Clock, staking_period: String, ctx: &mut TxContext) {
+
+        assert!(!linked_table::contains(&sp.veARCA_holders, tx_context::sender(ctx)), EOngoingStaking);
 
         let arca_amount = coin::value(&arca);
         let staked_amount = arca_amount*100;
         let start_tmstmp = clock::timestamp_ms(clock) / 1000;
         let end_tmstmp = 0;
+        let locking_period_sec = 0;
+        let v = vector::empty<u64>();
+
 
         if(staking_period == string::utf8(b"1w")) {
+            locking_period_sec = WEAK_TO_UNIX_SECONDS;
             end_tmstmp = start_tmstmp + WEAK_TO_UNIX_SECONDS;
-            staked_amount = calc_veARCA(staked_amount*7, 365);
+            staked_amount = calc_initial_veARCA(staked_amount*7, 365);
+
         } else if(staking_period == string::utf8(b"2w")) {
+            locking_period_sec = 2 * WEAK_TO_UNIX_SECONDS;
             end_tmstmp = start_tmstmp + 2* WEAK_TO_UNIX_SECONDS;
-            staked_amount = calc_veARCA(staked_amount*14, 365);
+            staked_amount = calc_initial_veARCA(staked_amount*14, 365);
 
         } else if(staking_period == string::utf8(b"1m")) {
+            locking_period_sec = MONTH_TO_UNIX_SECONDS;
             end_tmstmp = start_tmstmp + MONTH_TO_UNIX_SECONDS;
-            staked_amount = calc_veARCA(staked_amount, 12);
+            staked_amount = calc_initial_veARCA(staked_amount, 12);
 
         } else if(staking_period == string::utf8(b"3m")) {
+            locking_period_sec = 3 * MONTH_TO_UNIX_SECONDS;
+            // debug::print(&string::utf8(b"3m stake"));
+            // debug::print(&locking_period_sec);
             end_tmstmp = start_tmstmp + (3 * MONTH_TO_UNIX_SECONDS);
-            staked_amount = calc_veARCA(staked_amount, 4);
+            staked_amount = calc_initial_veARCA(staked_amount, 4);
 
         } else if(staking_period == string::utf8(b"6m")) {
             end_tmstmp = start_tmstmp + (6 * MONTH_TO_UNIX_SECONDS);
-            staked_amount = calc_veARCA(staked_amount, 2);
+            staked_amount = calc_initial_veARCA(staked_amount, 2);
+            locking_period_sec = 6 * MONTH_TO_UNIX_SECONDS;
 
         } else if(staking_period == string::utf8(b"1y")) {
             end_tmstmp = start_tmstmp + YEAR_TO_UNIX_SECONDS;
+            locking_period_sec = YEAR_TO_UNIX_SECONDS;
+
         } else {
             assert!(true, ENotCorrectStakingPeriod);
         };
@@ -123,35 +206,37 @@ module contracts::arca {
         let balance = coin::into_balance(arca);
         balance::join(&mut sp.liquidity, balance);
 
-        sp.total_supply_VeARCA = sp.total_supply_VeARCA + staked_amount;
+        // vector<u64>: initial veARCA amount, start lock, end lock, vip_level
 
-        dfield::add(&mut sp.id, tx_context::sender(ctx), staked_amount);
+        vector::push_back<u64>(&mut v, staked_amount);
+        vector::push_back<u64>(&mut v, end_tmstmp);
+        vector::push_back<u64>(&mut v, locking_period_sec);
 
-        let veARCA = mint_ve(staked_amount, arca_amount, start_tmstmp, end_tmstmp, ctx);
-        
+        // debug::print(&staking_period);
+        // debug::print(&v);
+
+        linked_table::push_back(&mut sp.veARCA_holders, tx_context::sender(ctx), v);
+
+        let veARCA = mint_ve(arca_amount, staked_amount, staked_amount, start_tmstmp, end_tmstmp, locking_period_sec, ctx);
+
         transfer::transfer(veARCA, tx_context::sender(ctx));
     }
 
-    public fun append(sp: &mut StakingPool, veARCA: &mut VeARCA, arca: Coin<ARCA>, clock: &Clock, ctx: &mut TxContext) {
+    public fun append(sp: &mut StakingPool, veARCA: &mut VeARCA, arca: Coin<ARCA>, clock: &Clock) {
         
-        let appended_stake = coin::value(&arca)*100;
-        veARCA.amount = veARCA.amount + appended_stake;
+        let appended_amount = coin::value(&arca)*100;
+        veARCA.amount = veARCA.amount + appended_amount;
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
         let time_left = (veARCA.end_date - current_timestamp)/DAY_TO_UNIX_SECONDS;
 
         assert!(time_left >= 1, ENotAppendActionAvaialble);
 
-        appended_stake = calc_veARCA(appended_stake*time_left, 365);
+        appended_amount = calc_initial_veARCA(appended_amount*time_left, 365);
 
         let balance = coin::into_balance(arca);
         balance::join(&mut sp.liquidity, balance);
 
-        sp.total_supply_VeARCA = sp.total_supply_VeARCA + appended_stake;
-
-        veARCA.staked_amount = veARCA.staked_amount + appended_stake;
-
-        *dfield::borrow_mut(&mut sp.id, tx_context::sender(ctx)) = appended_stake + *dfield::borrow(&sp.id, tx_context::sender(ctx));
-
+        veARCA.initial = veARCA.initial + appended_amount;
     }
 
     public fun unstake(veARCA: VeARCA, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext): Coin<ARCA> {
@@ -159,33 +244,153 @@ module contracts::arca {
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
         assert!(current_timestamp > veARCA.end_date, ENotValidAction);
 
-        let coin_balance = balance::split<ARCA>(&mut sp.liquidity, veARCA.amount);
-        sp.total_supply_VeARCA = sp.total_supply_VeARCA - veARCA.staked_amount;
+        let coin_balance = balance::split<ARCA>(&mut sp.liquidity, veARCA.staked_amount);
 
         let arca = coin::from_balance<ARCA>(coin_balance, ctx);
 
-        let _v = dfield::remove<address, u64>(&mut sp.id, tx_context::sender(ctx));
-
         burn_veARCA(veARCA);
+
+        linked_table::remove(&mut sp.veARCA_holders, tx_context::sender(ctx));
 
         arca
     }
 
-    // fun distribute_rewards(staking_pool:, clock: ) {
-        
-    // }
+    fun get_vip_percentage( vip_level: u64): u64 {
+        let percentage = 0;
+        if(vip_level == 1){
+            percentage = 48
+        } else if(vip_level == 2){
+            percentage = 96
+        } else if(vip_level == 3){
+            percentage = 144
+        } else if(vip_level == 4){
+            percentage = 192
+        } else if(vip_level == 5){
+            percentage = 220
+        } else if(vip_level == 6){
+            percentage = 288
+        } else if(vip_level == 7){
+            percentage = 336
+        } else if(vip_level == 8){
+            percentage = 384
+        } else if(vip_level == 9){
+            percentage = 432
+        } else if(vip_level == 10){
+            percentage = 450
+        } else if(vip_level == 11){
+            percentage = 528
+        } else if(vip_level == 12){
+            percentage = 576
+        } else if(vip_level == 13){
+            percentage = 624
+        } else if(vip_level == 14){
+            percentage = 672
+        } else if(vip_level == 15){
+            percentage = 700
+        } else if(vip_level == 16){
+            percentage = 768
+        } else if(vip_level == 17){
+            percentage = 816
+        } else if(vip_level == 18){
+            percentage = 864
+        } else if(vip_level == 19){
+            percentage = 912
+        } else if(vip_level == 20){
+            percentage = 950
+        };
 
-    fun burn_veARCA(veARCA: VeARCA) {
-        let VeARCA {id, staked_amount: _, amount: _, start_date: _, end_date: _, decimals:_} = veARCA;
-        object::delete(id);
+        percentage
     }
 
-    public fun get_total_supply_VeARCA(sp: &StakingPool): u64 {
-        sp.total_supply_VeARCA
+    fun calc_reward(value: &vector<u64>, rewards_amount: u64, clock: &Clock): u64 {
+
+        let veARCA_amount = calc_veARCA(*vector::borrow(value, 0), *vector::borrow(value, 1), *vector::borrow(value, 2), clock);
+
+        let vip_level = calc_vip_level_veARCA(veARCA_amount, 100);
+        let per = get_vip_percentage(vip_level);
+
+        let reward = (rewards_amount * per) / 10_000;
+
+        reward
+    }
+
+    public fun distribute_rewards(_cap: &StakingAdmin, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext) {
+
+        debug::print(&linked_table::length(&sp.veARCA_holders));
+        assert!(!(linked_table::length(&sp.veARCA_holders) == 0), ENoActiveStakes);
+
+        let rewards = balance::value<ARCA>(&sp.rewards) * 1;
+
+        let i = 0;
+        let holder_address = *option::borrow(linked_table::front(&sp.veARCA_holders));
+        
+        while( i < linked_table::length(&sp.veARCA_holders)) {
+            let value = linked_table::borrow(&sp.veARCA_holders, holder_address);
+            
+
+            // debug::print(&string::utf8(b"value"));
+            // debug::print(&holder_address);
+            // debug::print(value);
+
+            let reward = calc_reward(value, rewards, clock);
+
+            let coin = coin::take<ARCA>(&mut sp.rewards, reward, ctx);
+
+            debug::print(&string::utf8(b"holder_address"));
+
+            debug::print(&holder_address);
+            
+            transfer::public_transfer(coin, holder_address);
+
+            if(option::is_none(linked_table::next(&sp.veARCA_holders, holder_address))){
+                break
+            };
+
+            holder_address = *option::borrow(linked_table::next(&sp.veARCA_holders, holder_address));
+            i = i + 1;
+        }
+
+    }
+
+    fun burn_veARCA(veARCA: VeARCA) {
+        let VeARCA {id, staked_amount: _, initial: _, amount: _, start_date: _, end_date: _, locking_period_sec: _, decimals:_} = veARCA;
+        object::delete(id);
     }
 
     public fun get_staked_amount_VeARCA(veARCA: &VeARCA): u64 {
         veARCA.staked_amount
+    }
+
+    public fun get_initial_VeARCA(veARCA: &VeARCA): u64 {
+        veARCA.initial
+    }
+
+    public fun get_amount_VeARCA(veARCA: &VeARCA): u64 {
+        veARCA.amount
+    }
+
+    public fun get_start_date_VeARCA(veARCA: &VeARCA): u64 {
+        veARCA.start_date
+    }
+
+    public fun get_end_date_VeARCA(veARCA: &VeARCA): u64 {
+        veARCA.end_date
+    }
+
+    public fun get_locking_period_sec_VeARCA(veARCA: &VeARCA): u64 {
+        veARCA.locking_period_sec
+    }
+
+    public fun get_decimals_VeARCA(veARCA: &VeARCA): u64 {
+        veARCA.decimals
+    }
+
+    public fun get_id_VeARCA(veARCA: &VeARCA): ID {
+        object::uid_to_inner(&veARCA.id)
+    }
+
+    public fun get_holders_number(sp: &StakingPool): u64 {
+        linked_table::length(&sp.veARCA_holders)
     }
 
     #[test_only]
@@ -193,314 +398,11 @@ module contracts::arca {
         create_pool(ctx);
     }
 
-}
+    #[test_only]
+    public fun increase_rewards_supply(sp: &mut StakingPool) {
+        let new_balance = balance::create_for_testing<ARCA>(500_000);
 
-#[test_only]
-module contracts::staking_tests {
-
-    use contracts::arca::{Self, ARCA};
-
-    use sui::test_scenario as ts;
-    use sui::coin;
-    use sui::clock;
-    use sui::transfer;
-
-    use std::string;
-
-    const EVeARCAAmountNotMuch: u64 = 0;
-    const ENotCorrectAmmountTransfered: u64 = 1;
-    const EAppendNotWorking: u64 = 2;
-
-    const USER_ADDRESS: address = @0xABCD;
-    const USER2_ADDRESS: address = @0x1234;
-
-    #[test]
-    fun test_staking() {
-        let scenario = ts::begin(USER_ADDRESS);
-
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-        let user2_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-
-        let c = clock::create_for_testing(ts::ctx(&mut scenario));
-        clock::share_for_testing(c);
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {
-            arca::init_for_testing(ts::ctx(&mut scenario));
-        };
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {   
-            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
-
-            arca::stake(
-                &mut staking_pool, 
-                user_coin, 
-                &clock, 
-                string::utf8(b"1y"), 
-                ts::ctx(&mut scenario));
-
-            assert!(arca::get_total_supply_VeARCA(&staking_pool) == 1_000_000, EVeARCAAmountNotMuch);
-
-            ts::return_shared(staking_pool);
-            ts::return_shared(clock);
-        };
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {
-            let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
-
-            assert!(arca::get_staked_amount_VeARCA(&veARCA_object) == 1_000_000, ENotCorrectAmmountTransfered);
-
-            ts::return_to_sender<arca::VeARCA>(&scenario, veARCA_object);
-        };
-
-        ts::next_tx(&mut scenario, USER2_ADDRESS);
-        {   
-            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
-
-            arca::stake(
-                &mut staking_pool, 
-                user2_coin, 
-                &clock, 
-                string::utf8(b"1w"), 
-                ts::ctx(&mut scenario));
-
-            assert!(arca::get_total_supply_VeARCA(&staking_pool) == 1_019_178, EVeARCAAmountNotMuch);
-
-            ts::return_shared(staking_pool);
-            ts::return_shared(clock);
-        };
-
-        ts::next_tx(&mut scenario, USER2_ADDRESS);
-        {
-            let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
-
-            assert!(arca::get_staked_amount_VeARCA(&veARCA_object) == 19_178, ENotCorrectAmmountTransfered);
-
-            ts::return_to_sender<arca::VeARCA>(&scenario, veARCA_object);
-        };
-
-        ts::end(scenario);
+        let _b = balance::join(&mut sp.rewards, new_balance);
     }
-
-    #[test, expected_failure]
-    fun test_stake_twice() {
-        let scenario = ts::begin(USER_ADDRESS);
-
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-        let second_user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-
-        let c = clock::create_for_testing(ts::ctx(&mut scenario));
-        clock::share_for_testing(c);
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {
-            arca::init_for_testing(ts::ctx(&mut scenario));
-        };
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {   
-            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
-
-            arca::stake(
-                &mut staking_pool, 
-                user_coin, 
-                &clock, 
-                string::utf8(b"1y"), 
-                ts::ctx(&mut scenario));
-
-            ts::return_shared(staking_pool);
-            ts::return_shared(clock);
-
-        };
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {   
-            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
-
-            arca::stake(
-                &mut staking_pool, 
-                second_user_coin, 
-                &clock, 
-                string::utf8(b"1y"), 
-                ts::ctx(&mut scenario));
-
-            ts::return_shared(staking_pool);
-            ts::return_shared(clock);
-
-        };
-
-        ts::end(scenario);
-    }
-
-
-    #[test]
-    fun test_append_to_stake() {
-        let scenario = ts::begin(USER_ADDRESS);
-
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-        let second_user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-
-        let c = clock::create_for_testing(ts::ctx(&mut scenario));
-        clock::share_for_testing(c);
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {
-            arca::init_for_testing(ts::ctx(&mut scenario));
-        };
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {   
-            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
-
-            arca::stake(
-                &mut staking_pool, 
-                user_coin, 
-                &clock, 
-                string::utf8(b"1y"), 
-                ts::ctx(&mut scenario));
-
-            ts::return_shared(staking_pool);
-            ts::return_shared(clock);
-        };
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {
-            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
-            let test_clock = ts::take_shared<clock::Clock>(&mut scenario);
-            let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
-
-            clock::increment_for_testing(&mut test_clock, 86_400*1000);
-
-            arca::append(
-                &mut staking_pool,
-                &mut veARCA_object,
-                second_user_coin, 
-                &test_clock, 
-                ts::ctx(&mut scenario)); 
-
-            assert!(arca::get_total_supply_VeARCA(&staking_pool) > 1_000_000, EAppendNotWorking);
-
-            ts::return_shared(staking_pool);
-            ts::return_shared(test_clock);
-            ts::return_to_sender<arca::VeARCA>(&scenario, veARCA_object);
-        };
-
-        ts::end(scenario);
-    }
-
-    #[test, expected_failure]
-    fun test_append_to_stake_fail() {
-        let scenario = ts::begin(USER_ADDRESS);
-
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-        let second_user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-
-        let c = clock::create_for_testing(ts::ctx(&mut scenario));
-        clock::share_for_testing(c);
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {
-            arca::init_for_testing(ts::ctx(&mut scenario));
-        };
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {   
-            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
-
-            arca::stake(
-                &mut staking_pool, 
-                user_coin, 
-                &clock, 
-                string::utf8(b"1w"), 
-                ts::ctx(&mut scenario));
-
-            ts::return_shared(staking_pool);
-            ts::return_shared(clock);
-        };
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {
-            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
-            let test_clock = ts::take_shared<clock::Clock>(&mut scenario);
-            let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
-
-            clock::increment_for_testing(&mut test_clock, 86_400*7*1000);
-
-            arca::append(
-                &mut staking_pool,
-                &mut veARCA_object,
-                second_user_coin, 
-                &test_clock, 
-                ts::ctx(&mut scenario)); 
-
-            ts::return_shared(staking_pool);
-            ts::return_shared(test_clock);
-            ts::return_to_sender<arca::VeARCA>(&scenario, veARCA_object);
-        };
-
-        ts::end(scenario);
-    }
-
-    #[test]
-    fun test_unstake() {
-        let scenario = ts::begin(USER_ADDRESS);
-
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-
-        let c = clock::create_for_testing(ts::ctx(&mut scenario));
-        clock::share_for_testing(c);
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {
-            arca::init_for_testing(ts::ctx(&mut scenario));
-        };
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {   
-            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
-
-            arca::stake(
-                &mut staking_pool, 
-                user_coin, 
-                &clock, 
-                string::utf8(b"1w"), 
-                ts::ctx(&mut scenario));
-
-            ts::return_shared(staking_pool);
-            ts::return_shared(clock);
-        };
-
-        ts::next_tx(&mut scenario, USER_ADDRESS);
-        {
-            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
-            let test_clock = ts::take_shared<clock::Clock>(&mut scenario);
-            let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
-
-            clock::increment_for_testing(&mut test_clock, 8*86_400*1000);
-
-            let arca_coin = arca::unstake(veARCA_object, &mut staking_pool, &test_clock, ts::ctx(&mut scenario));
-
-            assert!(coin::value(&arca_coin) == 10_000, EAppendNotWorking);
-
-            ts::return_shared(staking_pool);
-            ts::return_shared(test_clock);
-
-            transfer::public_transfer(arca_coin, USER_ADDRESS);
-
-        };
-
-        ts::end(scenario);
-    }
-
-
 
 }
