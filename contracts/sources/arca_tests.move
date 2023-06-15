@@ -7,10 +7,8 @@ module contracts::staking_tests {
     use sui::coin;
     use sui::clock;
     use sui::transfer;
-    // use sui::linked_table;
 
     use std::string;
-    use std::debug;
 
     const EVeARCAAmountNotMuch: u64 = 0;
     const ENotCorrectAmmountTransfered: u64 = 1;
@@ -22,7 +20,6 @@ module contracts::staking_tests {
     const USER2_ADDRESS: address = @0x1234;
     const USER3_ADDRESS: address = @0x5678;
     const USER4_ADDRESS: address = @0x1459;
-
 
     #[test]
     fun test_staking() {
@@ -382,8 +379,6 @@ module contracts::staking_tests {
                 string::utf8(b"3m"), 
                 ts::ctx(&mut scenario));
 
-            debug::print(&string::utf8(b"this transaction executed"));
-
             ts::return_shared(staking_pool);
             ts::return_shared(clock);
         };
@@ -413,19 +408,12 @@ module contracts::staking_tests {
 
         ts::next_tx(&mut scenario, USER_ADDRESS);
         {
-            // let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
-
             let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
             let cap = ts::take_from_sender<arca::StakingAdmin>(&mut scenario);
 
-            // debug::print(&arca::get_holders_number(&staking_pool));
-    // public fun distribute_rewards(_cap: &StakingAdmin, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext) {
-
             arca::distribute_rewards(&cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
-
-            // arca::
             
             ts::return_to_sender<arca::StakingAdmin>(&scenario, cap);
             
