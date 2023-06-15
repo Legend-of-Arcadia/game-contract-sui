@@ -15,12 +15,12 @@ module contracts::arca {
 
 //  https://www.advancedconverter.com/unit-conversions/time-conversion/weeks-to-milliseconds
     const DAY_TO_UNIX_SECONDS: u64 = 86_400;
-    const WEAK_TO_UNIX_SECONDS: u64 = 604_800;
+    const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
     const MONTH_TO_UNIX_SECONDS: u64 = 2_629_744; // rounded up
     const YEAR_TO_UNIX_SECONDS: u64 = 31_556_926;
 
     const ENotEnoughveARCA: u64 = 0;
-    const ENotValidAction: u64 = 1;
+    const ELockPeriodNotElapsed: u64 = 1;
     const EOngoingStaking: u64 = 2;
     const EDenominatorIsZero: u64 = 3;
     const ENotCorrectStakingPeriod: u64 = 4;
@@ -56,7 +56,7 @@ module contracts::arca {
 
     // ======================== Init ======================
 
-    fun init(witness: ARCA, ctx: &mut TxContext) {
+    fun init(witness: ARCA, clock: &Clock, ctx: &mut TxContext) {
         let (treasury, metadata) = coin::create_currency(witness, 18, b"ARCA", b"", b"", option::none(), ctx);
         transfer::public_freeze_object(metadata);
         transfer::public_transfer(treasury, tx_context::sender(ctx));
@@ -72,7 +72,7 @@ module contracts::arca {
             id: object::new(ctx),
             liquidity: balance::zero<ARCA>(),
             rewards: balance::zero<ARCA>(),
-            next_distribution_timestamp: 0,
+            next_distribution_timestamp: clock::timestamp_ms(clock) + WEEK_TO_UNIX_SECONDS,
             veARCA_holders: linked_table::new<address, vector<u64>>(ctx),
             vip_per_table: table::new<u64, u64>(ctx),
         };
@@ -135,13 +135,13 @@ module contracts::arca {
 
 
         if(staking_period == string::utf8(b"1w")) {
-            locking_period_sec = WEAK_TO_UNIX_SECONDS;
-            end_tmstmp = start_tmstmp + WEAK_TO_UNIX_SECONDS;
+            locking_period_sec = WEEK_TO_UNIX_SECONDS;
+            end_tmstmp = start_tmstmp + WEEK_TO_UNIX_SECONDS;
             staked_amount = calc_initial_veARCA(staked_amount*7, 365);
 
         } else if(staking_period == string::utf8(b"2w")) {
-            locking_period_sec = 2 * WEAK_TO_UNIX_SECONDS;
-            end_tmstmp = start_tmstmp + 2* WEAK_TO_UNIX_SECONDS;
+            locking_period_sec = 2 * WEEK_TO_UNIX_SECONDS;
+            end_tmstmp = start_tmstmp + 2* WEEK_TO_UNIX_SECONDS;
             staked_amount = calc_initial_veARCA(staked_amount*14, 365);
 
         } else if(staking_period == string::utf8(b"1m")) {
@@ -209,7 +209,7 @@ module contracts::arca {
     public fun unstake(veARCA: VeARCA, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext): Coin<ARCA> {
          
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
-        assert!(current_timestamp > veARCA.end_date, ENotValidAction);
+        assert!(current_timestamp > veARCA.end_date, ELockPeriodNotElapsed);
 
         let coin_balance = balance::split<ARCA>(&mut sp.liquidity, veARCA.staked_amount);
 
@@ -256,6 +256,8 @@ module contracts::arca {
             holder_address = *option::borrow(linked_table::next(&sp.veARCA_holders, holder_address));
             i = i + 1;
         }
+
+        sp.next_distribution_timestamp = sp.next_distribution_timestamp + WEEK_TO_UNIX_SECONDS;
     }
 
     fun burn_veARCA(veARCA: VeARCA) {
