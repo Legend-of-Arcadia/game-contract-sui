@@ -12,6 +12,7 @@ module contracts::arca {
     use sui::balance::{Self, Balance};
     use sui::clock::{Self, Clock};
     use sui::linked_table::{Self, LinkedTable};
+    use sui::table::{Self, Table};
 
 //  https://www.advancedconverter.com/unit-conversions/time-conversion/weeks-to-milliseconds
     const DAY_TO_UNIX_SECONDS: u64 = 86_400;
@@ -26,6 +27,7 @@ module contracts::arca {
     const ENotCorrectStakingPeriod: u64 = 4;
     const ENotAppendActionAvaialble: u64 = 5;
     const ENoActiveStakes: u64 = 6;
+    const ENoRewardsLeft: u64 = 7;
 
     struct ARCA has drop {}
 
@@ -50,6 +52,7 @@ module contracts::arca {
         rewards: Balance<ARCA>,
         next_distribution_timestamp: u64,
         veARCA_holders: LinkedTable<address, vector<u64>>,
+        vip_per_table: Table<u64, u64>, // vip level, percentage
     }
 
     fun init(witness: ARCA, ctx: &mut TxContext) {
@@ -70,8 +73,34 @@ module contracts::arca {
             rewards: balance::zero<ARCA>(),
             next_distribution_timestamp: 0,
             veARCA_holders: linked_table::new<address, vector<u64>>(ctx),
+            vip_per_table: table::new<u64, u64>(ctx),
         };
+        populate_vip_per_table(&mut staking_pool);
         transfer::share_object(staking_pool);
+    }
+
+    fun populate_vip_per_table(sp: &mut StakingPool) {
+        table::add(&mut sp.vip_per_table, 0, 0);
+        table::add(&mut sp.vip_per_table, 1, 48);
+        table::add(&mut sp.vip_per_table, 2, 96);
+        table::add(&mut sp.vip_per_table, 3, 144);
+        table::add(&mut sp.vip_per_table, 4, 192);
+        table::add(&mut sp.vip_per_table, 5, 220);
+        table::add(&mut sp.vip_per_table, 6, 288);
+        table::add(&mut sp.vip_per_table, 7, 336);
+        table::add(&mut sp.vip_per_table, 8, 384);
+        table::add(&mut sp.vip_per_table, 9, 432);
+        table::add(&mut sp.vip_per_table, 10, 450);
+        table::add(&mut sp.vip_per_table, 11, 528);
+        table::add(&mut sp.vip_per_table, 12, 576);
+        table::add(&mut sp.vip_per_table, 13, 624);
+        table::add(&mut sp.vip_per_table, 14, 672);
+        table::add(&mut sp.vip_per_table, 15, 700);
+        table::add(&mut sp.vip_per_table, 16, 768);
+        table::add(&mut sp.vip_per_table, 17, 816);
+        table::add(&mut sp.vip_per_table, 18, 864);
+        table::add(&mut sp.vip_per_table, 19, 912);
+        table::add(&mut sp.vip_per_table, 20, 950);
     }
 
     fun mint_ve(staked_amount: u64, initial: u64, amount: u64, start_date: u64, end_date: u64, locking_period_sec: u64, ctx: &mut TxContext): VeARCA {
@@ -206,7 +235,7 @@ module contracts::arca {
         let balance = coin::into_balance(arca);
         balance::join(&mut sp.liquidity, balance);
 
-        // vector<u64>: initial veARCA amount, start lock, end lock, vip_level
+        // vector<u64>: initial veARCA amount, end lock, locking period
 
         vector::push_back<u64>(&mut v, staked_amount);
         vector::push_back<u64>(&mut v, end_tmstmp);
@@ -222,8 +251,8 @@ module contracts::arca {
         transfer::transfer(veARCA, tx_context::sender(ctx));
     }
 
-    public fun append(sp: &mut StakingPool, veARCA: &mut VeARCA, arca: Coin<ARCA>, clock: &Clock) {
-        
+    public fun append(sp: &mut StakingPool, veARCA: &mut VeARCA, arca: Coin<ARCA>, clock: &Clock, ctx: &mut TxContext) {
+
         let appended_amount = coin::value(&arca)*100;
         veARCA.amount = veARCA.amount + appended_amount;
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
@@ -237,6 +266,16 @@ module contracts::arca {
         balance::join(&mut sp.liquidity, balance);
 
         veARCA.initial = veARCA.initial + appended_amount;
+
+        let lt_initial = *linked_table::borrow(&mut sp.veARCA_holders, tx_context::sender(ctx));
+
+        *vector::borrow_mut<u64>(&mut lt_initial, 0) = veARCA.initial;
+
+        // debug::print(&veARCA.initial);
+        // debug::print(&lt_initial);
+
+        *linked_table::borrow_mut(&mut sp.veARCA_holders, tx_context::sender(ctx)) = lt_initial;
+
     }
 
     public fun unstake(veARCA: VeARCA, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext): Coin<ARCA> {
@@ -255,59 +294,12 @@ module contracts::arca {
         arca
     }
 
-    fun get_vip_percentage( vip_level: u64): u64 {
-        let percentage = 0;
-        if(vip_level == 1){
-            percentage = 48
-        } else if(vip_level == 2){
-            percentage = 96
-        } else if(vip_level == 3){
-            percentage = 144
-        } else if(vip_level == 4){
-            percentage = 192
-        } else if(vip_level == 5){
-            percentage = 220
-        } else if(vip_level == 6){
-            percentage = 288
-        } else if(vip_level == 7){
-            percentage = 336
-        } else if(vip_level == 8){
-            percentage = 384
-        } else if(vip_level == 9){
-            percentage = 432
-        } else if(vip_level == 10){
-            percentage = 450
-        } else if(vip_level == 11){
-            percentage = 528
-        } else if(vip_level == 12){
-            percentage = 576
-        } else if(vip_level == 13){
-            percentage = 624
-        } else if(vip_level == 14){
-            percentage = 672
-        } else if(vip_level == 15){
-            percentage = 700
-        } else if(vip_level == 16){
-            percentage = 768
-        } else if(vip_level == 17){
-            percentage = 816
-        } else if(vip_level == 18){
-            percentage = 864
-        } else if(vip_level == 19){
-            percentage = 912
-        } else if(vip_level == 20){
-            percentage = 950
-        };
-
-        percentage
-    }
-
-    fun calc_reward(value: &vector<u64>, rewards_amount: u64, clock: &Clock): u64 {
+    fun calc_reward(value: &vector<u64>, rewards_amount: u64, t: &Table<u64, u64>, clock: &Clock): u64 {
 
         let veARCA_amount = calc_veARCA(*vector::borrow(value, 0), *vector::borrow(value, 1), *vector::borrow(value, 2), clock);
-
+        
         let vip_level = calc_vip_level_veARCA(veARCA_amount, 100);
-        let per = get_vip_percentage(vip_level);
+        let per = *table::borrow(t, vip_level);
 
         let reward = (rewards_amount * per) / 10_000;
 
@@ -319,7 +311,8 @@ module contracts::arca {
         debug::print(&linked_table::length(&sp.veARCA_holders));
         assert!(!(linked_table::length(&sp.veARCA_holders) == 0), ENoActiveStakes);
 
-        let rewards = balance::value<ARCA>(&sp.rewards) * 1;
+        let rewards = balance::value<ARCA>(&sp.rewards);
+        let rewards_left = balance::value<ARCA>(&sp.rewards);
 
         let i = 0;
         let holder_address = *option::borrow(linked_table::front(&sp.veARCA_holders));
@@ -332,7 +325,15 @@ module contracts::arca {
             // debug::print(&holder_address);
             // debug::print(value);
 
-            let reward = calc_reward(value, rewards, clock);
+            let reward = calc_reward(value, rewards, &sp.vip_per_table, clock);
+            
+            assert!(!(rewards_left == 0), ENoRewardsLeft);
+
+            if(rewards_left < reward){
+                reward = rewards_left;
+            };
+
+            rewards_left = rewards_left - reward;
 
             let coin = coin::take<ARCA>(&mut sp.rewards, reward, ctx);
 

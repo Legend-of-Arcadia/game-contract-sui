@@ -22,7 +22,6 @@ module contracts::staking_tests {
     const USER2_ADDRESS: address = @0x1234;
     const USER3_ADDRESS: address = @0x5678;
     const USER4_ADDRESS: address = @0x1459;
-    // const USER5_ADDRESS: address = @0x1876;
 
 
     #[test]
@@ -189,7 +188,8 @@ module contracts::staking_tests {
                 &mut staking_pool,
                 &mut veARCA_object,
                 second_user_coin, 
-                &test_clock);
+                &test_clock,
+                ts::ctx(&mut scenario));
 
             ts::return_shared(staking_pool);
             ts::return_shared(test_clock);
@@ -242,7 +242,8 @@ module contracts::staking_tests {
                 &mut staking_pool,
                 &mut veARCA_object,
                 second_user_coin, 
-                &test_clock); 
+                &test_clock,
+                ts::ctx(&mut scenario)); 
 
             ts::return_shared(staking_pool);
             ts::return_shared(test_clock);
