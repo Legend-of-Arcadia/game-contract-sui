@@ -13,6 +13,8 @@ module contracts::arca {
     use sui::linked_table::{Self, LinkedTable};
     use sui::table::{Self, Table};
 
+    friend contracts::game;
+
 //  https://www.advancedconverter.com/unit-conversions/time-conversion/weeks-to-milliseconds
     const DAY_TO_UNIX_SECONDS: u64 = 86_400;
     const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
@@ -66,7 +68,7 @@ module contracts::arca {
         transfer::transfer(cap, tx_context::sender(ctx));
     }
 
-    fun create_pool(_cap: &StakingAdmin, clock: &Clock, ctx: &mut TxContext) {
+    public(friend) fun create_pool(_cap: &StakingAdmin, clock: &Clock, ctx: &mut TxContext) {
         let staking_pool = StakingPool{
             id: object::new(ctx),
             liquidity: balance::zero<ARCA>(),
