@@ -22,18 +22,6 @@ module contracts::hero {
     const ENotSameHeroRarity: u64 = 0;
     const EVectorLengthMismatch: u64 = 1;
 
-    // === Dynamic Field keys ===
-
-    struct BaseDynamicFieldKey has store, copy, drop {}
-
-    struct SkillDynamicFieldKey has store, copy, drop {}
-
-    struct AppearenceDynamicFieldKey has store, copy, drop {}
-
-    struct StatDynamicFieldKey has store, copy, drop {}
-
-    struct OthersDynamicFieldKey has store, copy, drop {}
-
     // One Time Witness
     struct HERO has drop {}
     
@@ -112,11 +100,11 @@ module contracts::hero {
             external_id
         };
 
-        df::add<BaseDynamicFieldKey, vector<String>>(&mut hero.id, BaseDynamicFieldKey {}, base_attributes_values);
-        df::add<SkillDynamicFieldKey, vector<String>>(&mut hero.id, SkillDynamicFieldKey {}, skill_attributes_values);
-        df::add<AppearenceDynamicFieldKey, vector<String>>(&mut hero.id, AppearenceDynamicFieldKey {}, appearence_attributes_values);
-        df::add<StatDynamicFieldKey, vector<u64>>(&mut hero.id, StatDynamicFieldKey {}, stat_attributes_values);
-        df::add<OthersDynamicFieldKey, vector<String>>(&mut hero.id, OthersDynamicFieldKey {}, other_attributes_values);
+        df::add<String, vector<String>>(&mut hero.id, string::utf8(b"base"), base_attributes_values);
+        df::add<String, vector<String>>(&mut hero.id, string::utf8(b"skill"), skill_attributes_values);
+        df::add<String, vector<String>>(&mut hero.id, string::utf8(b"appearence"), appearence_attributes_values);
+        df::add<String, vector<u64>>(&mut hero.id, string::utf8(b"stat"), stat_attributes_values);
+        df::add<String, vector<String>>(&mut hero.id, string::utf8(b"others"), other_attributes_values);
 
         event::emit(HeroMinted {id: object::uid_to_inner(&hero.id)});
 
