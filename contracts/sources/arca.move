@@ -27,6 +27,7 @@ module contracts::arca {
     const ENotAppendActionAvaialble: u64 = 5;
     const ENoActiveStakes: u64 = 6;
     const ENoRewardsLeft: u64 = 7;
+    const EDistributionRewardsNotAvaialable: u64 = 8;
 
     struct ARCA has drop {}
 
@@ -56,23 +57,22 @@ module contracts::arca {
 
     // ======================== Init ======================
 
-    fun init(witness: ARCA, clock: &Clock, ctx: &mut TxContext) {
+    fun init(witness: ARCA, ctx: &mut TxContext) {
         let (treasury, metadata) = coin::create_currency(witness, 18, b"ARCA", b"", b"", option::none(), ctx);
         transfer::public_freeze_object(metadata);
         transfer::public_transfer(treasury, tx_context::sender(ctx));
-        create_pool(ctx);
-    }
-
-    fun create_pool(ctx: &mut TxContext) {
         let cap = StakingAdmin {
             id: object::new(ctx),
         };
         transfer::transfer(cap, tx_context::sender(ctx));
+    }
+
+    fun create_pool(_cap: &StakingAdmin, clock: &Clock, ctx: &mut TxContext) {
         let staking_pool = StakingPool{
             id: object::new(ctx),
             liquidity: balance::zero<ARCA>(),
             rewards: balance::zero<ARCA>(),
-            next_distribution_timestamp: clock::timestamp_ms(clock) + WEEK_TO_UNIX_SECONDS,
+            next_distribution_timestamp: (clock::timestamp_ms(clock)/1000) + WEEK_TO_UNIX_SECONDS,
             veARCA_holders: linked_table::new<address, vector<u64>>(ctx),
             vip_per_table: table::new<u64, u64>(ctx),
         };
@@ -223,21 +223,27 @@ module contracts::arca {
     }
 
     public fun distribute_rewards(_cap: &StakingAdmin, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext) {
-
-        assert!(!(linked_table::length(&sp.veARCA_holders) == 0), ENoActiveStakes);
+        
+        assert!((clock::timestamp_ms(clock) >= sp.next_distribution_timestamp), EDistributionRewardsNotAvaialable);
 
         let rewards = balance::value<ARCA>(&sp.rewards);
         let rewards_left = balance::value<ARCA>(&sp.rewards);
 
         let i = 0;
-        let holder_address = *option::borrow(linked_table::front(&sp.veARCA_holders));
+        let holder_address = *option::borrow_with_default<address>(linked_table::front(&sp.veARCA_holders), &@0x0);
         
         while( i < linked_table::length(&sp.veARCA_holders)) {
+            if(holder_address == @0x0){
+                break
+            };
+
             let value = linked_table::borrow(&sp.veARCA_holders, holder_address);
 
             let reward = calc_reward(value, rewards, &sp.vip_per_table, clock);
-            
-            assert!(!(rewards_left == 0), ENoRewardsLeft);
+
+            if(rewards_left == 0){
+                break
+            };
 
             if(rewards_left < reward){
                 reward = rewards_left;
@@ -255,7 +261,7 @@ module contracts::arca {
 
             holder_address = *option::borrow(linked_table::next(&sp.veARCA_holders, holder_address));
             i = i + 1;
-        }
+        };
 
         sp.next_distribution_timestamp = sp.next_distribution_timestamp + WEEK_TO_UNIX_SECONDS;
     }
@@ -378,6 +384,10 @@ module contracts::arca {
         linked_table::length(&sp.veARCA_holders)
     }
 
+    public fun get_next_distribution_timestamp(sp: &StakingPool): u64 {
+        sp.next_distribution_timestamp
+    }
+
     public fun update_percentage_table(_cap: &StakingAdmin, sp: &mut StakingPool, key: u64, percentage: u64) {
         if(table::contains(&sp.vip_per_table, key)) {
             *table::borrow_mut(&mut sp.vip_per_table, key) = percentage;
@@ -389,13 +399,18 @@ module contracts::arca {
     // ============================================================
 
     #[test_only]
-    public fun init_for_testing(ctx: &mut TxContext) {
-        create_pool(ctx);
+    public fun init_for_testing(clock: &Clock, ctx: &mut TxContext) {
+        let cap = StakingAdmin {
+            id: object::new(ctx),
+        };
+        create_pool(&cap, clock, ctx);
+        transfer::transfer(cap, tx_context::sender(ctx));
+
     }
 
     #[test_only]
     public fun increase_rewards_supply(sp: &mut StakingPool) {
-        let new_balance = balance::create_for_testing<ARCA>(500_000);
+        let new_balance = balance::create_for_testing<ARCA>(5_000);
 
         let _b = balance::join(&mut sp.rewards, new_balance);
     }
