@@ -508,8 +508,6 @@ module contracts::staking_tests {
     fun test_distribute_rewards_no_stakes() {
         let scenario = ts::begin(USER1_ADDRESS);
 
-        // let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-
         let c = clock::create_for_testing(ts::ctx(&mut scenario));
         clock::share_for_testing(c);
 
