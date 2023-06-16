@@ -70,7 +70,7 @@ module contracts::staking_tests {
         {
             let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
 
-            assert!(arca::get_amount_VeARCA(&veARCA_object) == 1_000_000, ENotCorrectAmmountTransfered);
+            assert!(arca::get_initial_VeARCA(&veARCA_object) == 1_000_000, ENotCorrectAmmountTransfered);
 
             ts::return_to_sender<arca::VeARCA>(&scenario, veARCA_object);
         };
@@ -95,7 +95,7 @@ module contracts::staking_tests {
         {
             let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
 
-            assert!(arca::get_amount_VeARCA(&veARCA_object) == 19_178, ENotCorrectAmmountTransfered);
+            assert!(arca::get_initial_VeARCA(&veARCA_object) == 19_178, ENotCorrectAmmountTransfered);
 
             ts::return_to_sender<arca::VeARCA>(&scenario, veARCA_object);
         };
@@ -201,7 +201,7 @@ module contracts::staking_tests {
             let test_clock = ts::take_shared<clock::Clock>(&mut scenario);
             let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
 
-            clock::increment_for_testing(&mut test_clock, 86_400*1000);
+            clock::increment_for_testing(&mut test_clock, 2_629_744*6*1000);
 
             arca::append(
                 &mut staking_pool,
@@ -209,6 +209,20 @@ module contracts::staking_tests {
                 second_user_coin, 
                 &test_clock,
                 ts::ctx(&mut scenario));
+
+            ts::return_shared(staking_pool);
+            ts::return_shared(test_clock);
+            ts::return_to_sender<arca::VeARCA>(&scenario, veARCA_object);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
+            let test_clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
+
+            assert!(arca::get_initial_VeARCA(&veARCA_object) == 1_498_630, EAppendNotWorking);
+            assert!(arca::get_staked_amount_VeARCA(&veARCA_object) == 20_000, EAppendNotWorking);
 
             ts::return_shared(staking_pool);
             ts::return_shared(test_clock);

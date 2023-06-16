@@ -39,7 +39,6 @@ module contracts::arca {
         id: UID,
         staked_amount: u64, // ARCA
         initial: u64, // initial_veARCA
-        amount: u64, // current amount_veARCA
         start_date: u64,
         end_date: u64,
         locking_period_sec: u64,
@@ -106,13 +105,12 @@ module contracts::arca {
 
     // =============================================
 
-    fun mint_ve(staked_amount: u64, initial: u64, amount: u64, start_date: u64, end_date: u64, locking_period_sec: u64, ctx: &mut TxContext): VeARCA {
+    fun mint_ve(staked_amount: u64, initial: u64, start_date: u64, end_date: u64, locking_period_sec: u64, ctx: &mut TxContext): VeARCA {
         let id = object::new(ctx);
         let veARCA = VeARCA{
             id,
             staked_amount,
             initial,
-            amount,
             start_date,
             end_date,
             locking_period_sec,
@@ -178,7 +176,7 @@ module contracts::arca {
 
         linked_table::push_back(&mut sp.veARCA_holders, tx_context::sender(ctx), v);
 
-        let veARCA = mint_ve(arca_amount, staked_amount, staked_amount, start_tmstmp, end_tmstmp, locking_period_sec, ctx);
+        let veARCA = mint_ve(arca_amount, staked_amount, start_tmstmp, end_tmstmp, locking_period_sec, ctx);
 
         transfer::transfer(veARCA, tx_context::sender(ctx));
     }
@@ -186,7 +184,7 @@ module contracts::arca {
     public fun append(sp: &mut StakingPool, veARCA: &mut VeARCA, arca: Coin<ARCA>, clock: &Clock, ctx: &mut TxContext) {
 
         let appended_amount = coin::value(&arca)*100;
-        veARCA.amount = veARCA.amount + appended_amount;
+        veARCA.staked_amount = veARCA.staked_amount + coin::value(&arca);
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
         let time_left = (veARCA.end_date - current_timestamp)/DAY_TO_UNIX_SECONDS;
 
@@ -267,7 +265,7 @@ module contracts::arca {
     }
 
     fun burn_veARCA(veARCA: VeARCA) {
-        let VeARCA {id, staked_amount: _, initial: _, amount: _, start_date: _, end_date: _, locking_period_sec: _, decimals:_} = veARCA;
+        let VeARCA {id, staked_amount: _, initial: _, start_date: _, end_date: _, locking_period_sec: _, decimals:_} = veARCA;
         object::delete(id);
     }
 
@@ -283,7 +281,6 @@ module contracts::arca {
     }
 
     fun calc_veARCA(initial: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {
-        
         initial * (end_date - (clock::timestamp_ms(clock)/1000)) / locking_period_sec
     }
 
@@ -356,8 +353,8 @@ module contracts::arca {
         veARCA.initial
     }
 
-    public fun get_amount_VeARCA(veARCA: &VeARCA): u64 {
-        veARCA.amount
+    public fun get_amount_VeARCA(veARCA: &VeARCA, clock: &Clock): u64 {
+        calc_veARCA(veARCA.initial, veARCA.end_date, veARCA.locking_period_sec, clock)
     }
 
     public fun get_start_date_VeARCA(veARCA: &VeARCA): u64 {
