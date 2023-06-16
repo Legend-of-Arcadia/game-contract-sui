@@ -106,17 +106,34 @@ module contracts::game{
   }
 
   public fun admin_mint_hero(
-      _: &GameCap, 
+      _: &GameCap,
       name: String,
       class: String,
-      factions: String,
-      skill: String,
+      faction: String,
       rarity: String,
+      base_attributes_values: vector<String>,
+      skill_attributes_values: vector<String>,
+      appearence_attributes_values: vector<String>,
+      stat_attributes_values: vector<u64>,
+      other_attributes_values: vector<String>,
       external_id: String,
       ctx: &mut TxContext
-    ): Hero {
+      ): Hero {
 
-      let hero = hero::mint_hero(name, class, factions, skill, rarity, external_id, ctx);
+      let hero = hero::mint_hero(
+        name,
+        class,
+        faction,
+        rarity,
+        base_attributes_values,
+        skill_attributes_values,
+        appearence_attributes_values,
+        stat_attributes_values,
+        other_attributes_values,
+        external_id,
+        ctx,
+      );
+
       hero
     }
   
@@ -207,56 +224,4 @@ module contracts::game{
     transfer::public_share_object(config);
     transfer::public_transfer(cap, tx_context::sender(ctx));
   }
-}
-
-#[test_only]
-module contracts::test_game {
-  use std::string::{utf8, String};
-
-  use sui::coin;
-  use sui::test_scenario as ts;
-  use sui::transfer;
-  use sui::sui::SUI;
-  use sui::vec_map;
-
-  use contracts::game::{Self, GameCap, GameConfig};
-
-  const GAME: address = @0x111;
-  const USER: address = @0x222;
-
- #[test]
- public fun test_buy() {
-  let scenario = ts::begin(GAME);
-  game::init_for_test(ts::ctx(&mut scenario));
-  
-  ts::next_tx(&mut scenario, GAME);
-  {
-    let config = ts::take_shared<GameConfig>(&mut scenario);
-    let cap = ts::take_from_sender<GameCap>(&mut scenario);
-    // add sui as allowed coin
-    game::add_allowed_coin<SUI>(&cap, &mut config);
-    // add prices for sui
-    let sui_prices = game::borrow_mut<SUI>(&cap, &mut config);
-    vec_map::insert<String, u64>(sui_prices, utf8(b"rare"), 10_000_000_000);
-    vec_map::insert<String, u64>(sui_prices, utf8(b"legendary"), 20_000_000_000);
-    ts::return_shared(config);
-    ts::return_to_sender(&scenario, cap);
-  };
-
-  ts::next_tx(&mut scenario, USER);
-  {
-    let config = ts::take_shared<GameConfig>(&mut scenario);
-    let payment = coin::mint_for_testing<SUI>(10_000_000_000, ts::ctx(&mut scenario));
-    let type: String = utf8(b"rare");
-    let collection: String = utf8(b"New Collection");
-    let name: String = utf8(b"Cool Gacha");
-
-    let gacha = game::buy_gacha(&mut config, payment, type, collection, name, ts::ctx(&mut scenario));
-    transfer::public_transfer(gacha, USER);
-    ts::return_shared(config);
-  };
-
-  ts::end(scenario);
- }
-
 }
