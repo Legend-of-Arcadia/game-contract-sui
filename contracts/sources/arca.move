@@ -15,6 +15,8 @@ module contracts::arca {
 
     friend contracts::game;
 
+    const DECIMALS: u64 = 10_000_000_000;
+
 //  https://www.advancedconverter.com/unit-conversions/time-conversion/weeks-to-milliseconds
     const DAY_TO_UNIX_SECONDS: u64 = 86_400;
     const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
@@ -59,7 +61,7 @@ module contracts::arca {
     // ======================== Init ======================
 
     fun init(witness: ARCA, ctx: &mut TxContext) {
-        let (treasury, metadata) = coin::create_currency(witness, 18, b"ARCA", b"", b"", option::none(), ctx);
+        let (treasury, metadata) = coin::create_currency(witness, 9, b"ARCA", b"", b"", option::none(), ctx);
         transfer::public_freeze_object(metadata);
         transfer::public_transfer(treasury, tx_context::sender(ctx));
         let cap = StakingAdmin {

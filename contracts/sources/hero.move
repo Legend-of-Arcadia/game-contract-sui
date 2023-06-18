@@ -29,7 +29,8 @@ module contracts::hero {
         class: String,
         faction: String,
         rarity: String,
-        external_id: String
+        external_id: String,
+        pending_upgrade: u64 //heroes burned
     }
 
 
@@ -83,7 +84,8 @@ module contracts::hero {
             class, 
             faction, 
             rarity,
-            external_id
+            external_id,
+            pending_upgrade: 0
         };
 
         df::add<String, vector<String>>(&mut hero.id, string::utf8(b"base"), base_attributes_values);
@@ -113,6 +115,10 @@ module contracts::hero {
         df::remove<String, T>(&mut hero.id, name);
     }
 
+    public(friend) fun add_pending_upgrade(hero: &mut Hero, burned_heroes: u64) {
+        hero.pending_upgrade = burned_heroes;
+    }
+
     public(friend) fun burn(hero: Hero) {
         df::remove<String, vector<String>>(&mut hero.id, string::utf8(b"base"));
         df::remove<String, vector<String>>(&mut hero.id, string::utf8(b"skill"));
@@ -120,7 +126,7 @@ module contracts::hero {
         df::remove<String, vector<u64>>(&mut hero.id, string::utf8(b"stat"));
         df::remove<String, vector<String>>(&mut hero.id, string::utf8(b"others"));
 
-        let Hero {id, name: _, class: _, faction: _, rarity: _, external_id: _} = hero;
+        let Hero {id, name: _, class: _, faction: _, rarity: _, external_id: _, pending_upgrade: _} = hero;
         object::delete(id);
     }
 
@@ -143,6 +149,10 @@ module contracts::hero {
 
     public fun external_id(hero: &Hero): &String {
         &hero.external_id
+    }
+
+    public fun pending_upgrade(hero: &Hero): &u64 {
+        &hero.pending_upgrade
     }
 
     public fun base_values(hero: &Hero): &vector<String> {
@@ -186,11 +196,12 @@ module contracts::unit_tests {
     const EWrongFaction: u64 = 2;
     const EWrongRarity: u64 = 3;
     const EWrongExternalId: u64 = 4;
-    const EWrongBaseValues: u64 = 5;
-    const EWrongSkillValues: u64 = 6;
-    const EWrongAppearanceValues: u64 = 7;
-    const EWrongStatValues: u64 = 8;
-    const EWrongCustomValues: u64 = 9;
+    const EWrongPendingUpgradeValue: u64 = 5;
+    const EWrongBaseValues: u64 = 6;
+    const EWrongSkillValues: u64 = 7;
+    const EWrongAppearanceValues: u64 = 8;
+    const EWrongStatValues: u64 = 9;
+    const EWrongCustomValues: u64 = 10;
 
 
     const SENDER: address = @0xADD;
@@ -274,6 +285,7 @@ module contracts::unit_tests {
             assert!(hero::faction(&hero) == &faction, EWrongFaction);
             assert!(hero::rarity(&hero) == &rarity, EWrongRarity);
             assert!(hero::external_id(&hero) == &external_id, EWrongExternalId);
+            assert!(hero::pending_upgrade(&hero) == &0, EWrongPendingUpgradeValue);
             assert!(hero::base_values(&hero) == &base_values, EWrongBaseValues);
             assert!(hero::skill_values(&hero) == &skill_values, EWrongSkillValues);
             assert!(hero::appearance_values(&hero) == &appearance_values, EWrongAppearanceValues);

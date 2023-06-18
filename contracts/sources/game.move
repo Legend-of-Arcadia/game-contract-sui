@@ -1,17 +1,21 @@
 module contracts::game{
 
-  use std::string::{String, utf8};
   use std::option;
+  use std::string::{Self, String};
+  use std::vector;
 
+  use sui::balance::{Self, Balance};
   use sui::coin::{Self, Coin};
   use sui::event;
   use sui::object::{Self, ID, UID};
   use sui::dynamic_field as df;
+  use sui::dynamic_object_field as dof;
   use sui::vec_map::{Self, VecMap};
+  use sui::table::{Self, Table};
   use sui::transfer;
   use sui::tx_context::{Self, TxContext};
 
-  // use contracts::arca::ARCA;
+  use contracts::arca::ARCA;
   use contracts::hero::{Self, Hero};
   use contracts::gacha::{Self, GachaBall};
 
@@ -22,19 +26,48 @@ module contracts::game{
   const ECoinNotAllowed: u64 = 1;
   const ETypeDoesNotExist: u64 = 2;
   const EIncorrectVersion: u64 = 3;
+  const ERarityMismatch: u64 = 4;
+  const EReturningWrongHero: u64 = 5;
+  const EWrongPowerUpgradeFee: u64 = 6;
 
   // config struct
   struct GameConfig has key, store {
     id: UID,
     caps_created: u64,
-    game_address: address
+    game_address: address,
   }
 
-  // event for when a gacha ball is opened
+  // upgrader and hot potato
+  struct Upgrader has key, store {
+    id: UID,
+    power_prices: Table<String, u64>,
+    profits: Balance<ARCA>
+  }
+
+  struct ReturnTicket {
+    player_address: address,
+    hero_id: address
+  }
+
+  // events
   struct GachaBallOpened has copy, drop {
     id: ID,
     // address of user that opened the ball
     user: address,
+  }
+
+  struct UpgradeRequest has copy, drop {
+    hero_id: address,
+    player_address: address,
+    burned_heroes: u64,
+    is_makeover: bool
+  }
+
+  struct PowerUpgadeRequest has copy, drop {
+    hero_id: address,
+    user: address,
+    burned_heroes: u64,
+    arca_payed: u64
   }
 
   // game capability
@@ -52,14 +85,27 @@ module contracts::game{
     // create game cap
     let game_cap = GameCap { id: object::new(ctx) };
 
+    // add power upgrade default prices
+    let power_upgrade_prices = table::new<String, u64>(ctx);
+    table::add<String, u64>(&mut power_upgrade_prices, string::utf8(b"N"), 1_667_000_000);
+    table::add<String, u64>(&mut power_upgrade_prices, string::utf8(b"R"), 3_333_000_000);
+    table::add<String, u64>(&mut power_upgrade_prices, string::utf8(b"SR"), 12_500_000_000);
+    table::add<String, u64>(&mut power_upgrade_prices, string::utf8(b"SSR"), 25_000_000_000);
+
+    let upgrader = Upgrader {
+      id: object::new(ctx),
+      power_prices: power_upgrade_prices,
+      profits: balance::zero<ARCA>()
+    };
+
     let config = GameConfig {
       id: object::new(ctx),
       caps_created: 1,
       game_address: tx_context::sender(ctx)
-
     };
 
     transfer::public_share_object(config);
+    transfer::public_share_object(upgrader);
     transfer::public_transfer(game_cap, tx_context::sender(ctx));
   }
 
@@ -94,18 +140,24 @@ module contracts::game{
     vip_price: u64,
   ) {
     let prices = borrow_mut<C>(game_cap, config);
-    vec_map::insert<String, u64>(prices, utf8(b"elite"), elite_price);
-    vec_map::insert<String, u64>(prices, utf8(b"legendary"), legendary_price);
-    vec_map::insert<String, u64>(prices, utf8(b"epic"), epic_price);
-    vec_map::insert<String, u64>(prices, utf8(b"vip"), vip_price);
+    vec_map::insert<String, u64>(prices, string::utf8(b"elite"), elite_price);
+    vec_map::insert<String, u64>(prices, string::utf8(b"legendary"), legendary_price);
+    vec_map::insert<String, u64>(prices, string::utf8(b"epic"), epic_price);
+    vec_map::insert<String, u64>(prices, string::utf8(b"vip"), vip_price);
   }
 
-  /// change recipient address of the gacha ball profits
-  public fun set_game_address(_: &GameCap, config: &mut GameConfig, new: address) {
-    config.game_address = new;
+  /// set address that will claim gacha sell profits
+  public fun set_game_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
+    config.game_address = new_address;
   }
 
-  public fun admin_mint_hero(
+  /// claim profits
+  public fun claim_upgrade_profits(_: &GameCap, upgrader: &mut Upgrader , ctx: &mut TxContext): Coin<ARCA> {
+    let total: Balance<ARCA> = balance::withdraw_all<ARCA>(&mut upgrader.profits);
+    coin::from_balance(total, ctx)
+  }
+
+  public fun mint_hero(
       _: &GameCap,
       name: String,
       class: String,
@@ -137,7 +189,7 @@ module contracts::game{
       hero
     }
   
-  public fun admin_mint_gacha(
+  public fun mint_gacha(
     _: &GameCap,
     collection: String,
     name: String,
@@ -162,6 +214,48 @@ module contracts::game{
     config.caps_created = config.caps_created - 1;
     let GameCap { id } = game_cap;
     object::delete(id); 
+  }
+
+  /// === Upgrader functions ===
+  fun put_hero(hero: Hero, player_address: address, heroes_burned: u64, upgrader: &mut Upgrader) {
+    hero::add_pending_upgrade(&mut hero, heroes_burned);
+    dof::add<address, Hero>(&mut upgrader.id, player_address, hero);
+    // event
+  }
+
+  fun put_power_hero(
+    hero: Hero,
+    player_address: address,
+    heroes_burned:u64, 
+    fee: Coin<ARCA>, 
+    upgrader: &mut Upgrader) 
+    {
+      hero::add_pending_upgrade(&mut hero, heroes_burned);
+      dof::add<address, Coin<ARCA>>(&mut upgrader.id, object::id_address(&hero), fee);
+      dof::add<address, Hero>(&mut upgrader.id, player_address, hero);
+    }
+
+  public fun perform_upgrade(_: &GameCap, player_address: address, upgrader: &mut Upgrader): (Hero, ReturnTicket) {
+    let hero = dof::remove<address, Hero>(&mut upgrader.id, player_address);
+    let hero_address: address = object::id_address(&hero);
+    if (dof::exists_<address>(&mut upgrader.id, hero_address)) {
+      let fee: Coin<ARCA> = dof::remove<address, Coin<ARCA>>(&mut upgrader.id, hero_address);
+      balance::join<ARCA>(&mut upgrader.profits, coin::into_balance<ARCA>(fee));
+    };
+
+    let ticket = ReturnTicket {
+      player_address,
+      hero_id: hero_address
+    };
+
+    (hero, ticket)
+  }
+
+  public fun return_upgraded_hero(hero: Hero, ticket: ReturnTicket) {
+    let ReturnTicket {player_address, hero_id} = ticket;
+    assert!(object::id_address<Hero>(&hero) == hero_id, EReturningWrongHero);
+    hero::add_pending_upgrade(&mut hero, 0);
+    transfer::public_transfer(hero, player_address);
   }
 
   /// === Player functions ===
@@ -209,19 +303,74 @@ module contracts::game{
     event::emit(open_evt);
   }
 
+  public fun upgrade_hero(
+    main_hero: Hero,
+    to_burn: vector<Hero>,
+    upgrader: &mut Upgrader,
+    is_makeover: bool,
+    ctx: &mut TxContext)
+  {
+    assert!(VERSION == 1, EIncorrectVersion);
+
+    let main_rarity = hero::rarity(&main_hero);
+    let l = vector::length<Hero>(&to_burn);
+    let i: u64 = 0;
+    while (i < l) {
+      let burnable = vector::pop_back<Hero>(&mut to_burn);
+      assert!(main_rarity == hero::rarity(& burnable), ERarityMismatch);
+      hero::burn(burnable);
+      i = i + 1;
+    };
+    vector::destroy_empty<Hero>(to_burn);
+    // events
+    let evt = UpgradeRequest {
+      hero_id: object::id_address(&main_hero),
+      player_address: tx_context::sender(ctx),
+      burned_heroes: l,
+      is_makeover
+    };
+    event::emit(evt);
+    put_hero(main_hero, tx_context::sender(ctx), l, upgrader);
+    
+  }
+
+  public fun power_upgrade_hero(
+    main_hero: Hero,
+    to_burn: vector<Hero>,
+    fee: Coin<ARCA>,
+    upgrader: &mut Upgrader,
+    ctx: &mut TxContext
+  )
+  {
+    let l = vector::length<Hero>(&to_burn);
+    let main_rarity = hero::rarity(&main_hero);
+    let correct_price: u64 = *table::borrow<String, u64>(&mut upgrader.power_prices, *main_rarity) * l;
+    assert!(coin::value(&fee) == correct_price, EWrongPowerUpgradeFee);
+    let i: u64 = 0;
+    while (i < l) {
+      let burnable = vector::pop_back<Hero>(&mut to_burn);
+      assert!(main_rarity == hero::rarity(& burnable), ERarityMismatch);
+      hero::burn(burnable);
+      i = i + 1;
+    };
+    vector::destroy_empty<Hero>(to_burn);
+
+    let evt = PowerUpgadeRequest {
+      hero_id: object::id_address(&main_hero),
+      user: tx_context::sender(ctx),
+      burned_heroes: l,
+      arca_payed: correct_price
+    };
+
+    event::emit(evt);
+
+    put_power_hero(main_hero, tx_context::sender(ctx), l, fee, upgrader);
+  }
+
   // === Test-only ===
 
   #[test_only]
   public fun init_for_test(ctx: &mut TxContext) {
-    let config = GameConfig {
-      id: object::new(ctx),
-      caps_created: 0,
-      game_address: tx_context::sender(ctx)
-    };
-    let cap = GameCap {
-      id: object::new(ctx)
-    };
-    transfer::public_share_object(config);
-    transfer::public_transfer(cap, tx_context::sender(ctx));
+    init(ctx);
   }
 }

@@ -66,7 +66,7 @@ module contracts::test_game {
       let other_attributes_values = vector[string::utf8(b"0")];
       let external_id = string::utf8(b"1337");
 
-      let hero = game::admin_mint_hero(
+      let hero = game::mint_hero(
         &cap,
         name,
         class,
