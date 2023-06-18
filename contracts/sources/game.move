@@ -120,7 +120,7 @@ module contracts::game{
       ctx: &mut TxContext
       ): Hero {
 
-      let hero = hero::mint_hero(
+      let hero = hero::mint(
         name,
         class,
         faction,
