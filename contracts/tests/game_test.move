@@ -46,7 +46,7 @@ module contracts::test_game {
 
   ts::end(scenario);
  }
-
+  #[test]
   fun test_hero_mint(){
 
     let scenario = ts::begin(GAME);

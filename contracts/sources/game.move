@@ -258,6 +258,15 @@ module contracts::game{
     transfer::public_transfer(hero, player_address);
   }
 
+  // upgrade
+  public fun upgrade_appearance(_: &GameCap, hero: &mut Hero, new_values: vector<String>) {
+    hero::edit_string_fields(hero, string::utf8(b"appearance"), new_values);
+  }
+
+  public fun upgrade_stat(_: &GameCap, hero: &mut Hero, new_values: vector<u64>) {
+    hero::edit_number_fields(hero, string::utf8(b"stat"), new_values);
+  }
+
   /// === Player functions ===
 
   /// buy a gacha ball
