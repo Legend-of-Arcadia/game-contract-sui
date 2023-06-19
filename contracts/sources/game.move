@@ -29,6 +29,7 @@ module contracts::game{
   const ERarityMismatch: u64 = 4;
   const EReturningWrongHero: u64 = 5;
   const EWrongPowerUpgradeFee: u64 = 6;
+  const EMustBurnAtLeastOneHero: u64 = 7;
 
   // config struct
   struct GameConfig has key, store {
@@ -235,7 +236,7 @@ module contracts::game{
       dof::add<address, Hero>(&mut upgrader.id, player_address, hero);
     }
 
-  public fun perform_upgrade(_: &GameCap, player_address: address, upgrader: &mut Upgrader): (Hero, ReturnTicket) {
+  public fun get_for_upgrade(_: &GameCap, player_address: address, upgrader: &mut Upgrader): (Hero, ReturnTicket) {
     let hero = dof::remove<address, Hero>(&mut upgrader.id, player_address);
     let hero_address: address = object::id_address(&hero);
     if (dof::exists_<address>(&mut upgrader.id, hero_address)) {
@@ -321,8 +322,9 @@ module contracts::game{
   {
     assert!(VERSION == 1, EIncorrectVersion);
 
-    let main_rarity = hero::rarity(&main_hero);
     let l = vector::length<Hero>(&to_burn);
+    assert!(l > 0, EMustBurnAtLeastOneHero);
+    let main_rarity = hero::rarity(&main_hero);
     let i: u64 = 0;
     while (i < l) {
       let burnable = vector::pop_back<Hero>(&mut to_burn);
@@ -352,6 +354,7 @@ module contracts::game{
   )
   {
     let l = vector::length<Hero>(&to_burn);
+    assert!(l > 0, EMustBurnAtLeastOneHero);
     let main_rarity = hero::rarity(&main_hero);
     let correct_price: u64 = *table::borrow<String, u64>(&mut upgrader.power_prices, *main_rarity) * l;
     assert!(coin::value(&fee) == correct_price, EWrongPowerUpgradeFee);
@@ -381,5 +384,35 @@ module contracts::game{
   #[test_only]
   public fun init_for_test(ctx: &mut TxContext) {
     init(ctx);
+  }
+
+  #[test_only]
+  public fun mint_test_hero(cap: &GameCap, ctx: &mut TxContext): Hero {
+      let name = string::utf8(b"Tang Jia");
+      let class = string::utf8(b"Fighter");
+      let faction = string::utf8(b"Flamexecuter");
+      let rarity = string::utf8(b"SR");
+      let base_attributes_values = vector[string::utf8(b"female"), string::utf8(b"gloves")];
+      let skill_attributes_values = vector[string::utf8(b"some ultimate skill"), string::utf8(b"some basic skill"), string::utf8(b"some passive skill")];
+      let appearence_attributes_values = vector[string::utf8(b"round"), string::utf8(b"blue"), string::utf8(b"pointy"), string::utf8(b"basic"), string::utf8(b"tatoo"), string::utf8(b"tiara")];
+      let stat_attributes_values = vector [0, 0, 0, 0, 0, 0, 0, 0];
+      let other_attributes_values = vector[string::utf8(b"0")];
+      let external_id = string::utf8(b"1337");
+
+      let hero = mint_hero(
+        cap,
+        name,
+        class,
+        faction,
+        rarity,
+        base_attributes_values,
+        skill_attributes_values,
+        appearence_attributes_values,
+        stat_attributes_values,
+        other_attributes_values,
+        external_id,
+        ctx,
+      );
+      hero
   }
 }
