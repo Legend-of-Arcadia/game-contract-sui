@@ -30,12 +30,14 @@ module contracts::game{
   const EReturningWrongHero: u64 = 5;
   const EWrongPowerUpgradeFee: u64 = 6;
   const EMustBurnAtLeastOneHero: u64 = 7;
+  const EWhitelistInputsNotSameLength: u64 = 8;
+  const ENotWhitelisted: u64 = 9;
 
   // config struct
   struct GameConfig has key, store {
     id: UID,
     caps_created: u64,
-    game_address: address,
+    game_address: address
   }
 
   // upgrader and hot potato
@@ -48,6 +50,11 @@ module contracts::game{
   struct ReturnTicket {
     player_address: address,
     hero_id: address
+  }
+
+  struct ExchangeCoupon<Item> has key, store {
+    id: UID,
+    reward: Item
   }
 
   // events
@@ -156,6 +163,28 @@ module contracts::game{
   public fun claim_upgrade_profits(_: &GameCap, upgrader: &mut Upgrader , ctx: &mut TxContext): Coin<ARCA> {
     let total: Balance<ARCA> = balance::withdraw_all<ARCA>(&mut upgrader.profits);
     coin::from_balance(total, ctx)
+  }
+
+  /// whitelist add addresses and corresponding rewards
+  // address.length == rewards.length
+  public fun whitelist_add<Item: key + store>(_: &GameCap, addresses: vector<address>, rewards: vector<Item>, config: &mut GameConfig) {
+    assert!(vector::length(&addresses) == vector::length(&rewards), EWhitelistInputsNotSameLength);
+    while(vector::length(&addresses) > 0) {
+      dof::add<address, Item>(
+        &mut config.id,
+        vector::pop_back<address>(&mut addresses),
+        vector::pop_back<Item>(&mut rewards)
+      )
+    };
+
+    vector::destroy_empty<Item>(rewards);
+  }
+
+  public fun mint_exchange_coupon<Item: key+store>(_: &GameCap, reward: Item, ctx: &mut TxContext): ExchangeCoupon<Item> {
+    ExchangeCoupon<Item> {
+      id: object::new(ctx),
+      reward
+    }
   }
 
   public fun mint_hero(
@@ -377,6 +406,24 @@ module contracts::game{
     event::emit(evt);
 
     put_power_hero(main_hero, tx_context::sender(ctx), l, fee, upgrader);
+  }
+
+  // whitelist claim
+  public fun whitelist_claim<Item: key+store>(
+    config: &mut GameConfig,
+    ctx: &mut TxContext
+  ): Item
+  {
+    let sender: address = tx_context::sender(ctx);
+    assert!(dof::exists_<address>(&mut config.id, sender), ENotWhitelisted);
+    dof::remove<address, Item>(&mut config.id, sender)
+  }
+
+  // coupon claim
+  public fun claim_exchange_coupon<Item>(coupon: ExchangeCoupon<Item>): Item {
+    let ExchangeCoupon {id, reward} = coupon;
+    object::delete(id);
+    reward
   }
 
   // === Test-only ===

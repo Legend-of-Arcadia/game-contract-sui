@@ -9,7 +9,16 @@ module contracts::test_game {
   use sui::sui::SUI;
   use sui::vec_map;
 
-  use contracts::game::{Self, EMustBurnAtLeastOneHero, EWrongPowerUpgradeFee, GameCap, GameConfig, Upgrader};
+  use contracts::game::{
+    Self,
+    EMustBurnAtLeastOneHero, 
+    ENotWhitelisted,
+    EWrongPowerUpgradeFee,
+    ExchangeCoupon,
+    GameCap,
+    GameConfig,
+    Upgrader
+  };
   use contracts::hero::{Self, Hero};
   use contracts::arca::ARCA;
 
@@ -366,4 +375,82 @@ module contracts::test_game {
 
     ts::end(scenario);
   }
+
+  #[test]
+  #[expected_failure(abort_code = ENotWhitelisted)]
+  public fun test_whitelist() {
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    // add user to whitelist
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      // mint a hero
+      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      game::whitelist_add<Hero>(&cap, vector[USER, GAME], vector[hero1, hero2], &mut config);
+      ts::return_shared(config);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+    };
+
+    // user claim whitelist
+    ts::next_tx(&mut scenario, USER);
+    {
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let claimed_hero = game::whitelist_claim<Hero>(&mut config, ts::ctx(&mut scenario));
+      transfer::public_transfer(claimed_hero, USER);
+      ts::return_shared(config);
+    };
+    
+    // game claim
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let claimed_hero = game::whitelist_claim<Hero>(&mut config, ts::ctx(&mut scenario));
+      transfer::public_transfer(claimed_hero, GAME);
+      ts::return_shared(config);
+    };
+
+    // user tries to claim again -- fails
+    ts::next_tx(&mut scenario, USER);
+    {
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let claimed_hero = game::whitelist_claim<Hero>(&mut config, ts::ctx(&mut scenario));
+      transfer::public_transfer(claimed_hero, USER);
+      ts::return_shared(config);
+    };
+
+    ts::end(scenario);
+  }
+
+  // exchange coupon
+  #[test]
+  public fun test_exchange_coupon() {
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    // send coupon to user
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      // mint a hero
+      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let coupon = game::mint_exchange_coupon<Hero>(&cap, hero, ts::ctx(&mut scenario));
+      transfer::public_transfer(coupon, USER);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+    };
+
+    //claim coupon
+    ts::next_tx(&mut scenario, USER);
+    {
+      let coupon = ts::take_from_sender<ExchangeCoupon<Hero>>(&mut scenario);
+      let hero = game::claim_exchange_coupon<Hero>(coupon);
+      transfer::public_transfer(hero, USER);
+    };
+
+    ts::end(scenario);
+  }
+
 }
