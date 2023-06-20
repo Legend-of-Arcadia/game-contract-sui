@@ -15,7 +15,9 @@ module contracts::arca {
 
     friend contracts::game;
 
-    const DECIMALS: u64 = 10_000_000_000;
+    const DECIMALS: u64 = 1_000_000_000;
+    const TOTAL_SUPPLY_ARCA: u64 = 1_000_000_000;
+    const TOTAL_SUPPLY_ARCA_DEVISION: u64 = 1_000_000_000_000_000_000;
 
 //  https://www.advancedconverter.com/unit-conversions/time-conversion/weeks-to-milliseconds
     const DAY_TO_UNIX_SECONDS: u64 = 86_400;
@@ -169,7 +171,7 @@ module contracts::arca {
             assert!(true, ENotCorrectStakingPeriod);
         };
 
-        assert!(staked_amount >= 300, ENotEnoughveARCA);
+        assert!(staked_amount >= 300*DECIMALS, ENotEnoughveARCA);
         
         let balance = coin::into_balance(arca);
         balance::join(&mut sp.liquidity, balance);
@@ -284,8 +286,8 @@ module contracts::arca {
         veARCA_amount
     }
 
-    fun calc_veARCA(initial: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {
-        initial * (end_date - (clock::timestamp_ms(clock)/1000)) / locking_period_sec
+    fun calc_veARCA(initial: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {       
+        initial * ((end_date - (clock::timestamp_ms(clock))) / locking_period_sec)
     }
 
     fun calc_vip_level_veARCA( veARCA_amount: u64, decimals: u64): u64 {
@@ -411,7 +413,7 @@ module contracts::arca {
 
     #[test_only]
     public fun increase_rewards_supply(sp: &mut StakingPool) {
-        let new_balance = balance::create_for_testing<ARCA>(5_000);
+        let new_balance = balance::create_for_testing<ARCA>(5_000*DECIMALS);
 
         let _b = balance::join(&mut sp.rewards, new_balance);
     }
