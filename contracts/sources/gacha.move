@@ -18,7 +18,6 @@ module contracts::gacha{
         id: UID,
         collection: String,
         name: String,
-        initial_price: u64,
         type: String,
     }
 
@@ -68,7 +67,6 @@ module contracts::gacha{
     public(friend) fun mint(
         collection: String,
         name: String,
-        initial_price: u64,
         type: String,
         ctx: &mut TxContext
     ): GachaBall {
@@ -78,7 +76,6 @@ module contracts::gacha{
             id, 
             collection,
             name,
-            initial_price,
             type,
         };
 
@@ -88,13 +85,17 @@ module contracts::gacha{
     }
 
     public(friend) fun burn(gacha_ball: GachaBall) {
-        let GachaBall {id, collection: _, name: _, initial_price: _, type: _} = gacha_ball;
+        let GachaBall {id, collection: _, name: _, type: _} = gacha_ball;
         event::emit(GachaBallBurned {id: object::uid_to_inner(&id)});
         object::delete(id);
     }
 
     public(friend) fun id(gacha_ball: &GachaBall): ID {
         object::uid_to_inner(&gacha_ball.id)
+    }
+
+    public(friend) fun type(gacha: &GachaBall): String {
+        gacha.type
     }
 
 }

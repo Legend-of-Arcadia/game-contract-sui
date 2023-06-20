@@ -1,13 +1,10 @@
 module contracts::test_game {
-  use std::string::{Self, String};
   use std::vector;
   // use std::debug;
 
   use sui::coin::{Self, Coin};
   use sui::test_scenario as ts;
   use sui::transfer;
-  use sui::sui::SUI;
-  use sui::vec_map;
 
   use contracts::game::{
     Self,
@@ -31,40 +28,41 @@ module contracts::test_game {
   const GAME: address = @0x111;
   const USER: address = @0x222;
 
- #[test]
- public fun test_buy() {
-  let scenario = ts::begin(GAME);
-  game::init_for_test(ts::ctx(&mut scenario));
+ // removed buy gacha from game
+//  public fun test_buy() {
+//   let scenario = ts::begin(GAME);
+//   game::init_for_test(ts::ctx(&mut scenario));
   
-  ts::next_tx(&mut scenario, GAME);
-  {
-    let config = ts::take_shared<GameConfig>(&mut scenario);
-    let cap = ts::take_from_sender<GameCap>(&mut scenario);
-    // add sui as allowed coin
-    game::add_allowed_coin<SUI>(&cap, &mut config);
-    // add prices for sui
-    let sui_prices = game::borrow_mut<SUI>(&cap, &mut config);
-    vec_map::insert<String, u64>(sui_prices, string::utf8(b"rare"), 10_000_000_000);
-    vec_map::insert<String, u64>(sui_prices, string::utf8(b"legendary"), 20_000_000_000);
-    ts::return_shared(config);
-    ts::return_to_sender(&scenario, cap);
-  };
+//   ts::next_tx(&mut scenario, GAME);
+//   {
+//     let config = ts::take_shared<GameConfig>(&mut scenario);
+//     let cap = ts::take_from_sender<GameCap>(&mut scenario);
+//     // add sui as allowed coin
+//     game::add_allowed_coin<SUI>(&cap, &mut config);
+//     // add prices for sui
+//     let sui_prices = game::borrow_mut<SUI>(&cap, &mut config);
+//     vec_map::insert<String, u64>(sui_prices, string::utf8(b"rare"), 10_000_000_000);
+//     vec_map::insert<String, u64>(sui_prices, string::utf8(b"legendary"), 20_000_000_000);
+//     ts::return_shared(config);
+//     ts::return_to_sender(&scenario, cap);
+//   };
 
-  ts::next_tx(&mut scenario, USER);
-  {
-    let config = ts::take_shared<GameConfig>(&mut scenario);
-    let payment = coin::mint_for_testing<SUI>(10_000_000_000, ts::ctx(&mut scenario));
-    let type: String = string::utf8(b"rare");
-    let collection: String = string::utf8(b"New Collection");
-    let name: String = string::utf8(b"Cool Gacha");
+//   ts::next_tx(&mut scenario, USER);
+//   {
+//     let config = ts::take_shared<GameConfig>(&mut scenario);
+//     let payment = coin::mint_for_testing<SUI>(10_000_000_000, ts::ctx(&mut scenario));
+//     let type: String = string::utf8(b"rare");
+//     let collection: String = string::utf8(b"New Collection");
+//     let name: String = string::utf8(b"Cool Gacha");
 
-    let gacha = game::buy_gacha(&mut config, payment, type, collection, name, ts::ctx(&mut scenario));
-    transfer::public_transfer(gacha, USER);
-    ts::return_shared(config);
-  };
+//     let gacha = game::buy_gacha(&mut config, payment, type, collection, name, ts::ctx(&mut scenario));
+//     transfer::public_transfer(gacha, USER);
+//     ts::return_shared(config);
+//   };
 
-  ts::end(scenario);
- }
+//   ts::end(scenario);
+//  }
+
   #[test]
   fun test_hero_mint(){
 
@@ -214,18 +212,18 @@ module contracts::test_game {
       ts::return_shared(upgrader);
     };
 
-    let new_appearance: vector<String> = vector [
-            string::utf8(b"Face2"),
-            string::utf8(b"Eye3"),
-            string::utf8(b"Nose4"),
-            string::utf8(b"Mouth1"),
-            string::utf8(b"Tattoo"),
-            string::utf8(b"Hat2"),
-            string::utf8(b"Cloth3"),
-            string::utf8(b"Back4"),
-            string::utf8(b"Trouser1"),
-            string::utf8(b"Hand4"),
-            string::utf8(b"Item Slots1"),
+    let new_appearance: vector<u8> = vector [
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
         ];
 
     // game performs upgrade

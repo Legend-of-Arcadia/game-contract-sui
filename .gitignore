@@ -2,3 +2,4 @@
 Move.lock
 node_modules/
 .env
+sui.log**
