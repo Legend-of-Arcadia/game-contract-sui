@@ -1,6 +1,5 @@
 module contracts::game{
 
-  use std::option;
   use std::string::{Self, String};
   use std::vector;
 
@@ -8,9 +7,7 @@ module contracts::game{
   use sui::coin::{Self, Coin};
   use sui::event;
   use sui::object::{Self, ID, UID};
-  use sui::dynamic_field as df;
   use sui::dynamic_object_field as dof;
-  use sui::vec_map::{Self, VecMap};
   use sui::table::{Self, Table};
   use sui::transfer;
   use sui::tx_context::{Self, TxContext};
@@ -62,6 +59,7 @@ module contracts::game{
     id: ID,
     // address of user that opened the ball
     user: address,
+    type: String
   }
 
   struct UpgradeRequest has copy, drop {
@@ -84,9 +82,6 @@ module contracts::game{
   struct GameCap has key, store {
     id: UID,
   }
-
-  // C is the coin
-  struct AllowedCoin<phantom C> has store, copy, drop {}
 
   fun init(ctx: &mut TxContext){
 
@@ -118,42 +113,7 @@ module contracts::game{
   }
 
   // === Game-only function ===
-
-  /// add coin type C as an allowed coin to buy gacha
-  public fun add_allowed_coin<C> (_: &GameCap, config: &mut GameConfig) {
-    let allowed_coin = AllowedCoin<C>{};
-    df::add<AllowedCoin<C>, VecMap<String, u64>>(&mut config.id, allowed_coin, vec_map::empty<String, u64>());
-  }
-
-  /// remove coin of type C from the allowd coin types to buy gacha
-  public fun remove_allowed_coin<C> (_: &GameCap, config: &mut GameConfig) {
-    let allowed_coin = AllowedCoin<C>{};
-    df::remove<AllowedCoin<C>, vector<u64>>(&mut config.id, allowed_coin);
-  }
-
-  /// get a mutable reference for vec map containing gacha type->price for coin C
-  public fun borrow_mut<C>(_: &GameCap, config: &mut GameConfig): &mut VecMap<String, u64>{
-    let allowed_coin = AllowedCoin<C>{};
-    let prices = df::borrow_mut(&mut config.id, allowed_coin);
-    prices
-  }
-
-  /// set or change the price of a gacha ball for a coin type C
-  public fun set_gacha_price<C>(
-    game_cap: &GameCap,
-    config: &mut GameConfig,
-    elite_price: u64,
-    legendary_price: u64,
-    epic_price: u64,
-    vip_price: u64,
-  ) {
-    let prices = borrow_mut<C>(game_cap, config);
-    vec_map::insert<String, u64>(prices, string::utf8(b"elite"), elite_price);
-    vec_map::insert<String, u64>(prices, string::utf8(b"legendary"), legendary_price);
-    vec_map::insert<String, u64>(prices, string::utf8(b"epic"), epic_price);
-    vec_map::insert<String, u64>(prices, string::utf8(b"vip"), vip_price);
-  }
-
+ 
   /// set address that will claim gacha sell profits
   public fun set_game_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
     config.game_address = new_address;
@@ -164,7 +124,7 @@ module contracts::game{
     let total: Balance<ARCA> = balance::withdraw_all<ARCA>(&mut upgrader.profits);
     coin::from_balance(total, ctx)
   }
-
+  // TODO: Each address can get more than one rewards
   /// whitelist add addresses and corresponding rewards
   // address.length == rewards.length
   public fun whitelist_add<Item: key + store>(_: &GameCap, addresses: vector<address>, rewards: vector<Item>, config: &mut GameConfig) {
@@ -193,11 +153,11 @@ module contracts::game{
       class: String,
       faction: String,
       rarity: String,
-      base_attributes_values: vector<String>,
-      skill_attributes_values: vector<String>,
-      appearence_attributes_values: vector<String>,
+      base_attributes_values: vector<u8>,
+      skill_attributes_values: vector<u8>,
+      appearence_attributes_values: vector<u8>,
       stat_attributes_values: vector<u64>,
-      other_attributes_values: vector<String>,
+      other_attributes_values: vector<u8>,
       external_id: String,
       ctx: &mut TxContext
       ): Hero {
@@ -223,12 +183,11 @@ module contracts::game{
     _: &GameCap,
     collection: String,
     name: String,
-    initial_price: u64,
     type: String,
     ctx: &mut TxContext
   ): GachaBall {
 
-    let gacha_ball = gacha::mint(collection, name, initial_price, type, ctx);
+    let gacha_ball = gacha::mint(collection, name, type, ctx);
 
     gacha_ball
   }
@@ -289,42 +248,15 @@ module contracts::game{
   }
 
   // upgrade
-  public fun upgrade_appearance(_: &GameCap, hero: &mut Hero, new_values: vector<String>) {
-    hero::edit_string_fields(hero, string::utf8(b"appearance"), new_values);
+  public fun upgrade_appearance(_: &GameCap, hero: &mut Hero, new_values: vector<u8>) {
+    hero::edit_fields<u8>(hero, string::utf8(b"appearance"), new_values);
   }
 
   public fun upgrade_stat(_: &GameCap, hero: &mut Hero, new_values: vector<u64>) {
-    hero::edit_number_fields(hero, string::utf8(b"stat"), new_values);
+    hero::edit_fields<u64>(hero, string::utf8(b"stat"), new_values);
   }
 
   /// === Player functions ===
-
-  /// buy a gacha ball
-  /// @param type: type of Gacha we want to buy
-  /// C: type of coin we want to use. Must be listed in config
-  public fun buy_gacha<C>(
-    config: &mut GameConfig,
-    payment: Coin<C>,
-    type: String,
-    collection: String,
-    name: String,
-    ctx: &mut TxContext
-    ): GachaBall
-    {
-      assert!(VERSION == 1, EIncorrectVersion); 
-      let allowed_coin = AllowedCoin<C>{};
-      assert!(df::exists_<AllowedCoin<C>>(&mut config.id, allowed_coin), ECoinNotAllowed);
-      let prices = df::borrow<AllowedCoin<C>, VecMap<String, u64>>(&mut config.id, allowed_coin);
-      
-      // TODO: do safe get and have an assertion
-      let price = vec_map::try_get<String, u64>(prices, &type);
-      assert!(option::is_some(&price), ETypeDoesNotExist);
-      assert!(coin::value<C>(&payment) == *option::borrow<u64>(&price), EAmountNotExact);
-      let gacha_ball = gacha::mint(collection, name, *option::borrow<u64>(&price), type, ctx);
-    
-      transfer::public_transfer(payment, config.game_address);
-      gacha_ball
-  }
 
   /// open a gacha ball
   public fun open_gacha_ball(gacha_ball: GachaBall, ctx: &mut TxContext){
@@ -333,12 +265,12 @@ module contracts::game{
 
     let gacha_ball_id = gacha::id(&gacha_ball);
     let user = tx_context::sender(ctx);
-
+    let type = gacha::type(&gacha_ball);
     // burn gacha ball
     gacha::burn(gacha_ball);
 
     // create and emit an event
-    let open_evt = GachaBallOpened { id: gacha_ball_id, user };
+    let open_evt = GachaBallOpened { id: gacha_ball_id, user, type };
     event::emit(open_evt);
   }
 
@@ -439,11 +371,11 @@ module contracts::game{
       let class = string::utf8(b"Fighter");
       let faction = string::utf8(b"Flamexecuter");
       let rarity = string::utf8(b"SR");
-      let base_attributes_values = vector[string::utf8(b"female"), string::utf8(b"gloves")];
-      let skill_attributes_values = vector[string::utf8(b"some ultimate skill"), string::utf8(b"some basic skill"), string::utf8(b"some passive skill")];
-      let appearence_attributes_values = vector[string::utf8(b"round"), string::utf8(b"blue"), string::utf8(b"pointy"), string::utf8(b"basic"), string::utf8(b"tatoo"), string::utf8(b"tiara")];
-      let stat_attributes_values = vector [0, 0, 0, 0, 0, 0, 0, 0];
-      let other_attributes_values = vector[string::utf8(b"0")];
+      let base_attributes_values: vector<u8> = vector[1,2,3,4,5,6];
+      let skill_attributes_values: vector<u8> = vector[31, 32, 33, 34];
+      let appearence_attributes_values: vector<u8> = vector[21, 22, 23, 24, 25, 26];
+      let stat_attributes_values: vector<u64> = vector [0, 0, 0, 0, 0, 0, 0, 0];
+      let other_attributes_values: vector<u8> = vector[9];
       let external_id = string::utf8(b"1337");
 
       let hero = mint_hero(

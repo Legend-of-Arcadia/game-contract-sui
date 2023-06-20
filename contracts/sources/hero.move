@@ -29,7 +29,7 @@ module contracts::hero {
         class: String,
         faction: String,
         rarity: String,
-        external_id: String,
+        external_id: String, // should we keep this
         pending_upgrade: u64 //heroes burned
     }
 
@@ -47,8 +47,7 @@ module contracts::hero {
 
         let values = vector[
             string::utf8(b"Hero"),
-            // string::utf8(b"https://legendofarcadia.io/heroes/images/{external_id}"),
-            string::utf8(b"{external_id}"), // this is just for the demo
+            string::utf8(b"https://legendofarcadia.io/heroes/images/{external_id}"),
             string::utf8(b"https://legendofarcadia.io/heroes/{external_id}"),
             string::utf8(b"Heroes of Arcadia"),
             string::utf8(b"https://legendofarcadia.io")
@@ -67,12 +66,12 @@ module contracts::hero {
         class: String,
         faction: String,
         rarity: String,
-        base_attributes_values: vector<String>,
-        skill_attributes_values: vector<String>,
-        appearance_attributes_values: vector<String>,
+        base_attributes_values: vector<u8>,
+        skill_attributes_values: vector<u8>,
+        appearance_attributes_values: vector<u8>,
         stat_attributes_values: vector<u64>,
         // TODO: determine if this should be a string or a u64
-        other_attributes_values: vector<String>,
+        other_attributes_values: vector<u8>,
         external_id: String,
         ctx: &mut TxContext
         ): Hero {
@@ -88,22 +87,17 @@ module contracts::hero {
             pending_upgrade: 0
         };
 
-        df::add<String, vector<String>>(&mut hero.id, string::utf8(b"base"), base_attributes_values);
-        df::add<String, vector<String>>(&mut hero.id, string::utf8(b"skill"), skill_attributes_values);
-        df::add<String, vector<String>>(&mut hero.id, string::utf8(b"appearance"), appearance_attributes_values);
+        df::add<String, vector<u8>>(&mut hero.id, string::utf8(b"base"), base_attributes_values);
+        df::add<String, vector<u8>>(&mut hero.id, string::utf8(b"skill"), skill_attributes_values);
+        df::add<String, vector<u8>>(&mut hero.id, string::utf8(b"appearance"), appearance_attributes_values);
         df::add<String, vector<u64>>(&mut hero.id, string::utf8(b"stat"), stat_attributes_values);
-        df::add<String, vector<String>>(&mut hero.id, string::utf8(b"others"), other_attributes_values);
+        df::add<String, vector<u8>>(&mut hero.id, string::utf8(b"others"), other_attributes_values);
 
         hero
     }
 
-    public(friend) fun edit_string_fields(hero: &mut Hero, name: String, new_value: vector<String>) {
-        let value = df::borrow_mut<String, vector<String>>(&mut hero.id, name);
-        *value = new_value;
-    }
-
-    public(friend) fun edit_number_fields(hero: &mut Hero, name: String, new_value: vector<u64>) {
-        let value = df::borrow_mut<String, vector<u64>>(&mut hero.id, name);
+    public(friend) fun edit_fields<T: copy+drop+store>(hero: &mut Hero, name: String, new_value: vector<T>) {
+        let value = df::borrow_mut<String, vector<T>>(&mut hero.id, name);
         *value = new_value;
     }
 
@@ -120,11 +114,11 @@ module contracts::hero {
     }
 
     public(friend) fun burn(hero: Hero) {
-        df::remove<String, vector<String>>(&mut hero.id, string::utf8(b"base"));
-        df::remove<String, vector<String>>(&mut hero.id, string::utf8(b"skill"));
-        df::remove<String, vector<String>>(&mut hero.id, string::utf8(b"appearance"));
+        df::remove<String, vector<u8>>(&mut hero.id, string::utf8(b"base"));
+        df::remove<String, vector<u8>>(&mut hero.id, string::utf8(b"skill"));
+        df::remove<String, vector<u8>>(&mut hero.id, string::utf8(b"appearance"));
         df::remove<String, vector<u64>>(&mut hero.id, string::utf8(b"stat"));
-        df::remove<String, vector<String>>(&mut hero.id, string::utf8(b"others"));
+        df::remove<String, vector<u8>>(&mut hero.id, string::utf8(b"others"));
 
         let Hero {id, name: _, class: _, faction: _, rarity: _, external_id: _, pending_upgrade: _} = hero;
         object::delete(id);
@@ -155,24 +149,24 @@ module contracts::hero {
         &hero.pending_upgrade
     }
 
-    public fun base_values(hero: &Hero): &vector<String> {
-        df::borrow<String, vector<String>>(&hero.id, string::utf8(b"base"))
+    public fun base_values(hero: &Hero): &vector<u8> {
+        df::borrow<String, vector<u8>>(&hero.id, string::utf8(b"base"))
     }
 
-    public fun skill_values(hero: &Hero): &vector<String> {
-        df::borrow<String, vector<String>>(&hero.id, string::utf8(b"skill"))
+    public fun skill_values(hero: &Hero): &vector<u8> {
+        df::borrow<String, vector<u8>>(&hero.id, string::utf8(b"skill"))
     }
 
-    public fun appearance_values(hero: &Hero): &vector<String> {
-        df::borrow<String, vector<String>>(&hero.id, string::utf8(b"appearance"))
+    public fun appearance_values(hero: &Hero): &vector<u8> {
+        df::borrow<String, vector<u8>>(&hero.id, string::utf8(b"appearance"))
     }
 
     public fun stat_values(hero: &Hero): &vector<u64> {
         df::borrow<String, vector<u64>>(&hero.id, string::utf8(b"stat"))
     }
 
-    public fun others_values(hero: &Hero): &vector<String> {
-        df::borrow<String, vector<String>>(&hero.id, string::utf8(b"others"))
+    public fun others_values(hero: &Hero): &vector<u8> {
+        df::borrow<String, vector<u8>>(&hero.id, string::utf8(b"others"))
     }
 
     public fun field<T: store+drop>(hero: &Hero, field: String): &T {
@@ -209,45 +203,45 @@ module contracts::unit_tests {
     #[test]
     public fun test_functions() {
         let scenario = ts::begin(SENDER);
-
         let name = string::utf8(b"Wo Long");
         let class = string::utf8(b"Assassin");
         let faction = string::utf8(b"Void Walker");
         let rarity = string::utf8(b"R");
         let external_id = string::utf8(b"1337");
 
-        let base_values: vector<String> = vector[
-            string::utf8(b"Male"),
-            string::utf8(b"NatureType"),
-            string::utf8(b"IQ"),
-            string::utf8(b"Race"),
-            string::utf8(b"Skin"),
-            string::utf8(b"Weapon"),
+        let base_values: vector<u8> = vector[
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
         ];
 
-        let skill_values: vector<String> = vector[
-            string::utf8(b"Basic"),
-            string::utf8(b"Passive"),
-            string::utf8(b"Area"),
-            string::utf8(b"Ultimate"),
+        let skill_values: vector<u8> = vector[
+            200,
+            201,
+            202,
+            203
         ];
 
-        let appearance_values: vector<String> = vector [
-            string::utf8(b"Face"),
-            string::utf8(b"Eye"),
-            string::utf8(b"Nose"),
-            string::utf8(b"Mouth"),
-            string::utf8(b"Tattoo"),
-            string::utf8(b"Hat"),
-            string::utf8(b"Cloth"),
-            string::utf8(b"Back"),
-            string::utf8(b"Trouser"),
-            string::utf8(b"Hand"),
-            string::utf8(b"Item Slots"),
+        let appearance_values: vector<u8> = vector [
+            100,
+            101,
+            102,
+            103,
+            104,
+            105,
+            106,
+            107,
+            108,
+            109,
+            110,
+            111
         ];
 
         let stat_values: vector<u64> = vector[
-            0,
+            40,
             0,
             0,
             0,
@@ -257,8 +251,8 @@ module contracts::unit_tests {
             0
         ];
 
-        let others_values: vector<String> = vector[
-            string::utf8(b"Grow Up Count"),
+        let others_values: vector<u8> = vector[
+            34
         ];
 
         let hero = hero::mint(
@@ -295,13 +289,14 @@ module contracts::unit_tests {
             ts::return_to_sender<Hero>(&scenario, hero);
         };
 
-        let new_base_values: vector<String> = vector[
-                string::utf8(b"Male"),
-                string::utf8(b"NatureType"),
-                string::utf8(b"IQ"),
-                string::utf8(b"Race"),
-                string::utf8(b"Skin"),
-                string::utf8(b"Weapon"),
+        let new_base_values: vector<u8> = vector[
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16
         ];
         
         let new_stat_values: vector<u64> = vector[
@@ -316,17 +311,17 @@ module contracts::unit_tests {
         ];
 
         let new_field: String = string::utf8(b"senses");
-        let new_field_values: vector<String> = vector [
-            string::utf8(b"touch"),
-            string::utf8(b"vision"),
+        let new_field_values: vector<u8> = vector [
+            1,
+            2
         ];
 
         ts::next_tx(&mut scenario, SENDER);
         {
             let hero = ts::take_from_sender<Hero>(&mut scenario);
-            hero::edit_string_fields(&mut hero, string::utf8(b"base"), new_base_values);
-            hero::edit_number_fields(&mut hero, string::utf8(b"stat"), new_stat_values);
-            hero::add_field<vector<String>>(&mut hero, new_field, new_field_values);
+            hero::edit_fields<u8>(&mut hero, string::utf8(b"base"), new_base_values);
+            hero::edit_fields<u64>(&mut hero, string::utf8(b"stat"), new_stat_values);
+            hero::add_field<vector<u8>>(&mut hero, new_field, new_field_values);
             ts::return_to_sender<Hero>(&scenario, hero);
         };
 
@@ -343,7 +338,7 @@ module contracts::unit_tests {
         ts::next_tx(&mut scenario, SENDER);
         {
             let hero = ts::take_from_sender<Hero>(&mut scenario);
-            hero::remove_field<vector<String>>(&mut hero, new_field);
+            hero::remove_field<vector<u8>>(&mut hero, new_field);
             hero::burn(hero);
         };
 
