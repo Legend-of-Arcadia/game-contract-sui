@@ -388,7 +388,8 @@ module contracts::test_game {
       // mint a hero
       let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
       let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      game::whitelist_add<Hero>(&cap, vector[USER, GAME], vector[hero1, hero2], &mut config);
+      let gacha_ball1 = game::mint_test_gacha(&cap, ts::ctx(&mut scenario));
+      game::whitelist_add(&cap, USER, vector[hero1, hero2], vector[gacha_ball1], &mut config);
       ts::return_shared(config);
       ts::return_to_sender<GameCap>(&scenario, cap);
     };
@@ -397,26 +398,15 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, USER);
     {
       let config = ts::take_shared<GameConfig>(&mut scenario);
-      let claimed_hero = game::whitelist_claim<Hero>(&mut config, ts::ctx(&mut scenario));
-      transfer::public_transfer(claimed_hero, USER);
+      game::whitelist_claim(&mut config, ts::ctx(&mut scenario));
       ts::return_shared(config);
-    };
+    }; 
     
-    // game claim
-    ts::next_tx(&mut scenario, GAME);
-    {
-      let config = ts::take_shared<GameConfig>(&mut scenario);
-      let claimed_hero = game::whitelist_claim<Hero>(&mut config, ts::ctx(&mut scenario));
-      transfer::public_transfer(claimed_hero, GAME);
-      ts::return_shared(config);
-    };
-
     // user tries to claim again -- fails
     ts::next_tx(&mut scenario, USER);
     {
       let config = ts::take_shared<GameConfig>(&mut scenario);
-      let claimed_hero = game::whitelist_claim<Hero>(&mut config, ts::ctx(&mut scenario));
-      transfer::public_transfer(claimed_hero, USER);
+      game::whitelist_claim(&mut config, ts::ctx(&mut scenario));
       ts::return_shared(config);
     };
 

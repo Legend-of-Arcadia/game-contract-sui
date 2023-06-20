@@ -7,6 +7,7 @@ module contracts::game{
   use sui::coin::{Self, Coin};
   use sui::event;
   use sui::object::{Self, ID, UID};
+  use sui::dynamic_field as df;
   use sui::dynamic_object_field as dof;
   use sui::table::{Self, Table};
   use sui::transfer;
@@ -52,6 +53,11 @@ module contracts::game{
   struct ExchangeCoupon<Item> has key, store {
     id: UID,
     reward: Item
+  }
+
+  struct WhitelistRewards has store {
+    heroes: vector<Hero>,
+    gacha_balls: vector<GachaBall>
   }
 
   // events
@@ -127,17 +133,18 @@ module contracts::game{
   // TODO: Each address can get more than one rewards
   /// whitelist add addresses and corresponding rewards
   // address.length == rewards.length
-  public fun whitelist_add<Item: key + store>(_: &GameCap, addresses: vector<address>, rewards: vector<Item>, config: &mut GameConfig) {
-    assert!(vector::length(&addresses) == vector::length(&rewards), EWhitelistInputsNotSameLength);
-    while(vector::length(&addresses) > 0) {
-      dof::add<address, Item>(
-        &mut config.id,
-        vector::pop_back<address>(&mut addresses),
-        vector::pop_back<Item>(&mut rewards)
-      )
+  public fun whitelist_add(
+    _: &GameCap,
+    player_address: address,
+    hero_rewards: vector<Hero>,
+    gacha_rewards:vector<GachaBall>,
+    config: &mut GameConfig)
+  {
+    let rewards = WhitelistRewards {
+      heroes: hero_rewards,
+      gacha_balls: gacha_rewards
     };
-
-    vector::destroy_empty<Item>(rewards);
+    df::add<address, WhitelistRewards>(&mut config.id, player_address, rewards);
   }
 
   public fun mint_exchange_coupon<Item: key+store>(_: &GameCap, reward: Item, ctx: &mut TxContext): ExchangeCoupon<Item> {
@@ -341,14 +348,23 @@ module contracts::game{
   }
 
   // whitelist claim
-  public fun whitelist_claim<Item: key+store>(
+  public fun whitelist_claim(
     config: &mut GameConfig,
     ctx: &mut TxContext
-  ): Item
+  )
   {
     let sender: address = tx_context::sender(ctx);
-    assert!(dof::exists_<address>(&mut config.id, sender), ENotWhitelisted);
-    dof::remove<address, Item>(&mut config.id, sender)
+    assert!(df::exists_<address>(&mut config.id, sender), ENotWhitelisted);
+    let rewards = df::remove<address, WhitelistRewards>(&mut config.id, sender);
+    let WhitelistRewards {heroes, gacha_balls} = rewards;
+    while(vector::length(&heroes) > 0) {
+      transfer::public_transfer(vector::pop_back<Hero>(&mut heroes), sender);
+    };
+    vector::destroy_empty<Hero>(heroes);
+    while(vector::length(&gacha_balls) > 0) {
+      transfer::public_transfer(vector::pop_back<GachaBall>(&mut gacha_balls), sender);
+    };
+    vector::destroy_empty<GachaBall>(gacha_balls);
   }
 
   // coupon claim
@@ -393,5 +409,16 @@ module contracts::game{
         ctx,
       );
       hero
+  }
+
+  #[test_only]
+  public fun mint_test_gacha(cap: &GameCap, ctx: &mut TxContext): GachaBall {
+    mint_gacha(
+      cap,
+      string::utf8(b"Halloween"),
+      string::utf8(b"Grandia"),
+      string::utf8(b"VIP"),
+      ctx
+    )
   }
 }
