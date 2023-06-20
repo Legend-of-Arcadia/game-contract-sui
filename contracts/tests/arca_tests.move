@@ -31,12 +31,15 @@ module contracts::staking_tests {
     const USER11_ADDRESS: address = @0x2559;
     const USER12_ADDRESS: address = @0x2558;
 
+    const DECIMALS: u64 = 1_000_000_000;
+
+
     #[test]
     fun test_staking() {
         let scenario = ts::begin(USER1_ADDRESS);
 
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-        let user2_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
+        let user_coin = coin::mint_for_testing<ARCA>(10_000*DECIMALS, ts::ctx(&mut scenario));
+        let user2_coin = coin::mint_for_testing<ARCA>(10_000*DECIMALS, ts::ctx(&mut scenario));
 
         let c = clock::create_for_testing(ts::ctx(&mut scenario));
         clock::share_for_testing(c);
@@ -70,7 +73,7 @@ module contracts::staking_tests {
         {
             let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
 
-            assert!(arca::get_initial_VeARCA(&veARCA_object) == 1_000_000, ENotCorrectAmmountTransfered);
+            assert!(arca::get_initial_VeARCA(&veARCA_object) == 1_000_000*DECIMALS, ENotCorrectAmmountTransfered);
 
             ts::return_to_sender<arca::VeARCA>(&scenario, veARCA_object);
         };
@@ -95,7 +98,7 @@ module contracts::staking_tests {
         {
             let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
 
-            assert!(arca::get_initial_VeARCA(&veARCA_object) == 19_178, ENotCorrectAmmountTransfered);
+            assert!(arca::get_initial_VeARCA(&veARCA_object) == 19178082191780, ENotCorrectAmmountTransfered);
 
             ts::return_to_sender<arca::VeARCA>(&scenario, veARCA_object);
         };
@@ -107,8 +110,8 @@ module contracts::staking_tests {
     fun test_stake_twice() {
         let scenario = ts::begin(USER1_ADDRESS);
 
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-        let second_user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
+        let user_coin = coin::mint_for_testing<ARCA>(10_000*DECIMALS, ts::ctx(&mut scenario));
+        let second_user_coin = coin::mint_for_testing<ARCA>(10_000*DECIMALS, ts::ctx(&mut scenario));
 
         let c = clock::create_for_testing(ts::ctx(&mut scenario));
         clock::share_for_testing(c);
@@ -164,8 +167,8 @@ module contracts::staking_tests {
     fun test_append_to_stake() {
         let scenario = ts::begin(USER1_ADDRESS);
 
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-        let second_user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
+        let user_coin = coin::mint_for_testing<ARCA>(10_000*DECIMALS, ts::ctx(&mut scenario));
+        let second_user_coin = coin::mint_for_testing<ARCA>(10_000*DECIMALS, ts::ctx(&mut scenario));
 
         let c = clock::create_for_testing(ts::ctx(&mut scenario));
         clock::share_for_testing(c);
@@ -221,8 +224,8 @@ module contracts::staking_tests {
             let test_clock = ts::take_shared<clock::Clock>(&mut scenario);
             let veARCA_object = ts::take_from_sender<arca::VeARCA>(&mut scenario);
 
-            assert!(arca::get_initial_VeARCA(&veARCA_object) == 1_498_630, EAppendNotWorking);
-            assert!(arca::get_staked_amount_VeARCA(&veARCA_object) == 20_000, EAppendNotWorking);
+            assert!(arca::get_initial_VeARCA(&veARCA_object) == 1498630136986301, EAppendNotWorking);
+            assert!(arca::get_staked_amount_VeARCA(&veARCA_object) == 20_000*DECIMALS, EAppendNotWorking);
 
             ts::return_shared(staking_pool);
             ts::return_shared(test_clock);
@@ -236,8 +239,8 @@ module contracts::staking_tests {
     fun test_append_to_stake_fail() {
         let scenario = ts::begin(USER1_ADDRESS);
 
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-        let second_user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
+        let user_coin = coin::mint_for_testing<ARCA>(10_000*DECIMALS, ts::ctx(&mut scenario));
+        let second_user_coin = coin::mint_for_testing<ARCA>(10_000*DECIMALS, ts::ctx(&mut scenario));
 
         let c = clock::create_for_testing(ts::ctx(&mut scenario));
         clock::share_for_testing(c);
@@ -294,7 +297,7 @@ module contracts::staking_tests {
     fun test_unstake() {
         let scenario = ts::begin(USER1_ADDRESS);
 
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
+        let user_coin = coin::mint_for_testing<ARCA>(10_000*DECIMALS, ts::ctx(&mut scenario));
 
         let c = clock::create_for_testing(ts::ctx(&mut scenario));
         clock::share_for_testing(c);
@@ -334,7 +337,7 @@ module contracts::staking_tests {
 
             let arca_coin = arca::unstake(veARCA_object, &mut staking_pool, &test_clock, ts::ctx(&mut scenario));
 
-            assert!(coin::value(&arca_coin) == 10_000, EUnstakeNotWorking);
+            assert!(coin::value(&arca_coin) == 10_000*DECIMALS, EUnstakeNotWorking);
 
             ts::return_shared(staking_pool);
             ts::return_shared(test_clock);
@@ -350,10 +353,10 @@ module contracts::staking_tests {
     fun test_distribute_rewards() {
         let scenario = ts::begin(USER1_ADDRESS);
 
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
-        let user2_coin = coin::mint_for_testing<ARCA>(25_000, ts::ctx(&mut scenario));
-        let user3_coin = coin::mint_for_testing<ARCA>(100_000, ts::ctx(&mut scenario));
-        let user4_coin = coin::mint_for_testing<ARCA>(200_000, ts::ctx(&mut scenario));
+        let user_coin = coin::mint_for_testing<ARCA>(10_000*DECIMALS, ts::ctx(&mut scenario));
+        let user2_coin = coin::mint_for_testing<ARCA>(25_000*DECIMALS, ts::ctx(&mut scenario));
+        let user3_coin = coin::mint_for_testing<ARCA>(100_000*DECIMALS, ts::ctx(&mut scenario));
+        let user4_coin = coin::mint_for_testing<ARCA>(200_000*DECIMALS, ts::ctx(&mut scenario));
 
         let c = clock::create_for_testing(ts::ctx(&mut scenario));
         clock::share_for_testing(c);
@@ -470,7 +473,7 @@ module contracts::staking_tests {
     fun test_distribute_rewards_earlier() {
         let scenario = ts::begin(USER1_ADDRESS);
 
-        let user_coin = coin::mint_for_testing<ARCA>(10_000, ts::ctx(&mut scenario));
+        let user_coin = coin::mint_for_testing<ARCA>(10_000*DECIMALS, ts::ctx(&mut scenario));
 
         let c = clock::create_for_testing(ts::ctx(&mut scenario));
         clock::share_for_testing(c);
@@ -558,18 +561,18 @@ module contracts::staking_tests {
     fun test_distribute_rewards2() {
         let scenario = ts::begin(USER1_ADDRESS);
 
-        let user1_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
-        let user2_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
-        let user3_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
-        let user4_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
-        let user5_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
-        let user6_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
-        let user7_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
-        let user8_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
-        let user9_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
-        let user10_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
-        let user11_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
-        let user12_coin = coin::mint_for_testing<ARCA>(5_000_000, ts::ctx(&mut scenario));
+        let user1_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
+        let user2_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
+        let user3_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
+        let user4_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
+        let user5_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
+        let user6_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
+        let user7_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
+        let user8_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
+        let user9_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
+        let user10_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
+        let user11_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
+        let user12_coin = coin::mint_for_testing<ARCA>(5_000_000*DECIMALS, ts::ctx(&mut scenario));
 
         let c = clock::create_for_testing(ts::ctx(&mut scenario));
         clock::share_for_testing(c);
@@ -814,7 +817,7 @@ module contracts::staking_tests {
 
             let arca_coin = ts::take_from_sender<coin::Coin<ARCA>>(&mut scenario);
 
-            assert!(coin::value(&arca_coin) == 475, ENotRightAmountDistributed);
+            assert!(coin::value(&arca_coin) == 475*DECIMALS, ENotRightAmountDistributed);
 
             ts::return_to_sender<coin::Coin<ARCA>>(&scenario, arca_coin);
 
@@ -829,7 +832,7 @@ module contracts::staking_tests {
 
             let arca_coin = ts::take_from_sender<coin::Coin<ARCA>>(&mut scenario);
 
-            assert!(coin::value(&arca_coin) == 250, ENotRightAmountDistributed);
+            assert!(coin::value(&arca_coin) == 250*DECIMALS, ENotRightAmountDistributed);
 
             ts::return_to_sender<coin::Coin<ARCA>>(&scenario, arca_coin);
 
