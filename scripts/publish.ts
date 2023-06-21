@@ -3,7 +3,7 @@ const { execSync } = require('child_process');
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const privKey: string = process.env.MY_PRIVATE_KEY!;
+const privKey: string = process.env.PRIVATE_KEY!;
 const packagePath: string = process.env.PACKAGE_PATH!;
 const cliPath: string = process.env.CLI_PATH!;
 
@@ -16,7 +16,6 @@ function getKeyPair(privateKey: string): Ed25519Keypair{
 
 let keyPair = getKeyPair(privKey);
 let mugenAddress = keyPair.getPublicKey().toSuiAddress();
-// console.log(mugenAddress);
 
 const provider = new JsonRpcProvider(testnetConnection);
 const signer = new RawSigner(keyPair, provider);
@@ -37,12 +36,12 @@ async function publish() {
     transactionBlock: tx,
   });
   var fs = require('fs');
+  // unfortunately when I published, I forgot to ask for all the data needed in the response, so for now I have to go to the explorer manually 
   fs.writeFile(`./auto-results/publishResult.json`, JSON.stringify(result, null, 2), function(err: any) {
     if (err) {
         console.log(err);
     }
   });
-  console.log(result);
 }
 
 publish();

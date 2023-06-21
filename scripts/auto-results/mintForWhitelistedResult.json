@@ -1,0 +1,360 @@
+{
+  "digest": "77hQuJChAhYhv2uDVMEACsfCRrqEJYbrutHP48nyWYrB",
+  "effects": {
+    "messageVersion": "v1",
+    "status": {
+      "status": "success"
+    },
+    "executedEpoch": "42",
+    "gasUsed": {
+      "computationCost": "1000000",
+      "storageCost": "26577200",
+      "storageRebate": "3829716",
+      "nonRefundableStorageFee": "38684"
+    },
+    "modifiedAtVersions": [
+      {
+        "objectId": "0x32d39972a20f78b06c264a068f2773bfb2091d5afa4fb2d79f4cd9a2bff82947",
+        "sequenceNumber": "1507"
+      },
+      {
+        "objectId": "0x3a091883a7688e06a4a2a2613d215be3aa2578a95592ad46d8b077e0aefb7897",
+        "sequenceNumber": "1507"
+      },
+      {
+        "objectId": "0x5a937a1022838a39f429350d9d3f026316b1a16a59efa59a7057c0f7e3b927c2",
+        "sequenceNumber": "1507"
+      }
+    ],
+    "sharedObjects": [
+      {
+        "objectId": "0x5a937a1022838a39f429350d9d3f026316b1a16a59efa59a7057c0f7e3b927c2",
+        "version": 1507,
+        "digest": "GzQCGjB6Kt2HVT27d3kGbJUXjdRs2EXkqd1UfXkXoEZt"
+      }
+    ],
+    "transactionDigest": "77hQuJChAhYhv2uDVMEACsfCRrqEJYbrutHP48nyWYrB",
+    "created": [
+      {
+        "owner": {
+          "ObjectOwner": "0xa5dbb3afded9a9f46ba3218cdee82b19ed3dde8b344849956bac9973d27a528a"
+        },
+        "reference": {
+          "objectId": "0x06e82290506b40fea4777f432c9ebd7102264ef377596bb75e8102d25249ef6c",
+          "version": 1508,
+          "digest": "T2LDXPWKnMiZGJUWGKVnj9aEAXT2A8n1drw85Azm8p8"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0x5a937a1022838a39f429350d9d3f026316b1a16a59efa59a7057c0f7e3b927c2"
+        },
+        "reference": {
+          "objectId": "0x07047d51d1f044e09d9228ad7123d25cfa0d672d41ae0343e5493bc66d4c7391",
+          "version": 1508,
+          "digest": "2ujJDaDVHE87MV2T8RU6QDKGJtobDH8HpGXHqTmhWW6b"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0xd32d865160c8e05a8bcaee953054948718e786889aa8c8b96623e6c4209a0086"
+        },
+        "reference": {
+          "objectId": "0x114e55c8dc44d80eb76ede7db4d8374df3b04ab8f9a02fc24b4775f20bc8fd78",
+          "version": 1508,
+          "digest": "3wLw5DEqCkTaRSpZmsKSxgSD3gFKrHTjrqisQvHetrYy"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0xd32d865160c8e05a8bcaee953054948718e786889aa8c8b96623e6c4209a0086"
+        },
+        "reference": {
+          "objectId": "0x1257cfc816a84c97216b695dc75102efb3a958494b9c2a7a014bff754a7bb0cb",
+          "version": 1508,
+          "digest": "25gtsXMb74yMiMHrp6u2Be44dRMRqU2QUF3iM6ZoorUo"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0xa5dbb3afded9a9f46ba3218cdee82b19ed3dde8b344849956bac9973d27a528a"
+        },
+        "reference": {
+          "objectId": "0x18cd11fba72eb8280fe2f43cdc25f5ce440b1028663d913d3d72516a8469e72c",
+          "version": 1508,
+          "digest": "K468GMWnKPY2L1UhCdMYqU8pd346jP69Chn3zjdyFYa"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0xa5dbb3afded9a9f46ba3218cdee82b19ed3dde8b344849956bac9973d27a528a"
+        },
+        "reference": {
+          "objectId": "0x47f0132a442b9acfe5c903a6d7f5ee02fc66baee68c83bf419f2acbd9d497211",
+          "version": 1508,
+          "digest": "2Vj78jYXMpDXWBCJm9ToJKdTT8wZTHNX3wD1Va9prnsq"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0xa5dbb3afded9a9f46ba3218cdee82b19ed3dde8b344849956bac9973d27a528a"
+        },
+        "reference": {
+          "objectId": "0x5e12c892eaec21cc4c58515395042848c7290eb00969c39c1d53bb3ffef24e02",
+          "version": 1508,
+          "digest": "VxYCT4s5xbGE2Na5u3qLcJ2TgjqSCQuNp5HniUvF791"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0xd32d865160c8e05a8bcaee953054948718e786889aa8c8b96623e6c4209a0086"
+        },
+        "reference": {
+          "objectId": "0x6b6b0f2b98824e2451c0a930b522d769a473cf0ecf30b2bd3f596150fea13ed4",
+          "version": 1508,
+          "digest": "6prbYjs9LW2iRpXELHYQZueMJ2S6NmxgWidAwbb1Q7cd"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0xd32d865160c8e05a8bcaee953054948718e786889aa8c8b96623e6c4209a0086"
+        },
+        "reference": {
+          "objectId": "0xb2cb8e0638d48687a8d679ee1f030f865521ab7753e05ca8f4ecb47e172bf26a",
+          "version": 1508,
+          "digest": "J5C7KLGo6CZcZRf6HfeQkk9aP29svHZmAnAkoq6dupJF"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0xa5dbb3afded9a9f46ba3218cdee82b19ed3dde8b344849956bac9973d27a528a"
+        },
+        "reference": {
+          "objectId": "0xd8bf6b9b60aed22477e567c215044367a53848e9d2cc47f925d499991ca995d5",
+          "version": 1508,
+          "digest": "8DvzNXoxhTkvk841JbVrXAxcWNpUTgzLzoJjBGnrMJ7q"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0xd32d865160c8e05a8bcaee953054948718e786889aa8c8b96623e6c4209a0086"
+        },
+        "reference": {
+          "objectId": "0xeb985d823a47017b14bf6eb24b7971a01bc7685f01b406594003e962015a3e79",
+          "version": 1508,
+          "digest": "3CJBiUwPGxyTyWh2yYXoSVLWtmzGJLHZeMgUUeRLsFp5"
+        }
+      }
+    ],
+    "mutated": [
+      {
+        "owner": {
+          "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+        },
+        "reference": {
+          "objectId": "0x32d39972a20f78b06c264a068f2773bfb2091d5afa4fb2d79f4cd9a2bff82947",
+          "version": 1508,
+          "digest": "Cn6VZHgFvGo4ZPmH1QWRMoRC3C1EJcCyaVRqhS38etkg"
+        }
+      },
+      {
+        "owner": {
+          "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+        },
+        "reference": {
+          "objectId": "0x3a091883a7688e06a4a2a2613d215be3aa2578a95592ad46d8b077e0aefb7897",
+          "version": 1508,
+          "digest": "BzG756aeogeVGNMUxsx6ZhJ6sfUfrE1rkPjMboVT2ckn"
+        }
+      },
+      {
+        "owner": {
+          "Shared": {
+            "initial_shared_version": 1507
+          }
+        },
+        "reference": {
+          "objectId": "0x5a937a1022838a39f429350d9d3f026316b1a16a59efa59a7057c0f7e3b927c2",
+          "version": 1508,
+          "digest": "DZwHAka7jpKztqDBpgpts9a4k2aGZ2YQ557QoM1qQuLj"
+        }
+      }
+    ],
+    "gasObject": {
+      "owner": {
+        "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+      },
+      "reference": {
+        "objectId": "0x3a091883a7688e06a4a2a2613d215be3aa2578a95592ad46d8b077e0aefb7897",
+        "version": 1508,
+        "digest": "BzG756aeogeVGNMUxsx6ZhJ6sfUfrE1rkPjMboVT2ckn"
+      }
+    },
+    "eventsDigest": "FMf6NTNa9qykBy99vKfmkx9sCQY6nk8jbySe5pAQ1TYy",
+    "dependencies": [
+      "Bv8TJArVYPenSihtznQyToNKj48gZKpG1nmXuM7AiQXS"
+    ]
+  },
+  "objectChanges": [
+    {
+      "type": "mutated",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+      },
+      "objectType": "0xaaff3b7f505c84d7767b0da3f744c6f97f8770fc58eff9756c4a9038418a25b1::game::GameCap",
+      "objectId": "0x32d39972a20f78b06c264a068f2773bfb2091d5afa4fb2d79f4cd9a2bff82947",
+      "version": "1508",
+      "previousVersion": "1507",
+      "digest": "Cn6VZHgFvGo4ZPmH1QWRMoRC3C1EJcCyaVRqhS38etkg"
+    },
+    {
+      "type": "mutated",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+      },
+      "objectType": "0x2::coin::Coin<0x2::sui::SUI>",
+      "objectId": "0x3a091883a7688e06a4a2a2613d215be3aa2578a95592ad46d8b077e0aefb7897",
+      "version": "1508",
+      "previousVersion": "1507",
+      "digest": "BzG756aeogeVGNMUxsx6ZhJ6sfUfrE1rkPjMboVT2ckn"
+    },
+    {
+      "type": "mutated",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "Shared": {
+          "initial_shared_version": 1507
+        }
+      },
+      "objectType": "0xaaff3b7f505c84d7767b0da3f744c6f97f8770fc58eff9756c4a9038418a25b1::game::GameConfig",
+      "objectId": "0x5a937a1022838a39f429350d9d3f026316b1a16a59efa59a7057c0f7e3b927c2",
+      "version": "1508",
+      "previousVersion": "1507",
+      "digest": "DZwHAka7jpKztqDBpgpts9a4k2aGZ2YQ557QoM1qQuLj"
+    },
+    {
+      "type": "created",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "ObjectOwner": "0xa5dbb3afded9a9f46ba3218cdee82b19ed3dde8b344849956bac9973d27a528a"
+      },
+      "objectType": "0x2::dynamic_field::Field<0x1::string::String, vector<u8>>",
+      "objectId": "0x06e82290506b40fea4777f432c9ebd7102264ef377596bb75e8102d25249ef6c",
+      "version": "1508",
+      "digest": "T2LDXPWKnMiZGJUWGKVnj9aEAXT2A8n1drw85Azm8p8"
+    },
+    {
+      "type": "created",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "ObjectOwner": "0x5a937a1022838a39f429350d9d3f026316b1a16a59efa59a7057c0f7e3b927c2"
+      },
+      "objectType": "0x2::dynamic_field::Field<address, 0xaaff3b7f505c84d7767b0da3f744c6f97f8770fc58eff9756c4a9038418a25b1::game::WhitelistRewards>",
+      "objectId": "0x07047d51d1f044e09d9228ad7123d25cfa0d672d41ae0343e5493bc66d4c7391",
+      "version": "1508",
+      "digest": "2ujJDaDVHE87MV2T8RU6QDKGJtobDH8HpGXHqTmhWW6b"
+    },
+    {
+      "type": "created",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "ObjectOwner": "0xd32d865160c8e05a8bcaee953054948718e786889aa8c8b96623e6c4209a0086"
+      },
+      "objectType": "0x2::dynamic_field::Field<0x1::string::String, vector<u64>>",
+      "objectId": "0x114e55c8dc44d80eb76ede7db4d8374df3b04ab8f9a02fc24b4775f20bc8fd78",
+      "version": "1508",
+      "digest": "3wLw5DEqCkTaRSpZmsKSxgSD3gFKrHTjrqisQvHetrYy"
+    },
+    {
+      "type": "created",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "ObjectOwner": "0xd32d865160c8e05a8bcaee953054948718e786889aa8c8b96623e6c4209a0086"
+      },
+      "objectType": "0x2::dynamic_field::Field<0x1::string::String, vector<u8>>",
+      "objectId": "0x1257cfc816a84c97216b695dc75102efb3a958494b9c2a7a014bff754a7bb0cb",
+      "version": "1508",
+      "digest": "25gtsXMb74yMiMHrp6u2Be44dRMRqU2QUF3iM6ZoorUo"
+    },
+    {
+      "type": "created",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "ObjectOwner": "0xa5dbb3afded9a9f46ba3218cdee82b19ed3dde8b344849956bac9973d27a528a"
+      },
+      "objectType": "0x2::dynamic_field::Field<0x1::string::String, vector<u64>>",
+      "objectId": "0x18cd11fba72eb8280fe2f43cdc25f5ce440b1028663d913d3d72516a8469e72c",
+      "version": "1508",
+      "digest": "K468GMWnKPY2L1UhCdMYqU8pd346jP69Chn3zjdyFYa"
+    },
+    {
+      "type": "created",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "ObjectOwner": "0xa5dbb3afded9a9f46ba3218cdee82b19ed3dde8b344849956bac9973d27a528a"
+      },
+      "objectType": "0x2::dynamic_field::Field<0x1::string::String, vector<u8>>",
+      "objectId": "0x47f0132a442b9acfe5c903a6d7f5ee02fc66baee68c83bf419f2acbd9d497211",
+      "version": "1508",
+      "digest": "2Vj78jYXMpDXWBCJm9ToJKdTT8wZTHNX3wD1Va9prnsq"
+    },
+    {
+      "type": "created",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "ObjectOwner": "0xa5dbb3afded9a9f46ba3218cdee82b19ed3dde8b344849956bac9973d27a528a"
+      },
+      "objectType": "0x2::dynamic_field::Field<0x1::string::String, vector<u8>>",
+      "objectId": "0x5e12c892eaec21cc4c58515395042848c7290eb00969c39c1d53bb3ffef24e02",
+      "version": "1508",
+      "digest": "VxYCT4s5xbGE2Na5u3qLcJ2TgjqSCQuNp5HniUvF791"
+    },
+    {
+      "type": "created",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "ObjectOwner": "0xd32d865160c8e05a8bcaee953054948718e786889aa8c8b96623e6c4209a0086"
+      },
+      "objectType": "0x2::dynamic_field::Field<0x1::string::String, vector<u8>>",
+      "objectId": "0x6b6b0f2b98824e2451c0a930b522d769a473cf0ecf30b2bd3f596150fea13ed4",
+      "version": "1508",
+      "digest": "6prbYjs9LW2iRpXELHYQZueMJ2S6NmxgWidAwbb1Q7cd"
+    },
+    {
+      "type": "created",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "ObjectOwner": "0xd32d865160c8e05a8bcaee953054948718e786889aa8c8b96623e6c4209a0086"
+      },
+      "objectType": "0x2::dynamic_field::Field<0x1::string::String, vector<u8>>",
+      "objectId": "0xb2cb8e0638d48687a8d679ee1f030f865521ab7753e05ca8f4ecb47e172bf26a",
+      "version": "1508",
+      "digest": "J5C7KLGo6CZcZRf6HfeQkk9aP29svHZmAnAkoq6dupJF"
+    },
+    {
+      "type": "created",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "ObjectOwner": "0xa5dbb3afded9a9f46ba3218cdee82b19ed3dde8b344849956bac9973d27a528a"
+      },
+      "objectType": "0x2::dynamic_field::Field<0x1::string::String, vector<u8>>",
+      "objectId": "0xd8bf6b9b60aed22477e567c215044367a53848e9d2cc47f925d499991ca995d5",
+      "version": "1508",
+      "digest": "8DvzNXoxhTkvk841JbVrXAxcWNpUTgzLzoJjBGnrMJ7q"
+    },
+    {
+      "type": "created",
+      "sender": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71",
+      "owner": {
+        "ObjectOwner": "0xd32d865160c8e05a8bcaee953054948718e786889aa8c8b96623e6c4209a0086"
+      },
+      "objectType": "0x2::dynamic_field::Field<0x1::string::String, vector<u8>>",
+      "objectId": "0xeb985d823a47017b14bf6eb24b7971a01bc7685f01b406594003e962015a3e79",
+      "version": "1508",
+      "digest": "3CJBiUwPGxyTyWh2yYXoSVLWtmzGJLHZeMgUUeRLsFp5"
+    }
+  ],
+  "confirmedLocalExecution": true
+}

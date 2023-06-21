@@ -167,7 +167,6 @@ async function main() {
         console.log(err);
     }
   });
-  console.log(result);
 }
 
 main();
