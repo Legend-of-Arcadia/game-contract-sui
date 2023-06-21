@@ -5,7 +5,6 @@ dotenv.config();
 const privKey: string = process.env.PRIVATE_KEY as string;
 const gameCapId = process.env.GAME_CAP as string;
 const packageId = process.env.PACKAGE as string;
-const upgraderId = process.env.UPGRADER as string;
 // cli path is "sui"
 
 /// helper to make keypair from private key that is in string format
@@ -16,7 +15,7 @@ function getKeyPair(privateKey: string): Ed25519Keypair{
 }
 
 let keyPair = getKeyPair(privKey);
-let provider = new JsonRpcProvider(devnetConnection);
+let provider = new JsonRpcProvider(testnetConnection);
 let mugen = new RawSigner(keyPair, provider);
 
 async function mintHero() {
@@ -64,7 +63,13 @@ async function mintHero() {
 async function main() {
 
   let result = await mintHero();
-  console.log(JSON.stringify(result));
+  var fs = require('fs');
+  fs.writeFile(`./auto-results/mintHeroResult.json`, JSON.stringify(result, null, 2), function(err: any) {
+    if (err) {
+        console.log(err);
+    }
+  });
+  console.log(result);
 }
 
 main();

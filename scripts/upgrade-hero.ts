@@ -3,7 +3,8 @@ import { testnetConnection, fromB64, TransactionBlock, Ed25519Keypair, JsonRpcPr
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const privKey: string = process.env.MY_PRIVATE_KEY!;
+
+const privKey: string = process.env.PRIVATE_KEY!;
 // const gameCapId = process.env.GAME_CAP_ID!;
 // const packageId = process.env.PACKAGE_ID!;
 const gameCapId = "0x704ed0b3e69bf59b4e16cf89550a0a4377d62dcc8128846886dc9199e8f6a082"
@@ -54,6 +55,8 @@ async function upgradeHeroOfPlayer(playerAddress: String){
     ]
   });
 
+  txb.setGasBudget(100000000);
+
   let result = await mugen.signAndExecuteTransactionBlock({
     transactionBlock: txb,
     requestType: "WaitForLocalExecution",
@@ -73,7 +76,14 @@ async function main() {
 
   let address = "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71";
   let result = await upgradeHeroOfPlayer(address);
+  var fs = require('fs');
+  fs.writeFile(`./auto-results/upgradeHeroResult.json`, JSON.stringify(result, null, 2), function(err: any) {
+    if (err) {
+        console.log(err);
+    }
+  });
   console.log(result);
 }
+
 
 main();
