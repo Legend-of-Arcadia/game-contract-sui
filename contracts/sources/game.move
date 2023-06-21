@@ -73,8 +73,7 @@ module contracts::game{
   struct UpgradeRequest has copy, drop {
     hero_id: address,
     player_address: address,
-    burned_heroes: u64,
-    is_makeover: bool
+    burned_heroes: u64
   }
 
   struct PowerUpgadeRequest has copy, drop {
@@ -82,6 +81,13 @@ module contracts::game{
     user: address,
     burned_heroes: u64,
     arca_payed: u64
+  }
+
+  struct MakeoverRequest has copy, drop {
+    hero_id: address,
+    player_address: address,
+    burned_hero_id: address,
+    burned_hero_rarity: String
   }
 
   // game capability
@@ -285,7 +291,13 @@ module contracts::game{
 
   // appearance_index is the index of the part inside the appearance vector
   // eg: eye is 0, appearance[0]
-  public fun makeover_hero(main_hero: &mut Hero, to_burn: Hero, appearance_index: u64) {
+  public fun makeover_hero(
+    main_hero: Hero,
+    to_burn: Hero,
+    appearance_index: u64,
+    upgrader: &mut Upgrader,
+    ctx: &mut TxContext) {
+    assert!(VERSION == 1, EIncorrectVersion);
     assert!(
       appearance_index != 0 &&
       appearance_index != 4 &&
@@ -293,21 +305,22 @@ module contracts::game{
       appearance_index <=10,
       EBodyPartCannotBeExchanged
     );
-    let main_hero_appearance = *hero::appearance_values(main_hero);
-    let burn_hero_appearance = *hero::appearance_values(&to_burn);
-    assert!(vector::borrow(&main_hero_appearance, appearance_index) != vector::borrow(&burn_hero_appearance, appearance_index),
-      ESameAppearancePart
-    );
-    *vector::borrow_mut(&mut main_hero_appearance, appearance_index) = *vector::borrow(&burn_hero_appearance, appearance_index);
-    hero::edit_fields<u8>(main_hero, string::utf8(b"appearance"), main_hero_appearance);
+
+    let evt = MakeoverRequest {
+      hero_id: object::id_address(&main_hero),
+      player_address: tx_context::sender(ctx),
+      burned_hero_id: object::id_address(&to_burn),
+      burned_hero_rarity: *hero::rarity(&to_burn)
+    };
+    event::emit(evt);
     hero::burn(to_burn);
+    put_hero(main_hero, tx_context::sender(ctx), 1, upgrader);
   }
 
   public fun upgrade_hero(
     main_hero: Hero,
     to_burn: vector<Hero>,
     upgrader: &mut Upgrader,
-    is_makeover: bool,
     ctx: &mut TxContext)
   {
     assert!(VERSION == 1, EIncorrectVersion);
@@ -327,8 +340,7 @@ module contracts::game{
     let evt = UpgradeRequest {
       hero_id: object::id_address(&main_hero),
       player_address: tx_context::sender(ctx),
-      burned_heroes: l,
-      is_makeover
+      burned_heroes: l
     };
     event::emit(evt);
     put_hero(main_hero, tx_context::sender(ctx), l, upgrader);

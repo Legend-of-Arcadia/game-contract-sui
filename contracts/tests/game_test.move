@@ -73,7 +73,7 @@ module contracts::test_game {
 
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
 
-      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, false, ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
     };
 
@@ -137,7 +137,7 @@ module contracts::test_game {
 
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
 
-      game::upgrade_hero(hero, vector::empty<Hero>(), &mut upgrader, false, ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector::empty<Hero>(), &mut upgrader, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
     };
 
@@ -157,8 +157,6 @@ module contracts::test_game {
       let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
       let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
 
-      let appearance = vector[21, 22, 28, 24, 25, 26, 27, 28, 29, 30, 31];
-
       game::upgrade_appearance(&cap, &mut hero1, appearance);
 
       transfer::public_transfer(hero, USER);
@@ -169,11 +167,27 @@ module contracts::test_game {
     //user starts the upgrade
     ts::next_tx(&mut scenario, USER);
     {
+      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let hero1 = ts::take_from_sender<Hero>(&mut scenario);
       let hero = ts::take_from_sender<Hero>(&mut scenario);
       let appearance_index = 2u64;
-      game::makeover_hero(&mut hero, hero1, appearance_index);
-      ts::return_to_sender<Hero>(&scenario, hero);
+      game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, ts::ctx(&mut scenario));
+      ts::return_shared(upgrader);
+    };
+
+    // game performs upgrade
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+
+      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
+      assert!(hero::pending_upgrade(&hero) == &1, EWrongHeroPendingUpgrade);
+      game::upgrade_appearance(&cap, &mut hero, appearance);
+      game::return_upgraded_hero(hero, ticket);
+
+      ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(upgrader);
     };
 
     //check
