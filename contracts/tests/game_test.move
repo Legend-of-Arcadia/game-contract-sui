@@ -1,6 +1,5 @@
 module contracts::test_game {
   use std::vector;
-  // use std::debug;
 
   use sui::coin::{Self, Coin};
   use sui::test_scenario as ts;
@@ -27,41 +26,6 @@ module contracts::test_game {
 
   const GAME: address = @0x111;
   const USER: address = @0x222;
-
- // removed buy gacha from game
-//  public fun test_buy() {
-//   let scenario = ts::begin(GAME);
-//   game::init_for_test(ts::ctx(&mut scenario));
-  
-//   ts::next_tx(&mut scenario, GAME);
-//   {
-//     let config = ts::take_shared<GameConfig>(&mut scenario);
-//     let cap = ts::take_from_sender<GameCap>(&mut scenario);
-//     // add sui as allowed coin
-//     game::add_allowed_coin<SUI>(&cap, &mut config);
-//     // add prices for sui
-//     let sui_prices = game::borrow_mut<SUI>(&cap, &mut config);
-//     vec_map::insert<String, u64>(sui_prices, string::utf8(b"rare"), 10_000_000_000);
-//     vec_map::insert<String, u64>(sui_prices, string::utf8(b"legendary"), 20_000_000_000);
-//     ts::return_shared(config);
-//     ts::return_to_sender(&scenario, cap);
-//   };
-
-//   ts::next_tx(&mut scenario, USER);
-//   {
-//     let config = ts::take_shared<GameConfig>(&mut scenario);
-//     let payment = coin::mint_for_testing<SUI>(10_000_000_000, ts::ctx(&mut scenario));
-//     let type: String = string::utf8(b"rare");
-//     let collection: String = string::utf8(b"New Collection");
-//     let name: String = string::utf8(b"Cool Gacha");
-
-//     let gacha = game::buy_gacha(&mut config, payment, type, collection, name, ts::ctx(&mut scenario));
-//     transfer::public_transfer(gacha, USER);
-//     ts::return_shared(config);
-//   };
-
-//   ts::end(scenario);
-//  }
 
   #[test]
   fun test_hero_mint(){
@@ -182,6 +146,7 @@ module contracts::test_game {
 
   #[test]
   public fun makeover_test() {
+    let appearance = vector[21, 22, 28, 24, 25, 26, 27, 28, 29, 30, 31];
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
 
@@ -191,62 +156,31 @@ module contracts::test_game {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
       let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
       let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+
+      let appearance = vector[21, 22, 28, 24, 25, 26, 27, 28, 29, 30, 31];
+
+      game::upgrade_appearance(&cap, &mut hero1, appearance);
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
-      transfer::public_transfer(hero2, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
     };
 
     //user starts the upgrade
     ts::next_tx(&mut scenario, USER);
     {
-      let hero2 = ts::take_from_sender<Hero>(&mut scenario);
       let hero1 = ts::take_from_sender<Hero>(&mut scenario);
       let hero = ts::take_from_sender<Hero>(&mut scenario);
-
-      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-
-      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, true, ts::ctx(&mut scenario));
-      ts::return_shared(upgrader);
-    };
-
-    let new_appearance: vector<u8> = vector [
-            45,
-            46,
-            47,
-            48,
-            49,
-            50,
-            51,
-            52,
-            53,
-            54,
-            55,
-        ];
-
-    // game performs upgrade
-    ts::next_tx(&mut scenario, GAME);
-    {
-      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let cap = ts::take_from_sender<GameCap>(&mut scenario);
-
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
-      assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
-      game::upgrade_appearance(&cap, &mut hero, new_appearance);
-      game::return_upgraded_hero(hero, ticket);
-
-      ts::return_to_sender<GameCap>(&scenario, cap);
-      ts::return_shared(upgrader);
+      let appearance_index = 2u64;
+      game::makeover_hero(&mut hero, hero1, appearance_index);
+      ts::return_to_sender<Hero>(&scenario, hero);
     };
 
     //check
     ts::next_tx(&mut scenario, USER);
     {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
-      assert!(*hero::appearance_values(&hero) == new_appearance, EWrongAppearance);
-      assert!(hero::pending_upgrade(&hero) == &0, EWrongHeroPendingUpgrade);
+      assert!(*hero::appearance_values(&hero) == appearance, EWrongAppearance);
       ts::return_to_sender<Hero>(&scenario, hero);
     };
 

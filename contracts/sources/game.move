@@ -30,6 +30,8 @@ module contracts::game{
   const EMustBurnAtLeastOneHero: u64 = 7;
   const EWhitelistInputsNotSameLength: u64 = 8;
   const ENotWhitelisted: u64 = 9;
+  const EBodyPartCannotBeExchanged: u64 = 10;
+  const ESameAppearancePart: u64 = 11;
 
   // config struct
   struct GameConfig has key, store {
@@ -281,6 +283,26 @@ module contracts::game{
     event::emit(open_evt);
   }
 
+  // appearance_index is the index of the part inside the appearance vector
+  // eg: eye is 0, appearance[0]
+  public fun makeover_hero(main_hero: &mut Hero, to_burn: Hero, appearance_index: u64) {
+    assert!(
+      appearance_index != 0 &&
+      appearance_index != 4 &&
+      appearance_index != 7 &&
+      appearance_index <=10,
+      EBodyPartCannotBeExchanged
+    );
+    let main_hero_appearance = *hero::appearance_values(main_hero);
+    let burn_hero_appearance = *hero::appearance_values(&to_burn);
+    assert!(vector::borrow(&main_hero_appearance, appearance_index) != vector::borrow(&burn_hero_appearance, appearance_index),
+      ESameAppearancePart
+    );
+    *vector::borrow_mut(&mut main_hero_appearance, appearance_index) = *vector::borrow(&burn_hero_appearance, appearance_index);
+    hero::edit_fields<u8>(main_hero, string::utf8(b"appearance"), main_hero_appearance);
+    hero::burn(to_burn);
+  }
+
   public fun upgrade_hero(
     main_hero: Hero,
     to_burn: vector<Hero>,
@@ -389,7 +411,7 @@ module contracts::game{
       let rarity = string::utf8(b"SR");
       let base_attributes_values: vector<u8> = vector[1,2,3,4,5,6];
       let skill_attributes_values: vector<u8> = vector[31, 32, 33, 34];
-      let appearence_attributes_values: vector<u8> = vector[21, 22, 23, 24, 25, 26];
+      let appearance_attributes_values: vector<u8> = vector[21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
       let stat_attributes_values: vector<u64> = vector [0, 0, 0, 0, 0, 0, 0, 0];
       let other_attributes_values: vector<u8> = vector[9];
       let external_id = string::utf8(b"1337");
@@ -402,7 +424,7 @@ module contracts::game{
         rarity,
         base_attributes_values,
         skill_attributes_values,
-        appearence_attributes_values,
+        appearance_attributes_values,
         stat_attributes_values,
         other_attributes_values,
         external_id,
