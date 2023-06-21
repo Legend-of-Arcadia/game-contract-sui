@@ -36,7 +36,13 @@ async function publish() {
   const result = await signer.signAndExecuteTransactionBlock({
     transactionBlock: tx,
   });
-  console.log({ result });
+  var fs = require('fs');
+  fs.writeFile(`./auto-results/publishResult.json`, JSON.stringify(result, null, 2), function(err: any) {
+    if (err) {
+        console.log(err);
+    }
+  });
+  console.log(result);
 }
 
 publish();
