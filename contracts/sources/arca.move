@@ -3,7 +3,7 @@ module contracts::arca {
     use std::option;
     use std::string::{Self, String};
     use std::vector;
-    use std::debug;
+    // use std::debug;
 
     use sui::coin::{Self, Coin};
     use sui::transfer;
@@ -234,8 +234,6 @@ module contracts::arca {
         let i = 0;
         let holder_address = *option::borrow_with_default<address>(linked_table::front(&sp.veARCA_holders), &@0x0);
 
-        debug::print(&linked_table::length(&sp.veARCA_holders));
-
         while( i < linked_table::length(&sp.veARCA_holders)) {
             if(holder_address == @0x0) {
                 break
@@ -243,12 +241,11 @@ module contracts::arca {
 
             let value = linked_table::borrow(&sp.veARCA_holders, holder_address);
 
-            debug::print(value);
+            if (*vector::borrow(value, 1) < clock::timestamp_ms(clock)) {
+                break
+            };
 
-            // let vip = calc_vip_level(value, sp.next_distribution_timestamp);
-            let vip = calc_vip_level(value, clock);
-
-            debug::print(&vip);
+            let vip = calc_vip_level(value, sp.next_distribution_timestamp);
 
             if(!linked_table::contains(&sp.holders_vip_level, vip)){
                 let v = vector::empty<address>();
@@ -279,8 +276,6 @@ module contracts::arca {
         let rewards_left = balance::value<ARCA>(&sp.rewards);
 
         classify_vip_addresses(sp, clock);
-
-        // debug::print(&sp.holders_vip_level);
         
         while(!linked_table::is_empty(&sp.holders_vip_level)) {
 
@@ -299,8 +294,6 @@ module contracts::arca {
             rewards_left = rewards_left - sum_reward;
 
             let reward = sum_reward/vector::length<address>(&value);
-
-            // debug::print(&reward);
 
             while(!vector::is_empty(&value)) {
                 let coin = coin::take<ARCA>(&mut sp.rewards, reward, ctx);
@@ -328,26 +321,18 @@ module contracts::arca {
         veARCA_amount
     }
 
-    // we have to put the next distribution timestamp and not the current
-    // also probably we have to divide that reward by the users of the respective vip level
-    // probably I should put an assert somewhere to be sure that the end_date of the staking period has not pass and the stake is still valid
-    // fun calc_veARCA(initial: u64, next_distribution_timestamp: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {       
-    fun calc_veARCA(initial: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {       
-        // initial * ((end_date - next_distribution_timestamp) / locking_period_sec)
-        // debug::print(&clock::timestamp_ms(clock));
-        // debug::print(&initial);
-        // debug::print(&(((end_date - clock::timestamp_ms(clock))*10 / locking_period_sec*10)));
-        // this is not working properly, so we need more precise timestamps
-        // let s: u64 = (initial * ((end_date - clock::timestamp_ms(clock))*1000 / locking_period_sec*1000))/1000;
+    fun calc_veARCA(initial: u64, next_distribution_timestamp: u64, end_date: u64, locking_period_sec: u64): u64 {
+        let initial_128 = (initial as u128);    
+        let end_date_128 = (end_date as u128);    
+        let locking_period_sec_128 = (locking_period_sec as u128); 
+        let next_distribution_timestamp_128 = (next_distribution_timestamp as u128);
 
-        // debug::print(&s);
+        let veARCA_amount = initial_128 * (end_date_128 - next_distribution_timestamp_128) / locking_period_sec_128;
 
-        initial * (((end_date - clock::timestamp_ms(clock)))*1000 / locking_period_sec*1000)
+        (veARCA_amount as u64)
     }
 
     fun calc_vip_level_veARCA( veARCA_amount: u64, decimals: u64): u64 {
-
-        debug::print(&veARCA_amount);
         let vip_level = 0;
         if(veARCA_amount >= (3*decimals*DECIMALS) && veARCA_amount < (35*decimals*DECIMALS)) {
             vip_level = 1;
@@ -394,12 +379,8 @@ module contracts::arca {
         vip_level
     }
 
-    // fun calc_vip_level(value: &vector<u64>, next_distribution_timestamp: u64): u64 {
-    fun calc_vip_level(value: &vector<u64>, clock: &Clock): u64 {
-        // let veARCA_amount = calc_veARCA(*vector::borrow(value, 0), next_distribution_timestamp, *vector::borrow(value, 1), *vector::borrow(value, 2));
-        let veARCA_amount = calc_veARCA(*vector::borrow(value, 0), *vector::borrow(value, 1), *vector::borrow(value, 2), clock);
-
-        debug::print(&veARCA_amount);
+    fun calc_vip_level(value: &vector<u64>, next_distribution_timestamp: u64): u64 {
+        let veARCA_amount = calc_veARCA(*vector::borrow(value, 0), next_distribution_timestamp, *vector::borrow(value, 1), *vector::borrow(value, 2));
         
         let vip_level = calc_vip_level_veARCA(veARCA_amount, 100);
 
@@ -424,9 +405,9 @@ module contracts::arca {
         veARCA.initial
     }
 
-    // public fun get_amount_VeARCA(veARCA: &VeARCA, sp: &StakingPool): u64 {
-    //     calc_veARCA(veARCA.initial, sp.next_distribution_timestamp, veARCA.end_date, veARCA.locking_period_sec)
-    // }
+    public fun get_amount_VeARCA(veARCA: &VeARCA, sp: &StakingPool): u64 {
+        calc_veARCA(veARCA.initial, sp.next_distribution_timestamp, veARCA.end_date, veARCA.locking_period_sec)
+    }
 
     public fun get_start_date_VeARCA(veARCA: &VeARCA): u64 {
         veARCA.start_date

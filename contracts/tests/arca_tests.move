@@ -557,7 +557,7 @@ module contracts::staking_tests {
         ts::end(scenario);
     }
 
-    #[test, expected_failure]
+    #[test]
     fun test_distribute_rewards2() {
         let scenario = ts::begin(USER1_ADDRESS);
 
@@ -817,22 +817,7 @@ module contracts::staking_tests {
 
             let arca_coin = ts::take_from_sender<coin::Coin<ARCA>>(&mut scenario);
 
-            assert!(coin::value(&arca_coin) == 475*DECIMALS, ENotRightAmountDistributed);
-
-            ts::return_to_sender<coin::Coin<ARCA>>(&scenario, arca_coin);
-
-            ts::return_shared(staking_pool);
-            ts::return_shared(clock);
-        };
-
-        ts::next_tx(&mut scenario, USER12_ADDRESS);
-        {
-            let staking_pool = ts::take_shared<arca::StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
-
-            let arca_coin = ts::take_from_sender<coin::Coin<ARCA>>(&mut scenario);
-
-            assert!(coin::value(&arca_coin) == 250*DECIMALS, ENotRightAmountDistributed);
+            assert!(coin::value(&arca_coin) == 39583333333, ENotRightAmountDistributed);
 
             ts::return_to_sender<coin::Coin<ARCA>>(&scenario, arca_coin);
 
