@@ -1,0 +1,121 @@
+{
+  "digest": "4gyo6mRRt4nLXXGEQxX4Vi4DQVGkyWobe2kU3feEHPSQ",
+  "effects": {
+    "messageVersion": "v1",
+    "status": { "status": "success" },
+    "executedEpoch": "1",
+    "gasUsed": {
+      "computationCost": "1000000",
+      "storageCost": "7752000",
+      "storageRebate": "10285308",
+      "nonRefundableStorageFee": "103892"
+    },
+    "modifiedAtVersions": [
+      {
+        "objectId": "0x0676e6389aedde234ee8a4b32470ded58a35ebd842e9345adcf317d882556ab0",
+        "sequenceNumber": "46"
+      },
+      {
+        "objectId": "0x452ab990cd35a6b7b8576c924c5e0a4ce14071835df708b03152a0c1dd43b61e",
+        "sequenceNumber": "45"
+      },
+      {
+        "objectId": "0x690692ccae23de2bbf4219e9a13364a296230c60134ac576e92312236247764f",
+        "sequenceNumber": "46"
+      },
+      {
+        "objectId": "0x6e754e38a52ca90264851be96a3db55bbdea3eb7e0411c1f4b52c492b1f18940",
+        "sequenceNumber": "46"
+      },
+      {
+        "objectId": "0xd20d54bb5bbe7d5b4311374891520d85f86d1c0e798158480676e2c2bb800e95",
+        "sequenceNumber": "43"
+      },
+      {
+        "objectId": "0x2cb2fd6dd3eee2ce9c6fa91ffd9949b89f2a138cfb9e2debce61944166d7fb4c",
+        "sequenceNumber": "46"
+      }
+    ],
+    "sharedObjects": [
+      {
+        "objectId": "0x690692ccae23de2bbf4219e9a13364a296230c60134ac576e92312236247764f",
+        "version": 46,
+        "digest": "2TUvs1LhoVdVN1BEsHu16gtwZHQfod1vHR6CP7BYt8bF"
+      }
+    ],
+    "transactionDigest": "4gyo6mRRt4nLXXGEQxX4Vi4DQVGkyWobe2kU3feEHPSQ",
+    "mutated": [
+      {
+        "owner": {
+          "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+        },
+        "reference": {
+          "objectId": "0x0676e6389aedde234ee8a4b32470ded58a35ebd842e9345adcf317d882556ab0",
+          "version": 47,
+          "digest": "8wB5cRY2kEtef1w7nWgzEDkLKCb3gHPGQKcpnDja9HhX"
+        }
+      },
+      {
+        "owner": {
+          "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+        },
+        "reference": {
+          "objectId": "0x452ab990cd35a6b7b8576c924c5e0a4ce14071835df708b03152a0c1dd43b61e",
+          "version": 47,
+          "digest": "BBa48vkjsH8deNSE6WmRWaXgX9UX7Bc5raDcF2nBnSkQ"
+        }
+      },
+      {
+        "owner": { "Shared": { "initial_shared_version": 33 } },
+        "reference": {
+          "objectId": "0x690692ccae23de2bbf4219e9a13364a296230c60134ac576e92312236247764f",
+          "version": 47,
+          "digest": "63GK5tMgc7WJRhCG9MSz5Q6APKncW7eU5E1m2mhW5r1X"
+        }
+      },
+      {
+        "owner": {
+          "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+        },
+        "reference": {
+          "objectId": "0x6e754e38a52ca90264851be96a3db55bbdea3eb7e0411c1f4b52c492b1f18940",
+          "version": 47,
+          "digest": "EosypgwXdJbA8g3oyv8a3z6bedmbrWFGahsA46sB3Zy"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0x6e754e38a52ca90264851be96a3db55bbdea3eb7e0411c1f4b52c492b1f18940"
+        },
+        "reference": {
+          "objectId": "0xd20d54bb5bbe7d5b4311374891520d85f86d1c0e798158480676e2c2bb800e95",
+          "version": 47,
+          "digest": "j73KfcDq8hm6mwDPsujo932d2ZL9kNQY3L9B1EKP7SU"
+        }
+      }
+    ],
+    "deleted": [
+      {
+        "objectId": "0x2cb2fd6dd3eee2ce9c6fa91ffd9949b89f2a138cfb9e2debce61944166d7fb4c",
+        "version": 47,
+        "digest": "7gyGAp71YXQRoxmFBaHxofQXAipvgHyBKPyxmdSJxyvz"
+      }
+    ],
+    "gasObject": {
+      "owner": {
+        "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+      },
+      "reference": {
+        "objectId": "0x0676e6389aedde234ee8a4b32470ded58a35ebd842e9345adcf317d882556ab0",
+        "version": 47,
+        "digest": "8wB5cRY2kEtef1w7nWgzEDkLKCb3gHPGQKcpnDja9HhX"
+      }
+    },
+    "dependencies": [
+      "2Y5RP5tdzMq2Kxegwrxo3WsVHCuQKAz5aAvuGh9RhraC",
+      "2h83yon9Ezo8xebDKo7THD3h5xYwGffWWAYWAZ3gfV59",
+      "B25PVkdekwdd5GqvPG1CxNEDrurLmPhj42AGaZYwzDqZ"
+    ]
+  },
+  "confirmedLocalExecution": true
+}

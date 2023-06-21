@@ -1,13 +1,11 @@
-import { testnetConnection, fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner} from "@mysten/sui.js";
+import { fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner, devnetConnection} from "@mysten/sui.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const privKey: string = process.env.MY_PRIVATE_KEY!;
-// const gameCapId = process.env.GAME_CAP_ID!;
-// const packageId = process.env.PACKAGE_ID!;
-const gameCapId = "0x704ed0b3e69bf59b4e16cf89550a0a4377d62dcc8128846886dc9199e8f6a082"
-const packageId = "0x9e3ecb3a6958fc96bd9d848e15e40a232db7059660c1c2943ee2c5d543220310"
-const upgraderId = "0xec59bd25fce6f835d647cd7c458844171700db7addc620903f902cfa2b564292"
+const privKey: string = process.env.PRIVATE_KEY as string;
+const gameCapId = process.env.GAME_CAP as string;
+const packageId = process.env.PACKAGE as string;
+const upgraderId = process.env.UPGRADER as string;
 // cli path is "sui"
 
 /// helper to make keypair from private key that is in string format
@@ -25,7 +23,7 @@ function getHeroId(mintResult: any) {
 }
 
 let keyPair = getKeyPair(privKey);
-let provider = new JsonRpcProvider(testnetConnection);
+let provider = new JsonRpcProvider(devnetConnection);
 let mugen = new RawSigner(keyPair, provider);
 
 async function mintHero() {
@@ -41,16 +39,16 @@ async function mintHero() {
     target: `${packageId}::game::mint_hero`,
     arguments: [
       txb.object(gameCapId),
-      txb.pure("Wo Long"),
-      txb.pure("Assassin"),
-      txb.pure("Flamexecuter"),
-      txb.pure("R"),
+      txb.pure("Wo Long", "string"),
+      txb.pure("Assassin", "string"),
+      txb.pure("Flamexecuter", "string"),
+      txb.pure("R", "string"),
       txb.pure(baseValues),
       txb.pure(skillValues),
       txb.pure(appearenceValues),
       txb.pure(statValues),
       txb.pure(otherValues),
-      txb.pure("1337"),
+      txb.pure("1337", "string"),
     ]
   });
 
@@ -85,7 +83,7 @@ async function upgradeHero(mainHeroId: string, heroIds: string[]){
       hero,
       txb.makeMoveVec({ objects: heroes }),
       txb.object(upgraderId),
-      txb.pure("true", "bool"),
+      txb.pure("false", "bool"),
     ]
   });
 
@@ -95,29 +93,76 @@ async function upgradeHero(mainHeroId: string, heroIds: string[]){
     options: {
       showEffects: true,
       showObjectChanges: true,
+      showEvents: true
     },
   });
 
   return result;
-
  
+}
+
+const perofmUpgrade = async (playerAddress: string) => {
+  const new_stats = [
+    500, //5%
+    234, // 2.24%
+    0,
+    0,
+    300, // 3%
+    0,
+    0,
+    0
+  ]
+  const txb = new TransactionBlock();
+
+  const callResult = txb.moveCall({
+    target: `${packageId}::game::get_for_upgrade`,
+    arguments: [txb.object(gameCapId), txb.pure(playerAddress), txb.object(upgraderId)],
+    typeArguments: []
+  });
+  
+  txb.moveCall({
+    target: `${packageId}::game::upgrade_stat`,
+    arguments: [txb.object(gameCapId), callResult[0], txb.pure(new_stats)]
+  })
+
+  txb.moveCall({
+    target: `${packageId}::game::return_upgraded_hero`,
+    arguments: [callResult[0], callResult[1]]
+  });
+
+  let result = mugen.signAndExecuteTransactionBlock({
+    transactionBlock: txb,
+    requestType: "WaitForLocalExecution",
+    options: {
+      showEffects: true
+    }
+  });
+
+  return result;
+
 }
 
 async function main() {
 
-  let mintResult1 = await mintHero();
-  let mintResult2 = await mintHero();
-  let mintResult3 = await mintHero();
+  // let mintResult1 = await mintHero();
+  // console.log("YOooo")
+  // let mintResult2 = await mintHero();
+  // let mintResult3 = await mintHero();
 
-  let mainHeroId = getHeroId(mintResult1);
-  console.log(mainHeroId);
-  let hero1Id = getHeroId(mintResult2);
-  let hero2Id = getHeroId(mintResult3);
+  // let mainHeroId = getHeroId(mintResult1);
+  // console.log(mainHeroId);
+  // let hero1Id = getHeroId(mintResult2);
+  // let hero2Id = getHeroId(mintResult3);
 
-  let heroIds = [hero1Id, hero2Id];
+  // let heroIds = [hero1Id, hero2Id];
 
-  let upgradeResult = await upgradeHero(mainHeroId, heroIds);
+  // let requestUpgradeResult = await upgradeHero(mainHeroId, heroIds);
+  // console.log(JSON.stringify(requestUpgradeResult));
 
+  // address
+  const address = "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71";
+  let upgradeResult = await perofmUpgrade(address);
+  console.log(JSON.stringify(upgradeResult));
 }
 
 main();

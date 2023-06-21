@@ -1,13 +1,11 @@
-import { testnetConnection, fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner} from "@mysten/sui.js";
+import { testnetConnection, fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner, devnetConnection} from "@mysten/sui.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const privKey: string = process.env.MY_PRIVATE_KEY!;
-// const gameCapId = process.env.GAME_CAP_ID!;
-// const packageId = process.env.PACKAGE_ID!;
-const gameCapId = "0x704ed0b3e69bf59b4e16cf89550a0a4377d62dcc8128846886dc9199e8f6a082"
-const packageId = "0x9e3ecb3a6958fc96bd9d848e15e40a232db7059660c1c2943ee2c5d543220310"
-const upgraderId = "0xec59bd25fce6f835d647cd7c458844171700db7addc620903f902cfa2b564292"
+const privKey: string = process.env.PRIVATE_KEY as string;
+const gameCapId = process.env.GAME_CAP as string;
+const packageId = process.env.PACKAGE as string;
+const upgraderId = process.env.UPGRADER as string;
 // cli path is "sui"
 
 /// helper to make keypair from private key that is in string format
@@ -25,7 +23,7 @@ function getHeroId(mintResult: any) {
 }
 
 let keyPair = getKeyPair(privKey);
-let provider = new JsonRpcProvider(testnetConnection);
+let provider = new JsonRpcProvider(devnetConnection);
 let mugen = new RawSigner(keyPair, provider);
 
 async function airdrop(addresses: string[]) {
@@ -56,7 +54,7 @@ async function airdrop(addresses: string[]) {
         txb.pure(otherValues),
         txb.pure("1337"),
       ]
-    });
+    }); 
 
     txb.transferObjects([hero], txb.pure(addresses[i]));
   }
