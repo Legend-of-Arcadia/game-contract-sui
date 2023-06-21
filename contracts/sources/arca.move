@@ -3,6 +3,7 @@ module contracts::arca {
     use std::option;
     use std::string::{Self, String};
     use std::vector;
+    use std::debug;
 
     use sui::coin::{Self, Coin};
     use sui::transfer;
@@ -57,6 +58,7 @@ module contracts::arca {
         rewards: Balance<ARCA>,
         next_distribution_timestamp: u64,
         veARCA_holders: LinkedTable<address, vector<u64>>,
+        holders_vip_level: LinkedTable<u64, vector<address>>,
         vip_per_table: Table<u64, u64>, // vip level, percentage
     }
 
@@ -79,6 +81,7 @@ module contracts::arca {
             rewards: balance::zero<ARCA>(),
             next_distribution_timestamp: (clock::timestamp_ms(clock)/1000) + WEEK_TO_UNIX_SECONDS,
             veARCA_holders: linked_table::new<address, vector<u64>>(ctx),
+            holders_vip_level: linked_table::new<u64, vector<address>>(ctx),
             vip_per_table: table::new<u64, u64>(ctx),
         };
         populate_vip_per_table(&mut staking_pool);
@@ -226,45 +229,84 @@ module contracts::arca {
         arca
     }
 
-    public fun distribute_rewards(_cap: &StakingAdmin, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext) {
+    fun classify_vip_addresses(sp: &mut StakingPool, clock: &Clock) {
         
-        assert!((clock::timestamp_ms(clock) >= sp.next_distribution_timestamp), EDistributionRewardsNotAvaialable);
-
-        let rewards = balance::value<ARCA>(&sp.rewards);
-        let rewards_left = balance::value<ARCA>(&sp.rewards);
-
         let i = 0;
         let holder_address = *option::borrow_with_default<address>(linked_table::front(&sp.veARCA_holders), &@0x0);
-        
+
+        debug::print(&linked_table::length(&sp.veARCA_holders));
+
         while( i < linked_table::length(&sp.veARCA_holders)) {
-            if(holder_address == @0x0){
+            if(holder_address == @0x0) {
                 break
             };
 
             let value = linked_table::borrow(&sp.veARCA_holders, holder_address);
 
-            let reward = calc_reward(value, rewards, &sp.vip_per_table, clock);
+            debug::print(value);
 
-            if(rewards_left == 0){
-                break
-            };
+            // let vip = calc_vip_level(value, sp.next_distribution_timestamp);
+            let vip = calc_vip_level(value, clock);
 
-            if(rewards_left < reward){
-                reward = rewards_left;
-            };
+            debug::print(&vip);
 
-            rewards_left = rewards_left - reward;
+            if(!linked_table::contains(&sp.holders_vip_level, vip)){
+                let v = vector::empty<address>();
 
-            let coin = coin::take<ARCA>(&mut sp.rewards, reward, ctx);
-            
-            transfer::public_transfer(coin, holder_address);
+                vector::push_back<address>(&mut v, holder_address);
 
-            if(option::is_none(linked_table::next(&sp.veARCA_holders, holder_address))){
+                linked_table::push_back(&mut sp.holders_vip_level, vip, v);
+            } else {
+                let v = linked_table::borrow_mut(&mut sp.holders_vip_level, vip);
+
+                vector::push_back(v, holder_address);
+            };  
+
+            if(option::is_none(linked_table::next(&sp.veARCA_holders, holder_address))) {
                 break
             };
 
             holder_address = *option::borrow(linked_table::next(&sp.veARCA_holders, holder_address));
             i = i + 1;
+        };
+    }
+
+    public fun distribute_rewards(_cap: &StakingAdmin, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext) {
+
+        assert!((clock::timestamp_ms(clock) >= sp.next_distribution_timestamp), EDistributionRewardsNotAvaialable);
+
+        let rewards = balance::value<ARCA>(&sp.rewards);
+        let rewards_left = balance::value<ARCA>(&sp.rewards);
+
+        classify_vip_addresses(sp, clock);
+
+        // debug::print(&sp.holders_vip_level);
+        
+        while(!linked_table::is_empty(&sp.holders_vip_level)) {
+
+            let (vip, value) = linked_table::pop_back(&mut sp.holders_vip_level);
+
+            let sum_reward = calc_reward(vip, rewards, &sp.vip_per_table);
+
+            if(rewards_left == 0){
+                break
+            };
+
+            if(rewards_left < sum_reward){
+                sum_reward = rewards_left;
+            };
+
+            rewards_left = rewards_left - sum_reward;
+
+            let reward = sum_reward/vector::length<address>(&value);
+
+            // debug::print(&reward);
+
+            while(!vector::is_empty(&value)) {
+                let coin = coin::take<ARCA>(&mut sp.rewards, reward, ctx);
+                let recipient = vector::pop_back<address>(&mut value);
+                transfer::public_transfer(coin, recipient);
+            };
         };
 
         sp.next_distribution_timestamp = sp.next_distribution_timestamp + WEEK_TO_UNIX_SECONDS;
@@ -286,62 +328,85 @@ module contracts::arca {
         veARCA_amount
     }
 
+    // we have to put the next distribution timestamp and not the current
+    // also probably we have to divide that reward by the users of the respective vip level
+    // probably I should put an assert somewhere to be sure that the end_date of the staking period has not pass and the stake is still valid
+    // fun calc_veARCA(initial: u64, next_distribution_timestamp: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {       
     fun calc_veARCA(initial: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {       
-        initial * ((end_date - (clock::timestamp_ms(clock))) / locking_period_sec)
+        // initial * ((end_date - next_distribution_timestamp) / locking_period_sec)
+        // debug::print(&clock::timestamp_ms(clock));
+        // debug::print(&initial);
+        // debug::print(&(((end_date - clock::timestamp_ms(clock))*10 / locking_period_sec*10)));
+        // this is not working properly, so we need more precise timestamps
+        // let s: u64 = (initial * ((end_date - clock::timestamp_ms(clock))*1000 / locking_period_sec*1000))/1000;
+
+        // debug::print(&s);
+
+        initial * (((end_date - clock::timestamp_ms(clock)))*1000 / locking_period_sec*1000)
     }
 
     fun calc_vip_level_veARCA( veARCA_amount: u64, decimals: u64): u64 {
+
+        debug::print(&veARCA_amount);
         let vip_level = 0;
-        if(veARCA_amount >= (3*decimals) && veARCA_amount < (35*decimals)) {
+        if(veARCA_amount >= (3*decimals*DECIMALS) && veARCA_amount < (35*decimals*DECIMALS)) {
             vip_level = 1;
-        } else if(veARCA_amount >= (35*decimals) && veARCA_amount < (170*decimals)) {
+        } else if(veARCA_amount >= (35*decimals*DECIMALS) && veARCA_amount < (170*decimals*DECIMALS)) {
             vip_level = 2;
-        } else if(veARCA_amount >= (170*decimals) && veARCA_amount < (670*decimals)) {
+        } else if(veARCA_amount >= (170*decimals*DECIMALS) && veARCA_amount < (670*decimals*DECIMALS)) {
             vip_level = 3;
-        } else if(veARCA_amount >= (670*decimals) && veARCA_amount < (1_400*decimals)) {
+        } else if(veARCA_amount >= (670*decimals*DECIMALS) && veARCA_amount < (1_400*decimals*DECIMALS)) {
             vip_level = 4;
-        } else if(veARCA_amount >= (1_400*decimals) && veARCA_amount < (2_700*decimals)) {
+        } else if(veARCA_amount >= (1_400*decimals*DECIMALS) && veARCA_amount < (2_700*decimals*DECIMALS)) {
             vip_level = 5;
-        } else if(veARCA_amount >= (2_700*decimals) && veARCA_amount < (4_700*decimals)) {
+        } else if(veARCA_amount >= (2_700*decimals*DECIMALS) && veARCA_amount < (4_700*decimals*DECIMALS)) {
             vip_level = 6;
-        } else if(veARCA_amount >= (4_700*decimals) && veARCA_amount < (6_700*decimals)) {
+        } else if(veARCA_amount >= (4_700*decimals*DECIMALS) && veARCA_amount < (6_700*decimals*DECIMALS)) {
             vip_level = 7;
-        } else if(veARCA_amount >= (6_700*decimals) && veARCA_amount < (14_000*decimals)) {
+        } else if(veARCA_amount >= (6_700*decimals*DECIMALS) && veARCA_amount < (14_000*decimals*DECIMALS)) {
             vip_level = 8;
-        } else if(veARCA_amount >= (14_000*decimals) && veARCA_amount < (17_000*decimals)) {
+        } else if(veARCA_amount >= (14_000*decimals*DECIMALS) && veARCA_amount < (17_000*decimals*DECIMALS)) {
             vip_level = 9;
-        } else if(veARCA_amount >= (17_000*decimals) && veARCA_amount < (20_000*decimals)) {
+        } else if(veARCA_amount >= (17_000*decimals*DECIMALS) && veARCA_amount < (20_000*decimals*DECIMALS)) {
             vip_level = 10;
-        } else if(veARCA_amount >= (20_000*decimals) && veARCA_amount < (27_000*decimals)) {
+        } else if(veARCA_amount >= (20_000*decimals*DECIMALS) && veARCA_amount < (27_000*decimals*DECIMALS)) {
             vip_level = 11;
-        } else if(veARCA_amount >= (27_000*decimals) && veARCA_amount < (34_000*decimals)) {
+        } else if(veARCA_amount >= (27_000*decimals*DECIMALS) && veARCA_amount < (34_000*decimals*DECIMALS)) {
             vip_level = 12;
-        } else if(veARCA_amount >= (34_000*decimals) && veARCA_amount < (67_000*decimals)) {
+        } else if(veARCA_amount >= (34_000*decimals*DECIMALS) && veARCA_amount < (67_000*decimals*DECIMALS)) {
             vip_level = 13;
-        } else if(veARCA_amount >= (67_000*decimals) && veARCA_amount < (140_000*decimals)) {
+        } else if(veARCA_amount >= (67_000*decimals*DECIMALS) && veARCA_amount < (140_000*decimals*DECIMALS)) {
             vip_level = 14;
-        } else if(veARCA_amount >= (140_000*decimals) && veARCA_amount < (270_000*decimals)) {
+        } else if(veARCA_amount >= (140_000*decimals*DECIMALS) && veARCA_amount < (270_000*decimals*DECIMALS)) {
             vip_level = 15;
-        } else if(veARCA_amount >= (270_000*decimals) && veARCA_amount < (400_000*decimals)) {
+        } else if(veARCA_amount >= (270_000*decimals*DECIMALS) && veARCA_amount < (400_000*decimals*DECIMALS)) {
             vip_level = 16;
-        } else if(veARCA_amount >= (400_000*decimals) && veARCA_amount < (670_000*decimals)) {
+        } else if(veARCA_amount >= (400_000*decimals*DECIMALS) && veARCA_amount < (670_000*decimals*DECIMALS)) {
             vip_level = 17;
-        } else if(veARCA_amount >= (670_000*decimals) && veARCA_amount < (1_700_000*decimals)) {
+        } else if(veARCA_amount >= (670_000*decimals*DECIMALS) && veARCA_amount < (1_700_000*decimals*DECIMALS)) {
             vip_level = 18;
-        } else if(veARCA_amount >= (1_700_000*decimals) && veARCA_amount < (3_400_000*decimals)) {
+        } else if(veARCA_amount >= (1_700_000*decimals*DECIMALS) && veARCA_amount < (3_400_000*decimals*DECIMALS)) {
             vip_level = 19;
-        } else if(veARCA_amount >= (3_400_000*decimals)) {
+        } else if(veARCA_amount >= (3_400_000*decimals*DECIMALS)) {
             vip_level = 20;
         };
 
         vip_level
     }
 
-    fun calc_reward(value: &vector<u64>, rewards_amount: u64, t: &Table<u64, u64>, clock: &Clock): u64 {
-
+    // fun calc_vip_level(value: &vector<u64>, next_distribution_timestamp: u64): u64 {
+    fun calc_vip_level(value: &vector<u64>, clock: &Clock): u64 {
+        // let veARCA_amount = calc_veARCA(*vector::borrow(value, 0), next_distribution_timestamp, *vector::borrow(value, 1), *vector::borrow(value, 2));
         let veARCA_amount = calc_veARCA(*vector::borrow(value, 0), *vector::borrow(value, 1), *vector::borrow(value, 2), clock);
+
+        debug::print(&veARCA_amount);
         
         let vip_level = calc_vip_level_veARCA(veARCA_amount, 100);
+
+        vip_level
+    }
+
+    fun calc_reward(vip_level: u64, rewards_amount: u64, t: &Table<u64, u64>):  u64 {
         let per = *table::borrow(t, vip_level);
 
         let reward = (rewards_amount * per) / 10_000;
@@ -359,9 +424,9 @@ module contracts::arca {
         veARCA.initial
     }
 
-    public fun get_amount_VeARCA(veARCA: &VeARCA, clock: &Clock): u64 {
-        calc_veARCA(veARCA.initial, veARCA.end_date, veARCA.locking_period_sec, clock)
-    }
+    // public fun get_amount_VeARCA(veARCA: &VeARCA, sp: &StakingPool): u64 {
+    //     calc_veARCA(veARCA.initial, sp.next_distribution_timestamp, veARCA.end_date, veARCA.locking_period_sec)
+    // }
 
     public fun get_start_date_VeARCA(veARCA: &VeARCA): u64 {
         veARCA.start_date
