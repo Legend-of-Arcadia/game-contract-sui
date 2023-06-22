@@ -1,4 +1,4 @@
-import { fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner, devnetConnection} from "@mysten/sui.js";
+import { fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner, testnetConnection} from "@mysten/sui.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -23,7 +23,7 @@ function getHeroId(mintResult: any) {
 }
 
 let keyPair = getKeyPair(privKey);
-let provider = new JsonRpcProvider(devnetConnection);
+let provider = new JsonRpcProvider(testnetConnection);
 let mugen = new RawSigner(keyPair, provider);
 
 async function mintHero() {
@@ -130,6 +130,7 @@ const perofmUpgrade = async (playerAddress: string) => {
     arguments: [callResult[0], callResult[1]]
   });
 
+  txb.setGasBudget(100000000);
   let result = mugen.signAndExecuteTransactionBlock({
     transactionBlock: txb,
     requestType: "WaitForLocalExecution",
@@ -144,25 +145,28 @@ const perofmUpgrade = async (playerAddress: string) => {
 
 async function main() {
 
-  // let mintResult1 = await mintHero();
-  // console.log("YOooo")
-  // let mintResult2 = await mintHero();
-  // let mintResult3 = await mintHero();
+  let mintResult1 = await mintHero();
+  let mintResult2 = await mintHero();
+  let mintResult3 = await mintHero();
 
-  // let mainHeroId = getHeroId(mintResult1);
-  // console.log(mainHeroId);
-  // let hero1Id = getHeroId(mintResult2);
-  // let hero2Id = getHeroId(mintResult3);
+  let mainHeroId = getHeroId(mintResult1);
+  let hero1Id = getHeroId(mintResult2);
+  let hero2Id = getHeroId(mintResult3);
 
-  // let heroIds = [hero1Id, hero2Id];
+  let heroIds = [hero1Id, hero2Id];
 
-  // let requestUpgradeResult = await upgradeHero(mainHeroId, heroIds);
-  // console.log(JSON.stringify(requestUpgradeResult));
+  let requestUpgradeResult = await upgradeHero(mainHeroId, heroIds);
+  console.log(JSON.stringify(requestUpgradeResult));
 
   // address
   const address = "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71";
-  let upgradeResult = await perofmUpgrade(address);
-  console.log(JSON.stringify(upgradeResult));
+  let result = await perofmUpgrade(address);
+  var fs = require('fs');
+  fs.writeFile(`./auto-results/mintHeroAndPutForUpgradeResult.json`, JSON.stringify(result, null, 2), function(err: any) {
+    if (err) {
+        console.log(err);
+    }
+  });
 }
 
 main();

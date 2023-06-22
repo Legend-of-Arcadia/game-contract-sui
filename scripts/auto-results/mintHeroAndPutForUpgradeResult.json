@@ -1,0 +1,127 @@
+{
+  "digest": "EUWDn2xQsBWrqqhHmC6SiNyeZFHZFmkXna4yYAHSUgCd",
+  "effects": {
+    "messageVersion": "v1",
+    "status": {
+      "status": "success"
+    },
+    "executedEpoch": "42",
+    "gasUsed": {
+      "computationCost": "1000000",
+      "storageCost": "7752000",
+      "storageRebate": "10285308",
+      "nonRefundableStorageFee": "103892"
+    },
+    "modifiedAtVersions": [
+      {
+        "objectId": "0x3a091883a7688e06a4a2a2613d215be3aa2578a95592ad46d8b077e0aefb7897",
+        "sequenceNumber": "1505"
+      },
+      {
+        "objectId": "0x5591258b2fd19ff21e4b0c18d135bbe41719af8fc8c62ff39e0d5e09c97fa081",
+        "sequenceNumber": "1505"
+      },
+      {
+        "objectId": "0x704ed0b3e69bf59b4e16cf89550a0a4377d62dcc8128846886dc9199e8f6a082",
+        "sequenceNumber": "1504"
+      },
+      {
+        "objectId": "0x7372605927fb76ea0e45c99a7aa0efcf000cfcb56411282f083c12a9d1e5a09c",
+        "sequenceNumber": "1502"
+      },
+      {
+        "objectId": "0xec59bd25fce6f835d647cd7c458844171700db7addc620903f902cfa2b564292",
+        "sequenceNumber": "1505"
+      },
+      {
+        "objectId": "0xe03e989bee5215b7a0feb7d9cf59952995ec7d4b6d894c877639b8d8edd24a7e",
+        "sequenceNumber": "1505"
+      }
+    ],
+    "sharedObjects": [
+      {
+        "objectId": "0xec59bd25fce6f835d647cd7c458844171700db7addc620903f902cfa2b564292",
+        "version": 1505,
+        "digest": "5zwsRAGMm3T32YaT48AQMuT9TcDk2HHFCgjEhZYSFiLR"
+      }
+    ],
+    "transactionDigest": "EUWDn2xQsBWrqqhHmC6SiNyeZFHZFmkXna4yYAHSUgCd",
+    "mutated": [
+      {
+        "owner": {
+          "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+        },
+        "reference": {
+          "objectId": "0x3a091883a7688e06a4a2a2613d215be3aa2578a95592ad46d8b077e0aefb7897",
+          "version": 1506,
+          "digest": "3napkeFAcBKaQeFCMqtHffMB8SEt1ek9DprLwDBLqVRb"
+        }
+      },
+      {
+        "owner": {
+          "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+        },
+        "reference": {
+          "objectId": "0x5591258b2fd19ff21e4b0c18d135bbe41719af8fc8c62ff39e0d5e09c97fa081",
+          "version": 1506,
+          "digest": "7op81kNYJRx9bN3UB9nKXU1Rxg5kHF7U9HYqTRbnLaZ8"
+        }
+      },
+      {
+        "owner": {
+          "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+        },
+        "reference": {
+          "objectId": "0x704ed0b3e69bf59b4e16cf89550a0a4377d62dcc8128846886dc9199e8f6a082",
+          "version": 1506,
+          "digest": "7MHzGUekcyURHnJZ7e52RN4S4sAwCrohVHVE2fGVJ72W"
+        }
+      },
+      {
+        "owner": {
+          "ObjectOwner": "0x5591258b2fd19ff21e4b0c18d135bbe41719af8fc8c62ff39e0d5e09c97fa081"
+        },
+        "reference": {
+          "objectId": "0x7372605927fb76ea0e45c99a7aa0efcf000cfcb56411282f083c12a9d1e5a09c",
+          "version": 1506,
+          "digest": "5sCFZYueRgM52DVraTUTsdDtYbdUNrRzcLbStfgZAcST"
+        }
+      },
+      {
+        "owner": {
+          "Shared": {
+            "initial_shared_version": 1473
+          }
+        },
+        "reference": {
+          "objectId": "0xec59bd25fce6f835d647cd7c458844171700db7addc620903f902cfa2b564292",
+          "version": 1506,
+          "digest": "83AuXXed9HFKcVpXM13iZ2sDMMMCjXxnJEe99YfmhWsB"
+        }
+      }
+    ],
+    "deleted": [
+      {
+        "objectId": "0xe03e989bee5215b7a0feb7d9cf59952995ec7d4b6d894c877639b8d8edd24a7e",
+        "version": 1506,
+        "digest": "7gyGAp71YXQRoxmFBaHxofQXAipvgHyBKPyxmdSJxyvz"
+      }
+    ],
+    "gasObject": {
+      "owner": {
+        "AddressOwner": "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71"
+      },
+      "reference": {
+        "objectId": "0x3a091883a7688e06a4a2a2613d215be3aa2578a95592ad46d8b077e0aefb7897",
+        "version": 1506,
+        "digest": "3napkeFAcBKaQeFCMqtHffMB8SEt1ek9DprLwDBLqVRb"
+      }
+    },
+    "dependencies": [
+      "3BUxdkNX6NVJg1evUHAPDbDfcfudXizgysxpgiZQJPuJ",
+      "GS7WC9hSWzCpynrwCABhG1gDRWNqmUvQw3FLR28QTaBa",
+      "HWqZgGkPcUS1yoc9xw4XGTp9fW732bSCp3CdJYDdYP3Y"
+    ]
+  },
+  "confirmedLocalExecution": true
+}
