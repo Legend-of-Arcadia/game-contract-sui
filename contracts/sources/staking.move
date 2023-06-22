@@ -2,7 +2,6 @@ module contracts::staking {
     use std::option;
     use std::string::{Self, String};
     use std::vector;
-    // use std::debug;
 
     use sui::coin::{Self, Coin};
     use sui::transfer;
@@ -15,8 +14,6 @@ module contracts::staking {
 
     use contracts::arca::ARCA;
     use contracts::game::GameCap;
-
-    // friend contracts::game;
 
     const DECIMALS: u64 = 1_000_000_000;
     const TOTAL_SUPPLY_ARCA: u64 = 1_000_000_000;
@@ -38,11 +35,6 @@ module contracts::staking {
     const ENoRewardsLeft: u64 = 7;
     const EDistributionRewardsNotAvaialable: u64 = 8;
 
-    
-    // struct StakingAdmin has key {
-    //     id: UID
-    // }
-
     struct VeARCA has key {
         id: UID,
         staked_amount: u64, // ARCA
@@ -62,13 +54,6 @@ module contracts::staking {
         holders_vip_level: LinkedTable<u64, vector<address>>,
         vip_per_table: Table<u64, u64>, // vip level, percentage
     }
-
-    // fun init(ctx: &mut TxContext) {
-    //     let cap = StakingAdmin {
-    //         id: object::new(ctx),
-    //     };
-    //     transfer::transfer(cap, tx_context::sender(ctx));
-    // }
 
     public fun create_pool(_cap: &GameCap, clock: &Clock, ctx: &mut TxContext) {
         let staking_pool = StakingPool{
@@ -446,11 +431,7 @@ module contracts::staking {
 
     #[test_only]
     public fun init_for_testing(cap: &GameCap, clock: &Clock, ctx: &mut TxContext) {
-        // let cap = StakingAdmin {
-        //     id: object::new(ctx),
-        // };
         create_pool(cap, clock, ctx);
-        // transfer::transfer(cap, tx_context::sender(ctx));
     }
 
     #[test_only]
