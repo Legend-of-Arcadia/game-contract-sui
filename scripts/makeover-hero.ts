@@ -1,4 +1,4 @@
-import { testnetConnection, fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner, SuiEventFilter } from "@mysten/sui.js";
+import { testnetConnection, fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner } from "@mysten/sui.js";
 import * as dotenv from "dotenv";
 dotenv.config();
 
@@ -11,9 +11,6 @@ const upgrader = process.env.UPGRADER!;
 let keyPair = getKeyPair(mugenPrivKey);
 let provider = new JsonRpcProvider(testnetConnection);
 let mugen = new RawSigner(keyPair, provider);
-let playerKeyPair = getKeyPair(playerPrivKey);
-let player = new RawSigner(playerKeyPair, provider);
-let playerAddress = playerKeyPair.getPublicKey().toSuiAddress();
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
