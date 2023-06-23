@@ -6,7 +6,7 @@ module contracts::staking {
     use sui::coin::{Self, Coin};
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
-    use sui::object::{Self, UID, ID};
+    use sui::object::{Self, UID};
     use sui::balance::{Self, Balance};
     use sui::clock::{Self, Clock};
     use sui::linked_table::{Self, LinkedTable};
@@ -35,7 +35,7 @@ module contracts::staking {
     const ENotAppendActionAvaialble: u64 = 5;
     const ENoActiveStakes: u64 = 6;
     const ENoRewardsLeft: u64 = 7;
-    const EDistributionRewardsNotAvaialable: u64 = 8;
+    const EDistributionRewardsNotAvailable: u64 = 8;
     const EVersionMismatch: u64 = 9;
 
     struct VeARCA has key {
@@ -264,7 +264,7 @@ module contracts::staking {
 
         assert!(VERSION == 1, EVersionMismatch);
         
-        assert!((clock::timestamp_ms(clock) >= sp.next_distribution_timestamp), EDistributionRewardsNotAvaialable);
+        assert!(clock::timestamp_ms(clock) >= sp.next_distribution_timestamp, EDistributionRewardsNotAvailable);
 
         let rewards = balance::value<ARCA>(&sp.rewards);
         let rewards_left = balance::value<ARCA>(&sp.rewards);
@@ -332,7 +332,7 @@ module contracts::staking {
 
         let current_timestamp = clock::timestamp_ms(clock);
 
-        calc_veARCA(initial, current_timestamp, end_date, locking_period_sec);
+        calc_veARCA(initial, current_timestamp, end_date, locking_period_sec)
     }
 
     public fun calc_vip_level_veARCA( veARCA_amount: u64, decimals: u64): u64 {
@@ -481,7 +481,7 @@ module contracts::staking {
 
         assert!(VERSION == 1, EVersionMismatch);
 
-        balance::join(&mut sp.rewards, new balance);
+        balance::join(&mut sp.rewards, new_balance);
     }
 
     // ============================================================
