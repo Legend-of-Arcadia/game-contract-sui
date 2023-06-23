@@ -233,7 +233,7 @@ module contracts::staking {
 
             let value = linked_table::borrow(&sp.veARCA_holders, holder_address);
 
-            if (*vector::borrow(value, 1) < clock::timestamp_ms(clock)) {
+            if (*vector::borrow(value, 1) > clock::timestamp_ms(clock)) {
                 break
             };
 
@@ -264,7 +264,8 @@ module contracts::staking {
 
         assert!(VERSION == 1, EVersionMismatch);
         
-        assert!(clock::timestamp_ms(clock) >= sp.next_distribution_timestamp, EDistributionRewardsNotAvailable);
+        let current_timestamp = clock::timestamp_ms(clock) / 1000;
+        assert!(current_timestamp >= sp.next_distribution_timestamp, EDistributionRewardsNotAvailable);
 
         let rewards = balance::value<ARCA>(&sp.rewards);
         let rewards_left = balance::value<ARCA>(&sp.rewards);
