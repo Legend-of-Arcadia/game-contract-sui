@@ -15,6 +15,8 @@ module contracts::staking {
     use contracts::arca::ARCA;
     use contracts::game::GameCap;
 
+    const VERSION = 1;
+
     const DECIMALS: u64 = 1_000_000_000;
     const TOTAL_SUPPLY_ARCA: u64 = 1_000_000_000;
     const TOTAL_SUPPLY_ARCA_DEVISION: u64 = 1_000_000_000_000_000_000;
@@ -34,6 +36,7 @@ module contracts::staking {
     const ENoActiveStakes: u64 = 6;
     const ENoRewardsLeft: u64 = 7;
     const EDistributionRewardsNotAvaialable: u64 = 8;
+    const EVersionMismatch: u64 = 9;
 
     struct VeARCA has key {
         id: UID,
@@ -56,6 +59,7 @@ module contracts::staking {
     }
 
     public fun create_pool(_cap: &GameCap, clock: &Clock, ctx: &mut TxContext) {
+        assert!(VERSION == 1, EVersionMismatch);
         let staking_pool = StakingPool{
             id: object::new(ctx),
             liquidity: balance::zero<ARCA>(),
@@ -112,6 +116,8 @@ module contracts::staking {
     }
 
     public fun stake(sp: &mut StakingPool, arca: Coin<ARCA>, clock: &Clock, staking_period: String, ctx: &mut TxContext) {
+
+        assert!(VERSION == 1, EVersionMismatch);
 
         assert!(!linked_table::contains(&sp.veARCA_holders, tx_context::sender(ctx)), EOngoingStaking);
 
@@ -174,6 +180,8 @@ module contracts::staking {
 
     public fun append(sp: &mut StakingPool, veARCA: &mut VeARCA, arca: Coin<ARCA>, clock: &Clock, ctx: &mut TxContext) {
 
+        assert!(VERSION == 1, EVersionMismatch);
+
         let appended_amount = coin::value(&arca)*100;
         veARCA.staked_amount = veARCA.staked_amount + coin::value(&arca);
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
@@ -197,6 +205,8 @@ module contracts::staking {
 
     public fun unstake(veARCA: VeARCA, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext): Coin<ARCA> {
          
+        assert!(VERSION == 1, EVersionMismatch);
+        
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
         assert!(current_timestamp > veARCA.end_date, ELockPeriodNotElapsed);
 
@@ -252,6 +262,8 @@ module contracts::staking {
 
     public fun distribute_rewards(_cap: &GameCap, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext) {
 
+        assert!(VERSION == 1, EVersionMismatch);
+        
         assert!((clock::timestamp_ms(clock) >= sp.next_distribution_timestamp), EDistributionRewardsNotAvaialable);
 
         let rewards = balance::value<ARCA>(&sp.rewards);
@@ -315,12 +327,18 @@ module contracts::staking {
     }
 
     public fun public_calc_veARCA(initial: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {
+        
+        assert!(VERSION == 1, EVersionMismatch);
+
         let current_timestamp = clock::timestamp_ms(clock);
 
         calc_veARCA(initial, current_timestamp, end_date, locking_period_sec);
     }
 
     public fun calc_vip_level_veARCA( veARCA_amount: u64, decimals: u64): u64 {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         let vip_level = 0;
         if(veARCA_amount >= (3*decimals*DECIMALS) && veARCA_amount < (35*decimals*DECIMALS)) {
             vip_level = 1;
@@ -386,46 +404,72 @@ module contracts::staking {
     // ======================= Accessors ========================
 
     public fun get_staked_amount_VeARCA(veARCA: &VeARCA): u64 {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         veARCA.staked_amount
     }
 
     public fun get_initial_VeARCA(veARCA: &VeARCA): u64 {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         veARCA.initial
     }
 
     public fun get_amount_VeARCA(veARCA: &VeARCA, sp: &StakingPool): u64 {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         calc_veARCA(veARCA.initial, sp.next_distribution_timestamp, veARCA.end_date, veARCA.locking_period_sec)
     }
 
     public fun get_start_date_VeARCA(veARCA: &VeARCA): u64 {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         veARCA.start_date
     }
 
     public fun get_end_date_VeARCA(veARCA: &VeARCA): u64 {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         veARCA.end_date
     }
 
     public fun get_locking_period_sec_VeARCA(veARCA: &VeARCA): u64 {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         veARCA.locking_period_sec
     }
 
     public fun get_decimals_VeARCA(veARCA: &VeARCA): u64 {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         veARCA.decimals
     }
 
-    public fun get_id_VeARCA(veARCA: &VeARCA): ID {
-        object::uid_to_inner(&veARCA.id)
-    }
-
     public fun get_holders_number(sp: &StakingPool): u64 {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         linked_table::length(&sp.veARCA_holders)
     }
 
     public fun get_next_distribution_timestamp(sp: &StakingPool): u64 {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         sp.next_distribution_timestamp
     }
 
     public fun update_percentage_table(_cap: &GameCap, sp: &mut StakingPool, key: u64, percentage: u64) {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         if(table::contains(&sp.vip_per_table, key)) {
             *table::borrow_mut(&mut sp.vip_per_table, key) = percentage;
         } else {
@@ -434,6 +478,9 @@ module contracts::staking {
     }
 
     public fun append_rewards(_cap: &GameCap, sp: &mut StakingPool, new_balance: Balance<ARCA>) {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
         balance::join(&mut sp.rewards, new balance);
     }
 
