@@ -314,7 +314,13 @@ module contracts::staking {
         (veARCA_amount as u64)
     }
 
-    fun calc_vip_level_veARCA( veARCA_amount: u64, decimals: u64): u64 {
+    public fun public_calc_veARCA(initial: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {
+        let current_timestamp = clock::timestamp_ms(clock);
+
+        calc_veARCA(initial, current_timestamp, end_date, locking_period_sec);
+    }
+
+    public fun calc_vip_level_veARCA( veARCA_amount: u64, decimals: u64): u64 {
         let vip_level = 0;
         if(veARCA_amount >= (3*decimals*DECIMALS) && veARCA_amount < (35*decimals*DECIMALS)) {
             vip_level = 1;
@@ -425,6 +431,10 @@ module contracts::staking {
         } else {
             table::add(&mut sp.vip_per_table, key, percentage);
         };
+    }
+
+    public fun append_rewards(_cap: &GameCap, sp: &mut StakingPool, new_balance: Balance<ARCA>) {
+        balance::join(&mut sp.rewards, new balance);
     }
 
     // ============================================================
