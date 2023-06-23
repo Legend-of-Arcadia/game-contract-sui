@@ -17,6 +17,8 @@ const TreasuryCap = process.env.TREASURY_CAP as string;
 const Clock = process.env.CLOCK as string;
 const StakingPool = process.env.STAKING_POOL_ID as string;
 const ArcaCoin = process.env.ARCA_COIN_ID as string;
+const ArcaCoin2 = process.env.ARCA_COIN_ID2 as string;
+const ArcaCoin3 = process.env.ARCA_COIN_ID3 as string;
 const veARCAId = process.env.VEARCA_ID as string;
 
 function getKeyPair(privateKey: string): Ed25519Keypair{
@@ -41,7 +43,7 @@ async function mintARCA() {
       txb.pure("500000000000", "u64"),
       txb.pure(mugenAddress, "address")
     ],
-    typeArguments: [`0x1f2d091d955717a2f81a7bc3216af57311e9cce9a691e71800a71785aa1e3d3d::arca::ARCA`]
+    typeArguments: [`${packageId}::arca::ARCA`]
   });
 
   txb.setGasBudget(100000000);
@@ -139,13 +141,70 @@ async function unstake() {
   return response;
 }
 
+async function append() {
+  let txb = new TransactionBlock();
+
+  txb.moveCall({
+    target: `${packageId}::staking::append`,
+    arguments: [
+      txb.object(StakingPool),
+      txb.object(veARCAId),
+      txb.object(ArcaCoin2),
+      txb.object(Clock)
+    ]
+  });
+
+  txb.setGasBudget(100000000);
+
+  let response = await mugen.signAndExecuteTransactionBlock({
+    transactionBlock: txb,
+    requestType: "WaitForLocalExecution",
+    options: {
+      showEffects: true,
+    },
+  });
+
+  return response;
+  
+}
+
+async function distribute_rewards() {
+  let txb = new TransactionBlock();
+
+  txb.moveCall({
+    target: `${packageId}::staking::distribute_rewards`,
+    arguments: [
+      txb.object(gameCapId),
+      txb.object(StakingPool),
+      txb.object(Clock)
+    ]
+  });
+
+  txb.setGasBudget(100000000);
+
+  let response = await mugen.signAndExecuteTransactionBlock({
+    transactionBlock: txb,
+    requestType: "WaitForLocalExecution",
+    options: {
+      showEffects: true,
+    }
+  });
+
+  return response;
+
+}
+
 async function main() {
   
-  let response = await mintARCA();
+  // let response = await mintARCA();
   // let response = await createStakingPool();
   // let response = await stake();
   // let response = await unstake();
+  // let response = await append();
+  let response = await distribute_rewards();
   console.log(response);
 }
 
 main();
+
+// 1689373136
