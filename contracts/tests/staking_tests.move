@@ -524,11 +524,13 @@ module contracts::staking_tests {
 
             let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
 
-            clock::increment_for_testing(&mut clock, staking::get_next_distribution_timestamp(&staking_pool));
+            clock::increment_for_testing(&mut clock, staking::get_next_distribution_timestamp(&staking_pool)*1000);
+
+            let timestamp_before = staking::get_next_distribution_timestamp(&staking_pool);
 
             staking::distribute_rewards(&cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
             
-            assert!(!(staking::get_next_distribution_timestamp(&staking_pool) == (staking::get_next_distribution_timestamp(&staking_pool) + 604_800)) , ENextDistributionNotCorrect);
+            assert!((staking::get_next_distribution_timestamp(&staking_pool) == (timestamp_before + 604_800)) , ENextDistributionNotCorrect);
 
             ts::return_to_sender<game::GameCap>(&scenario, cap);
             
@@ -635,7 +637,7 @@ module contracts::staking_tests {
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
             let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
 
-            clock::increment_for_testing(&mut clock, staking::get_next_distribution_timestamp(&staking_pool));
+            clock::increment_for_testing(&mut clock, staking::get_next_distribution_timestamp(&staking_pool)*1000);
 
             staking::distribute_rewards(&cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
             
@@ -900,11 +902,13 @@ module contracts::staking_tests {
 
             let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
 
-            clock::increment_for_testing(&mut clock, staking::get_next_distribution_timestamp(&staking_pool));
+            clock::increment_for_testing(&mut clock, staking::get_next_distribution_timestamp(&staking_pool)*1000);
+
+            let timestamp_before = staking::get_next_distribution_timestamp(&staking_pool);
 
             staking::distribute_rewards(&cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
             
-            assert!(!(staking::get_next_distribution_timestamp(&staking_pool) == (staking::get_next_distribution_timestamp(&staking_pool) + 604_800)) , ENextDistributionNotCorrect);
+            assert!((staking::get_next_distribution_timestamp(&staking_pool) == (timestamp_before + 604_800)) , ENextDistributionNotCorrect);
 
             ts::return_to_sender<game::GameCap>(&scenario, cap);
             
@@ -912,7 +916,7 @@ module contracts::staking_tests {
             ts::return_shared(clock);
         };
 
-        ts::next_tx(&mut scenario, USER2_ADDRESS);
+        ts::next_tx(&mut scenario, USER4_ADDRESS);
         {
             let staking_pool = ts::take_shared<staking::StakingPool>(&mut scenario);
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
