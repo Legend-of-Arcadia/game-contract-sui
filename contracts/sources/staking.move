@@ -15,7 +15,7 @@ module contracts::staking {
     use contracts::arca::ARCA;
     use contracts::game::GameCap;
 
-    const VERSION = 1;
+    const VERSION: u64 = 1;
 
     const DECIMALS: u64 = 1_000_000_000;
     const TOTAL_SUPPLY_ARCA: u64 = 1_000_000_000;
