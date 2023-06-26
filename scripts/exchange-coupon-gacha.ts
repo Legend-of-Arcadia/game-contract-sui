@@ -17,8 +17,8 @@ function getKeyPair(privateKey: string): Ed25519Keypair{
 }
 
 // helper to find coupon ID from transaction result
-function getCouponIdHero(result: any) {
-  let [exchangeCoupon]: any = result.objectChanges?.filter((objectChange: any) => (objectChange.type === "created" && objectChange.objectType == `${packageId}::game::ExchangeCoupon<${packageId}::hero::Hero>`));
+function getCouponIdGacha(result: any) {
+  let [exchangeCoupon]: any = result.objectChanges?.filter((objectChange: any) => (objectChange.type === "created" && objectChange.objectType == `${packageId}::game::ExchangeCoupon<${packageId}::gacha::GachaBall>`));
   console.log(exchangeCoupon);
   let exchangeCouponId = exchangeCoupon.objectId;
   return exchangeCouponId;
@@ -32,41 +32,28 @@ let player = new RawSigner(playerKeyPair, provider);
 
 
 // mint exchange coupon and transfer it to player
-async function mintHeroExchangeCoupon(){
+async function mintGachaExchangeCoupon(){
 
   let txb = new TransactionBlock();
 
-  let baseValues = [1, 2, 3, 4, 5, 6];
-  let skillValues = [200, 201, 202, 203];
-  let appearenceValues = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111];
-  let statValues = [40, 0, 0, 0, 0, 0, 0, 0];
-  let otherValues = [34];
-
-  // mint a hero
-  let hero = txb.moveCall({
-    target: `${packageId}::game::mint_hero`,
+  // mint a gacha ball
+  let gachaBall = txb.moveCall({
+    target: `${packageId}::game::mint_gacha`,
     arguments: [
       txb.object(gameCap),
-      txb.pure("Wo Long", "string"),
-      txb.pure("Assassin", "string"),
-      txb.pure("Flamexecuter"),
-      txb.pure("R"),
-      txb.pure(baseValues),
-      txb.pure(skillValues),
-      txb.pure(appearenceValues),
-      txb.pure(statValues),
-      txb.pure(otherValues),
-      txb.pure("1337", "string"),
-    ]
+      txb.pure("Haloween", "string"),
+      txb.pure("Grandia", "string"),
+      txb.pure("VIP"),
+    ],
   });
 
   let exchangeCoupon = txb.moveCall({
     target: `${packageId}::game::mint_exchange_coupon`,
     arguments: [
       txb.object(gameCap),
-      hero,
+      gachaBall,
     ],
-    typeArguments: [`${packageId}::hero::Hero`],
+    typeArguments: [`${packageId}::gacha::GachaBall`],
   });
 
   // transfer exchange coupon to player
@@ -94,7 +81,7 @@ async function claimExchangeCoupon(couponId: string){
     arguments: [
       txb.object(couponId),
     ],
-    typeArguments: [`${packageId}::hero::Hero`],
+    typeArguments: [`${packageId}::gacha::GachaBall`],
   });
 
   // transfer item to player (self)
@@ -114,12 +101,12 @@ async function claimExchangeCoupon(couponId: string){
 }
 
 async function main(){
-  let result = await mintHeroExchangeCoupon();
+  let result = await mintGachaExchangeCoupon();
   console.log(result);
-  let couponId = getCouponIdHero(result);
+  let couponId = getCouponIdGacha(result);
 
-  // let claimResult = await claimExchangeCoupon(couponId);
-  // console.log("claim result: ", claimResult);
+  let claimResult = await claimExchangeCoupon(couponId);
+  console.log("claim result: ", claimResult);
 }
 
 main();
