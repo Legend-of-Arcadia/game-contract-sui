@@ -1,6 +1,6 @@
 import { testnetConnection, fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner } from "@mysten/sui.js";
 import * as dotenv from "dotenv";
-dotenv.config();
+dotenv.config({ path: __dirname + `/../.env` }); 
 
 const mugenPrivKey: string = process.env.PRIVATE_KEY!;
 const playerPrivKey: string = process.env.PLAYER_PRIVATE_KEY!;
