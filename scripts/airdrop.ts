@@ -10,9 +10,10 @@ const upgraderId = process.env.UPGRADER as string;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
-  let privateKeyArray = Array.from(fromB64(privateKey));
-  privateKeyArray.shift();
-  return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  // let privateKeyArray = Array.from(fromB64(privateKey));
+  // privateKeyArray.shift();
+  //return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey.slice(2), "hex"), { skipValidation: true });
 }
 
 // helper to find hero ID from transaction result
@@ -23,7 +24,7 @@ function getHeroId(mintResult: any) {
 }
 
 let keyPair = getKeyPair(privKey);
-let provider = new JsonRpcProvider(devnetConnection);
+let provider = new JsonRpcProvider(testnetConnection);
 let mugen = new RawSigner(keyPair, provider);
 
 async function airdrop(addresses: string[]) {
@@ -73,7 +74,7 @@ async function airdrop(addresses: string[]) {
 }
 
 async function main() {
-  let addresses = ['0x0ba6a2ea5e021ba771c882b65dccccd37131b2e68816de2d39f90a20864ab413', '0x1378f860144a2ab2e34622009e4a11b9228d245e444b0caf6289096206cbd496', '0x5fc4018050c3f30499bcd7e18b028596bd5f25557080725f1fd586a6d5def2b1', '0x611ae9aba751de462aa8347a0d4428584193a64373bb717e389f17c8df21a52b'];
+  let addresses = ['0x0421a66d58e4acd151ec50a2c5aa6219ca3c13d18df816c6e93b0b7838e26f65', '0x9e4edd0140d46f36d58772b8ba62f7c11c5d15cddaf7bcb3f9bef6fdcb4f8a86', '0x5fc4018050c3f30499bcd7e18b028596bd5f25557080725f1fd586a6d5def2b1', '0x611ae9aba751de462aa8347a0d4428584193a64373bb717e389f17c8df21a52b'];
 
   let result = await airdrop(addresses);
   console.log(result);

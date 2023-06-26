@@ -1,3 +1,4 @@
+#[test_only]
 module contracts::test_game {
   use std::vector;
 
@@ -77,7 +78,7 @@ module contracts::test_game {
       ts::return_shared(upgrader);
     };
 
-    let new_stats: vector<u64> = vector[
+    let new_stats: vector<u16> = vector[
         200,
         120,
         30,
@@ -235,7 +236,7 @@ module contracts::test_game {
       ts::return_shared(upgrader);
     };
 
-    let new_stats: vector<u64> = vector[
+    let new_stats: vector<u16> = vector[
         2000,
         1290,
         370,

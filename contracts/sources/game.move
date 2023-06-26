@@ -168,11 +168,11 @@ module contracts::game{
       class: String,
       faction: String,
       rarity: String,
-      base_attributes_values: vector<u8>,
-      skill_attributes_values: vector<u8>,
-      appearence_attributes_values: vector<u8>,
-      stat_attributes_values: vector<u64>,
-      other_attributes_values: vector<u8>,
+      base_attributes_values: vector<u16>,
+      skill_attributes_values: vector<u16>,
+      appearence_attributes_values: vector<u16>,
+      growth_attributes_values: vector<u16>,
+      //other_attributes_values: vector<u8>,
       external_id: String,
       ctx: &mut TxContext
       ): Hero {
@@ -185,8 +185,8 @@ module contracts::game{
         base_attributes_values,
         skill_attributes_values,
         appearence_attributes_values,
-        stat_attributes_values,
-        other_attributes_values,
+        growth_attributes_values,
+        //other_attributes_values,
         external_id,
         ctx,
       );
@@ -263,12 +263,12 @@ module contracts::game{
   }
 
   // upgrade
-  public fun upgrade_appearance(_: &GameCap, hero: &mut Hero, new_values: vector<u8>) {
-    hero::edit_fields<u8>(hero, string::utf8(b"appearance"), new_values);
+  public fun upgrade_appearance(_: &GameCap, hero: &mut Hero, new_values: vector<u16>) {
+    hero::edit_fields<u16>(hero, string::utf8(b"appearance"), new_values);
   }
 
-  public fun upgrade_stat(_: &GameCap, hero: &mut Hero, new_values: vector<u64>) {
-    hero::edit_fields<u64>(hero, string::utf8(b"stat"), new_values);
+  public fun upgrade_stat(_: &GameCap, hero: &mut Hero, new_values: vector<u16>) {
+    hero::edit_fields<u16>(hero, string::utf8(b"stat"), new_values);
   }
 
   /// === Player functions ===
@@ -421,11 +421,11 @@ module contracts::game{
       let class = string::utf8(b"Fighter");
       let faction = string::utf8(b"Flamexecuter");
       let rarity = string::utf8(b"SR");
-      let base_attributes_values: vector<u8> = vector[1,2,3,4,5,6];
-      let skill_attributes_values: vector<u8> = vector[31, 32, 33, 34];
-      let appearance_attributes_values: vector<u8> = vector[21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
-      let stat_attributes_values: vector<u64> = vector [0, 0, 0, 0, 0, 0, 0, 0];
-      let other_attributes_values: vector<u8> = vector[9];
+      let base_attributes_values: vector<u16> = vector[1,2,3,4,5,6];
+      let skill_attributes_values: vector<u16> = vector[31, 32, 33, 34];
+      let appearance_attributes_values: vector<u16> = vector[21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
+      let growth_attributes_values: vector<u16> = vector [0, 0, 0, 0, 0, 0, 0, 0];
+      //let other_attributes_values: vector<u8> = vector[9];
       let external_id = string::utf8(b"1337");
 
       let hero = mint_hero(
@@ -437,8 +437,8 @@ module contracts::game{
         base_attributes_values,
         skill_attributes_values,
         appearance_attributes_values,
-        stat_attributes_values,
-        other_attributes_values,
+        growth_attributes_values,
+        //other_attributes_values,
         external_id,
         ctx,
       );

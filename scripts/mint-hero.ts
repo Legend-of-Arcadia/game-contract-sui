@@ -9,9 +9,10 @@ const packageId = process.env.PACKAGE as string;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
-  let privateKeyArray = Array.from(fromB64(privateKey));
-  privateKeyArray.shift();
-  return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  // let privateKeyArray = Array.from(fromB64(privateKey));
+  // privateKeyArray.shift();
+  //return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey.slice(2), "hex"), { skipValidation: true });
 }
 
 let keyPair = getKeyPair(privKey);
@@ -23,7 +24,7 @@ async function mintHero() {
   let skillValues = [200, 201, 202, 203];
   let appearenceValues = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111];
   let statValues = [40, 0, 0, 0, 0, 0, 0, 0];
-  let otherValues = [34];
+  //let otherValues = [34];
   let txb = new TransactionBlock();
 
   
@@ -40,7 +41,7 @@ async function mintHero() {
       txb.pure(skillValues),
       txb.pure(appearenceValues),
       txb.pure(statValues),
-      txb.pure(otherValues),
+      //txb.pure(otherValues),
       txb.pure("1337", "string"),
     ]
   });

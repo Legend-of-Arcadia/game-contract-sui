@@ -10,9 +10,10 @@ const upgraderId = process.env.UPGRADER as string;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
-  let privateKeyArray = Array.from(fromB64(privateKey));
-  privateKeyArray.shift();
-  return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  // let privateKeyArray = Array.from(fromB64(privateKey));
+  // privateKeyArray.shift();
+  //return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey.slice(2), "hex"), { skipValidation: true });
 }
 
 // helper to find hero ID from transaction result
@@ -82,8 +83,7 @@ async function upgradeHero(mainHeroId: string, heroIds: string[]){
     arguments: [
       hero,
       txb.makeMoveVec({ objects: heroes }),
-      txb.object(upgraderId),
-      txb.pure("false", "bool"),
+      txb.object(upgraderId)
     ]
   });
 
@@ -146,10 +146,14 @@ const perofmUpgrade = async (playerAddress: string) => {
 async function main() {
 
   let mintResult1 = await mintHero();
+  await sleep(5);
   let mintResult2 = await mintHero();
+  await sleep(5);
   let mintResult3 = await mintHero();
+  await sleep(5);
 
   let mainHeroId = getHeroId(mintResult1);
+
   let hero1Id = getHeroId(mintResult2);
   let hero2Id = getHeroId(mintResult3);
 
@@ -159,7 +163,7 @@ async function main() {
   console.log(JSON.stringify(requestUpgradeResult));
 
   // address
-  const address = "0x6f2d5e80dd21cb2c87c80b227d662642c688090dc81adbd9c4ae1fe889dfaf71";
+  const address = "0xbe225c0731573a1a41afb36dd363754d24585cfc790929252656ea4e77435d6e";
   let result = await perofmUpgrade(address);
   var fs = require('fs');
   fs.writeFile(`./auto-results/mintHeroAndPutForUpgradeResult.json`, JSON.stringify(result, null, 2), function(err: any) {
@@ -168,5 +172,10 @@ async function main() {
     }
   });
 }
+
+function sleep(seconds:number) {
+  const milliseconds = seconds * 1000;
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+};
 
 main();
