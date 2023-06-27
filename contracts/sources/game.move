@@ -263,6 +263,14 @@ module contracts::game{
   }
 
   // upgrade
+  public fun upgrade_base(_: &GameCap, hero: &mut Hero, new_values: vector<u8>) {
+    hero::edit_fields<u8>(hero, string::utf8(b"base"), new_values);
+  }
+
+  public fun upgrade_skill(_: &GameCap, hero: &mut Hero, new_values: vector<u8>) {
+    hero::edit_fields<u8>(hero, string::utf8(b"skill"), new_values);
+  }
+
   public fun upgrade_appearance(_: &GameCap, hero: &mut Hero, new_values: vector<u8>) {
     hero::edit_fields<u8>(hero, string::utf8(b"appearance"), new_values);
   }
@@ -270,6 +278,11 @@ module contracts::game{
   public fun upgrade_stat(_: &GameCap, hero: &mut Hero, new_values: vector<u64>) {
     hero::edit_fields<u64>(hero, string::utf8(b"stat"), new_values);
   }
+
+  public fun upgrade_other(_: &GameCap, hero: &mut Hero, new_values: vector<u8>) {
+    hero::edit_fields<u8>(hero, string::utf8(b"other"), new_values);
+  }
+
 
   /// === Player functions ===
 
