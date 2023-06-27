@@ -114,7 +114,7 @@ module contracts::test_game {
     ts::end(scenario);
   }
 
-    #[test]
+  #[test]
   public fun upgrade_base_test() {
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
@@ -175,6 +175,145 @@ module contracts::test_game {
     {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
       assert!(*hero::base_values(&hero) == new_base, EWrongStats);
+      assert!(hero::pending_upgrade(&hero) == &0, EWrongHeroPendingUpgrade);
+      ts::return_to_sender<Hero>(&scenario, hero);
+    };
+
+    ts::end(scenario);
+  }
+
+  #[test]
+  public fun upgrade_skill_test() {
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    // mint three heroes and send it to the user
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+
+      transfer::public_transfer(hero, USER);
+      transfer::public_transfer(hero1, USER);
+      transfer::public_transfer(hero2, USER);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+    };
+
+    //user starts the upgrade
+    ts::next_tx(&mut scenario, USER);
+    {
+      let hero2 = ts::take_from_sender<Hero>(&mut scenario);
+      let hero1 = ts::take_from_sender<Hero>(&mut scenario);
+      let hero = ts::take_from_sender<Hero>(&mut scenario);
+
+      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+
+      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, ts::ctx(&mut scenario));
+      ts::return_shared(upgrader);
+    };
+
+    let new_skills: vector<u8> = vector[
+        20,
+        20,
+        20,
+        20,
+        30,
+        30,
+        30,
+    ];
+
+    // game performs upgrade
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+
+      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
+      assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
+      game::upgrade_base(&cap, &mut hero, new_skills);
+      game::return_upgraded_hero(hero, ticket);
+
+      ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(upgrader);
+    };
+
+    //check
+    ts::next_tx(&mut scenario, USER);
+    {
+      let hero = ts::take_from_sender<Hero>(&mut scenario);
+      assert!(*hero::base_values(&hero) == new_skills, EWrongStats);
+      assert!(hero::pending_upgrade(&hero) == &0, EWrongHeroPendingUpgrade);
+      ts::return_to_sender<Hero>(&scenario, hero);
+    };
+
+    ts::end(scenario);
+  }
+
+  #[test]
+  public fun upgrade_other_test() {
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    // mint three heroes and send it to the user
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+
+      transfer::public_transfer(hero, USER);
+      transfer::public_transfer(hero1, USER);
+      transfer::public_transfer(hero2, USER);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+    };
+
+    //user starts the upgrade
+    ts::next_tx(&mut scenario, USER);
+    {
+      let hero2 = ts::take_from_sender<Hero>(&mut scenario);
+      let hero1 = ts::take_from_sender<Hero>(&mut scenario);
+      let hero = ts::take_from_sender<Hero>(&mut scenario);
+
+      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+
+      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, ts::ctx(&mut scenario));
+      ts::return_shared(upgrader);
+    };
+
+    let new_others: vector<u8> = vector[
+        33,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+    ];
+
+    // game performs upgrade
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+
+      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
+      assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
+      game::upgrade_base(&cap, &mut hero, new_others);
+      game::return_upgraded_hero(hero, ticket);
+
+      ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(upgrader);
+    };
+
+    //check
+    ts::next_tx(&mut scenario, USER);
+    {
+      let hero = ts::take_from_sender<Hero>(&mut scenario);
+      assert!(*hero::base_values(&hero) == new_others, EWrongStats);
       assert!(hero::pending_upgrade(&hero) == &0, EWrongHeroPendingUpgrade);
       ts::return_to_sender<Hero>(&scenario, hero);
     };
