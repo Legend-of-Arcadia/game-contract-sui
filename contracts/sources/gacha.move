@@ -94,8 +94,18 @@ module contracts::gacha{
         object::uid_to_inner(&gacha_ball.id)
     }
 
-    public(friend) fun type(gacha: &GachaBall): String {
-        gacha.type
+    // === Accessors ===
+
+    public fun collection(gacha_ball: &GachaBall): &String {
+        &gacha_ball.collection
+    }
+
+    public fun name(gacha_ball: &GachaBall): &String {
+        &gacha_ball.name
+    }
+
+    public fun type(gacha_ball: &GachaBall): &String {
+        &gacha_ball.type
     }
 
 }

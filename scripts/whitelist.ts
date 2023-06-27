@@ -1,4 +1,3 @@
-// after the hero is put for upgrade by the player, mugen upgrades the hero
 import { testnetConnection, fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner} from "@mysten/sui.js";
 import * as dotenv from "dotenv";
 dotenv.config();
