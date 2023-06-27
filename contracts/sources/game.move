@@ -76,7 +76,7 @@ module contracts::game{
     burned_heroes: u64
   }
 
-  struct PowerUpgadeRequest has copy, drop {
+  struct PowerUpgradeRequest has copy, drop {
     hero_id: address,
     user: address,
     burned_heroes: u64,
