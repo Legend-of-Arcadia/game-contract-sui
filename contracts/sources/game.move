@@ -369,7 +369,7 @@ module contracts::game{
     };
     vector::destroy_empty<Hero>(to_burn);
 
-    let evt = PowerUpgadeRequest {
+    let evt = PowerUpgradeRequest {
       hero_id: object::id_address(&main_hero),
       user: tx_context::sender(ctx),
       burned_heroes: l,
