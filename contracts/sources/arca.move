@@ -17,4 +17,10 @@ module contracts::arca {
         transfer::public_freeze_object(metadata);
         transfer::public_transfer(treasury, tx_context::sender(ctx));
     }
+
+    #[test_only]
+    public fun init_for_testing(ctx: &mut TxContext) {
+        let witness = ARCA{};
+        init(witness, ctx);
+    }
 }
