@@ -124,7 +124,7 @@ module contracts::hero {
         object::delete(id);
     }
 
-    // Accessors
+    // === Accessors ===
     public fun name(hero: &Hero): &String {
         &hero.name
     }

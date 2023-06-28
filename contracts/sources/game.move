@@ -76,7 +76,7 @@ module contracts::game{
     burned_heroes: u64
   }
 
-  struct PowerUpgadeRequest has copy, drop {
+  struct PowerUpgradeRequest has copy, drop {
     hero_id: address,
     user: address,
     burned_heroes: u64,
@@ -280,7 +280,7 @@ module contracts::game{
 
     let gacha_ball_id = gacha::id(&gacha_ball);
     let user = tx_context::sender(ctx);
-    let type = gacha::type(&gacha_ball);
+    let type = *gacha::type(&gacha_ball);
     // burn gacha ball
     gacha::burn(gacha_ball);
 
@@ -369,7 +369,7 @@ module contracts::game{
     };
     vector::destroy_empty<Hero>(to_burn);
 
-    let evt = PowerUpgadeRequest {
+    let evt = PowerUpgradeRequest {
       hero_id: object::id_address(&main_hero),
       user: tx_context::sender(ctx),
       burned_heroes: l,
