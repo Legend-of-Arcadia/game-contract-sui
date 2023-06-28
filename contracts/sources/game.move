@@ -61,11 +61,6 @@ module contracts::game{
     hero_id: address
   }
 
-  struct ExchangeCoupon<Item> has key, store {
-    id: UID,
-    reward: Item
-  }
-
   struct WhitelistRewards has store {
     heroes: vector<Hero>,
     gacha_balls: vector<GachaBall>
@@ -162,13 +157,6 @@ module contracts::game{
       gacha_balls: gacha_rewards
     };
     df::add<address, WhitelistRewards>(&mut config.id, player_address, rewards);
-  }
-
-  public fun mint_exchange_coupon<Item: key+store>(_: &GameCap, reward: Item, ctx: &mut TxContext): ExchangeCoupon<Item> {
-    ExchangeCoupon<Item> {
-      id: object::new(ctx),
-      reward
-    }
   }
 
   public fun mint_hero(
@@ -444,13 +432,6 @@ module contracts::game{
       transfer::public_transfer(vector::pop_back<GachaBall>(&mut gacha_balls), sender);
     };
     vector::destroy_empty<GachaBall>(gacha_balls);
-  }
-
-  // coupon claim
-  public fun claim_exchange_coupon<Item>(coupon: ExchangeCoupon<Item>): Item {
-    let ExchangeCoupon {id, reward} = coupon;
-    object::delete(id);
-    reward
   }
 
   // === Test-only ===
