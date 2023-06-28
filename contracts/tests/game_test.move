@@ -147,7 +147,7 @@ module contracts::test_game {
       ts::return_shared(upgrader);
     };
 
-    let new_base: vector<u8> = vector[
+    let new_base: vector<u16> = vector[
         1,
         2,
         5,
@@ -215,7 +215,7 @@ module contracts::test_game {
       ts::return_shared(upgrader);
     };
 
-    let new_skills: vector<u8> = vector[
+    let new_skills: vector<u16> = vector[
         20,
         20,
         20,
@@ -284,7 +284,7 @@ module contracts::test_game {
       ts::return_shared(upgrader);
     };
 
-    let new_others: vector<u8> = vector[
+    let new_others: vector<u16> = vector[
         33,
         0,
         0,

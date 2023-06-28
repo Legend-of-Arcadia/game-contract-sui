@@ -1,4 +1,4 @@
-module contracts::gacha{
+module contracts::item{
 
     use sui::display;
     use sui::object::{Self, ID, UID};
@@ -6,31 +6,30 @@ module contracts::gacha{
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
     use sui::event;
-    
+
     use std::string::{Self, String};
 
     friend contracts::game;
 
     // one-time witness
-    struct GACHA has drop {}
+    struct ITEM has drop {}
 
-    struct GachaBall has key, store {
+    struct Item has key, store {
         id: UID,
-        gacha_id: u64,
         collection: String,
         name: String,
         type: String,
     }
 
-    struct GachaBallMinted has copy, drop {
+    struct ItemMinted has copy, drop {
         id: ID
     }
 
-    struct GachaBallBurned has copy, drop {
+    struct ItemBurned has copy, drop {
         id: ID
     }
 
-    fun init(otw: GACHA, ctx: &mut TxContext){
+    fun init(otw: ITEM, ctx: &mut TxContext){
 
         // claim publisher
         let publisher = package::claim(otw, ctx);
@@ -58,61 +57,55 @@ module contracts::gacha{
             string::utf8(b"{https://legendofarcadia.io}"),
         ];
 
-        let display = display::new_with_fields<GachaBall>(&publisher, keys, values, ctx);
-        display::update_version<GachaBall>(&mut display);
+        let display = display::new_with_fields<Item>(&publisher, keys, values, ctx);
+        display::update_version<Item>(&mut display);
 
         transfer::public_transfer(publisher, tx_context::sender(ctx));
-        transfer::public_transfer(display, tx_context::sender(ctx)); 
+        transfer::public_transfer(display, tx_context::sender(ctx));
     }
 
     public(friend) fun mint(
-        gacha_id: u64,
         collection: String,
         name: String,
         type: String,
         ctx: &mut TxContext
-    ): GachaBall {
+    ): Item {
         let id = object::new(ctx);
 
-        let new_ball = GachaBall {
+        let new_item = Item {
             id,
-            gacha_id,
             collection,
             name,
             type,
         };
 
-        event::emit(GachaBallMinted {id: object::uid_to_inner(&new_ball.id)});
+        event::emit(ItemMinted {id: object::uid_to_inner(&new_item.id)});
 
-        new_ball
+        new_item
     }
 
-    public(friend) fun burn(gacha_ball: GachaBall) {
-        let GachaBall {id, gacha_id: _, collection: _, name: _, type: _} = gacha_ball;
-        event::emit(GachaBallBurned {id: object::uid_to_inner(&id)});
+    public(friend) fun burn(item: Item) {
+        let Item {id, collection: _, name: _, type: _} = item;
+        event::emit(ItemBurned {id: object::uid_to_inner(&id)});
         object::delete(id);
     }
 
-    public(friend) fun id(gacha_ball: &GachaBall): ID {
+    public(friend) fun id(gacha_ball: &Item): ID {
         object::uid_to_inner(&gacha_ball.id)
     }
 
     // === Accessors ===
 
-    public fun collection(gacha_ball: &GachaBall): &String {
-        &gacha_ball.collection
+    public fun collection(item: &Item): &String {
+        &item.collection
     }
 
-    public fun name(gacha_ball: &GachaBall): &String {
-        &gacha_ball.name
+    public fun name(item: &Item): &String {
+        &item.name
     }
 
-    public fun type(gacha_ball: &GachaBall): &String {
-        &gacha_ball.type
-    }
-
-    public fun gachaId(gacha_ball: &GachaBall): &u64 {
-        &gacha_ball.gacha_id
+    public fun type(item: &Item): &String {
+        &item.type
     }
 
 }

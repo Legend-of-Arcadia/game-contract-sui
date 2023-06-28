@@ -16,6 +16,7 @@ module contracts::game{
   use contracts::arca::ARCA;
   use contracts::hero::{Self, Hero};
   use contracts::gacha::{Self, GachaBall};
+  use contracts::item::{Self, Item};
 
   const VERSION: u64 = 1;
 
@@ -38,7 +39,15 @@ module contracts::game{
     id: UID,
     caps_created: u64,
     game_address: address
+    //gacha_config: Table<u64,GachaConfig>
   }
+
+  // struct GachaConfig has store {
+  //   open_fee:u64,
+  //   name: String,
+  //   type: String,
+  //   collection: String
+  // }
 
   // upgrader and hot potato
   struct Upgrader has key, store {
@@ -196,15 +205,29 @@ module contracts::game{
   
   public fun mint_gacha(
     _: &GameCap,
+    gacha_id: u64,
     collection: String,
     name: String,
     type: String,
     ctx: &mut TxContext
   ): GachaBall {
 
-    let gacha_ball = gacha::mint(collection, name, type, ctx);
+    let gacha_ball = gacha::mint(gacha_id, collection, name, type, ctx);
 
     gacha_ball
+  }
+
+  public fun mint_item(
+    _: &GameCap,
+    collection: String,
+    name: String,
+    type: String,
+    ctx: &mut TxContext
+  ): Item {
+
+    let item = item::mint(collection, name, type, ctx);
+
+    item
   }
 
   public fun create_game_cap(_: &GameCap, config: &mut GameConfig, ctx: &mut TxContext): GameCap {
@@ -218,6 +241,19 @@ module contracts::game{
     config.caps_created = config.caps_created - 1;
     let GameCap { id } = game_cap;
     object::delete(id); 
+  }
+
+  public fun set_upgrade_price(_: &GameCap, upgrader: &mut Upgrader , keys: vector<String>, values: vector<u64>){
+    let i = 0;
+    let len = vector::length(&keys);
+    while(i < len) {
+      let key = vector::borrow(&keys, i);
+      let value = vector::borrow(&values, i);
+      if(table::contains<String, u64>(&mut upgrader.power_prices, *key)) {
+        table::remove<String, u64>(&mut upgrader.power_prices, *key);
+      };
+      table::add<String, u64>(&mut upgrader.power_prices, *key, *value);
+    }
   }
 
   /// === Upgrader functions ===
@@ -263,6 +299,15 @@ module contracts::game{
   }
 
   // upgrade
+
+  public fun upgrade_base(_: &GameCap, hero: &mut Hero, new_values: vector<u16>) {
+    hero::edit_fields<u16>(hero, string::utf8(b"base"), new_values);
+  }
+
+  public fun upgrade_skill(_: &GameCap, hero: &mut Hero, new_values: vector<u16>) {
+    hero::edit_fields<u16>(hero, string::utf8(b"skill"), new_values);
+  }
+
   public fun upgrade_appearance(_: &GameCap, hero: &mut Hero, new_values: vector<u16>) {
     hero::edit_fields<u16>(hero, string::utf8(b"appearance"), new_values);
   }
@@ -449,6 +494,7 @@ module contracts::game{
   public fun mint_test_gacha(cap: &GameCap, ctx: &mut TxContext): GachaBall {
     mint_gacha(
       cap,
+      1000,
       string::utf8(b"Halloween"),
       string::utf8(b"Grandia"),
       string::utf8(b"VIP"),
