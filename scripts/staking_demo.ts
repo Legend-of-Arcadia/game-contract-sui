@@ -20,8 +20,9 @@ const ArcaCoin = process.env.ARCA_COIN_ID as string;
 const ArcaCoin2 = process.env.ARCA_COIN_ID2 as string;
 const ArcaCoin3 = process.env.ARCA_COIN_ID3 as string;
 const veARCAId = process.env.VEARCA_ID as string;
+const Sui = process.env.SUI as string;
 
-function getKeyPair(privateKey: string): Ed25519Keypair{
+export function getKeyPair(privateKey: string): Ed25519Keypair{
   let privateKeyArray = Array.from(fromB64(privateKey));
   privateKeyArray.shift();
   return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
@@ -32,15 +33,15 @@ let provider = new JsonRpcProvider(testnetConnection);
 let mugen = new RawSigner(keyPair, provider);
 let mugenAddress = keyPair.getPublicKey().toSuiAddress();
 
-async function mintARCA() {
+export async function mintARCA() {
   let txb = new TransactionBlock();
 
   txb.moveCall({
-    target: `0x0000000000000000000000000000000000000000000000000000000000000002::coin::mint_and_transfer`,
+    target: `${Sui}::coin::mint_and_transfer`,
     arguments: [ 
       txb.object(TreasuryCap),
       // 50_000_000_000_000_000
-      txb.pure("500000000000", "u64"),
+      txb.pure("30000000000", "u64"),
       txb.pure(mugenAddress, "address")
     ],
     typeArguments: [`${packageId}::arca::ARCA`]
@@ -59,13 +60,13 @@ async function mintARCA() {
   return response;
 }
 
-async function createStakingPool() {
+export async function createStakingPool() {
   let txb = new TransactionBlock();
 
   txb.moveCall({
     target: `${packageId}::staking::create_pool`,
     arguments: [
-      txb.object(gameCapId),
+      txb.object(TreasuryCap),
       txb.object(Clock),
     ]
   });
@@ -85,7 +86,7 @@ async function createStakingPool() {
 
 // TODO: take the object with the respective sdk function
 
-async function stake() {
+export async function stake() {
   let txb = new TransactionBlock();
 
   txb.moveCall({
@@ -174,7 +175,7 @@ async function distribute_rewards() {
   txb.moveCall({
     target: `${packageId}::staking::distribute_rewards`,
     arguments: [
-      txb.object(gameCapId),
+      txb.object(TreasuryCap),
       txb.object(StakingPool),
       txb.object(Clock)
     ]
@@ -194,17 +195,15 @@ async function distribute_rewards() {
 
 }
 
-async function main() {
+// async function main() {
   
-  // let response = await mintARCA();
-  // let response = await createStakingPool();
-  // let response = await stake();
-  // let response = await unstake();
-  // let response = await append();
-  let response = await distribute_rewards();
-  console.log(response);
-}
+//   // let response = await mintARCA();
+//   // let response = await createStakingPool();
+//   // let response = await stake();
+//   // let response = await unstake();
+//   // let response = await append();
+//   let response = await distribute_rewards();
+//   console.log(response);
+// }
 
-main();
-
-// 1689373136
+// main();
