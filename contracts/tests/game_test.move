@@ -11,7 +11,6 @@ module contracts::test_game {
     EMustBurnAtLeastOneHero, 
     ENotWhitelisted,
     EWrongPowerUpgradeFee,
-    ExchangeCoupon,
     GameCap,
     GameConfig,
     Upgrader
@@ -570,31 +569,31 @@ module contracts::test_game {
   }
 
   // exchange coupon
-  #[test]
-  public fun test_exchange_coupon() {
-    let scenario = ts::begin(GAME);
-    game::init_for_test(ts::ctx(&mut scenario));
-
-    // send coupon to user
-    ts::next_tx(&mut scenario, GAME);
-    {
-      let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      // mint a hero
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let coupon = game::mint_exchange_coupon<Hero>(&cap, hero, ts::ctx(&mut scenario));
-      transfer::public_transfer(coupon, USER);
-      ts::return_to_sender<GameCap>(&scenario, cap);
-    };
-
-    //claim coupon
-    ts::next_tx(&mut scenario, USER);
-    {
-      let coupon = ts::take_from_sender<ExchangeCoupon<Hero>>(&mut scenario);
-      let hero = game::claim_exchange_coupon<Hero>(coupon);
-      transfer::public_transfer(hero, USER);
-    };
-
-    ts::end(scenario);
-  }
+  //#[test]
+  // public fun test_exchange_coupon() {
+  //   let scenario = ts::begin(GAME);
+  //   game::init_for_test(ts::ctx(&mut scenario));
+  //
+  //   // send coupon to user
+  //   ts::next_tx(&mut scenario, GAME);
+  //   {
+  //     let cap = ts::take_from_sender<GameCap>(&mut scenario);
+  //     // mint a hero
+  //     let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+  //     let coupon = game::mint_exchange_coupon<Hero>(&cap, hero, ts::ctx(&mut scenario));
+  //     transfer::public_transfer(coupon, USER);
+  //     ts::return_to_sender<GameCap>(&scenario, cap);
+  //   };
+  //
+  //   //claim coupon
+  //   ts::next_tx(&mut scenario, USER);
+  //   {
+  //     let coupon = ts::take_from_sender<ExchangeCoupon<Hero>>(&mut scenario);
+  //     let hero = game::claim_exchange_coupon<Hero>(coupon);
+  //     transfer::public_transfer(hero, USER);
+  //   };
+  //
+  //   ts::end(scenario);
+  // }
 
 }

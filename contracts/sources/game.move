@@ -56,6 +56,10 @@ module contracts::game{
     profits: Balance<ARCA>
   }
 
+  struct OpenGachaer has key, store {
+    id: UID
+  }
+
   struct ReturnTicket {
     player_address: address,
     hero_id: address
@@ -77,13 +81,13 @@ module contracts::game{
   struct UpgradeRequest has copy, drop {
     hero_id: address,
     player_address: address,
-    burned_heroes: u64
+    burned_heroes: vector<address>
   }
 
   struct PowerUpgradeRequest has copy, drop {
     hero_id: address,
     user: address,
-    burned_heroes: u64,
+    burned_heroes: vector<address>,
     arca_payed: u64
   }
 
@@ -125,8 +129,13 @@ module contracts::game{
       game_address: tx_context::sender(ctx)
     };
 
+    let openGachaer = OpenGachaer {
+      id: object::new(ctx),
+    };
+
     transfer::public_share_object(config);
     transfer::public_share_object(upgrader);
+    transfer::public_share_object(openGachaer);
     transfer::public_transfer(game_cap, tx_context::sender(ctx));
   }
 
@@ -286,6 +295,16 @@ module contracts::game{
     transfer::public_transfer(hero, player_address);
   }
 
+  fun put_burn_hero(hero: Hero, hero_address: address, upgrader: &mut Upgrader) {
+    dof::add<address, Hero>(&mut upgrader.id, hero_address, hero);
+    // event
+  }
+
+  fun get_burn_hero_and_burn(_: &GameCap, hero_address: address, upgrader: &mut Upgrader) {
+    let burn_hero = dof::remove<address, Hero>(&mut upgrader.id, hero_address);
+    hero::burn(burn_hero);
+    // event
+  }
   // upgrade
 
   public fun upgrade_base(_: &GameCap, hero: &mut Hero, new_values: vector<u16>) {
@@ -304,18 +323,31 @@ module contracts::game{
     hero::edit_fields<u16>(hero, string::utf8(b"stat"), new_values);
   }
 
+  /// === Open gacha functions ===
+  fun put_gacha(gacha: GachaBall, gacha_ball_address: address, open_gachaer: &mut OpenGachaer) {
+    dof::add<address, GachaBall>(&mut open_gachaer.id, gacha_ball_address, gacha);
+    // event
+  }
+
+  fun get_gacha_and_burn(_: &GameCap, gacha_ball_address: address, open_gachaer: &mut OpenGachaer) {
+    let gacha_ball = dof::remove<address, GachaBall>(&mut open_gachaer.id, gacha_ball_address);
+    gacha::burn(gacha_ball);
+    // event
+  }
   /// === Player functions ===
 
   /// open a gacha ball
-  public fun open_gacha_ball(gacha_ball: GachaBall, ctx: &mut TxContext){
+  public fun open_gacha_ball(gacha_ball: GachaBall, open_gachaer: &mut OpenGachaer, ctx: &mut TxContext){
 
     assert!(VERSION == 1, EIncorrectVersion); 
 
     let gacha_ball_id = gacha::id(&gacha_ball);
     let user = tx_context::sender(ctx);
     let type = *gacha::type(&gacha_ball);
+    let gacha_ball_address: address = object::id_address(&gacha_ball);
     // burn gacha ball
-    gacha::burn(gacha_ball);
+    // gacha::burn(gacha_ball);
+    put_gacha(gacha_ball, gacha_ball_address, open_gachaer);
 
     // create and emit an event
     let open_evt = GachaBallOpened { id: gacha_ball_id, user, type };
@@ -346,7 +378,9 @@ module contracts::game{
       burned_hero_rarity: *hero::rarity(&to_burn)
     };
     event::emit(evt);
-    hero::burn(to_burn);
+    //hero::burn(to_burn);
+    let burn_hero_address = object::id_address(&to_burn);
+    put_burn_hero(to_burn, burn_hero_address, upgrader);
     put_hero(main_hero, tx_context::sender(ctx), 1, upgrader);
   }
 
@@ -362,10 +396,14 @@ module contracts::game{
     assert!(l > 0, EMustBurnAtLeastOneHero);
     let main_rarity = hero::rarity(&main_hero);
     let i: u64 = 0;
+    let burn_addresses: vector<address> = vector::empty<address>();
     while (i < l) {
       let burnable = vector::pop_back<Hero>(&mut to_burn);
       assert!(main_rarity == hero::rarity(& burnable), ERarityMismatch);
-      hero::burn(burnable);
+      // hero::burn(burnable);
+      let burn_hero_address = object::id_address(&burnable);
+      vector::push_back(&mut burn_addresses, burn_hero_address);
+      put_burn_hero(burnable, burn_hero_address, upgrader);
       i = i + 1;
     };
     vector::destroy_empty<Hero>(to_burn);
@@ -373,7 +411,7 @@ module contracts::game{
     let evt = UpgradeRequest {
       hero_id: object::id_address(&main_hero),
       player_address: tx_context::sender(ctx),
-      burned_heroes: l
+      burned_heroes: burn_addresses
     };
     event::emit(evt);
     put_hero(main_hero, tx_context::sender(ctx), l, upgrader);
@@ -394,10 +432,14 @@ module contracts::game{
     let correct_price: u64 = *table::borrow<String, u64>(&mut upgrader.power_prices, *main_rarity) * l;
     assert!(coin::value(&fee) == correct_price, EWrongPowerUpgradeFee);
     let i: u64 = 0;
+    let burn_addresses: vector<address> = vector::empty<address>();
     while (i < l) {
       let burnable = vector::pop_back<Hero>(&mut to_burn);
       assert!(main_rarity == hero::rarity(& burnable), ERarityMismatch);
-      hero::burn(burnable);
+      // hero::burn(burnable);
+      let burn_hero_address = object::id_address(&burnable);
+      vector::push_back(&mut burn_addresses, burn_hero_address);
+      put_burn_hero(burnable, burn_hero_address, upgrader);
       i = i + 1;
     };
     vector::destroy_empty<Hero>(to_burn);
@@ -405,7 +447,7 @@ module contracts::game{
     let evt = PowerUpgradeRequest {
       hero_id: object::id_address(&main_hero),
       user: tx_context::sender(ctx),
-      burned_heroes: l,
+      burned_heroes: burn_addresses,
       arca_payed: correct_price
     };
 
