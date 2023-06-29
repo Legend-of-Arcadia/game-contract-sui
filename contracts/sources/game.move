@@ -56,7 +56,8 @@ module contracts::game{
     profits: Balance<ARCA>
   }
 
-  struct OpenGachaer has key, store {
+  // 目前我将需要销毁的盲盒和英雄都存在这个对象上了
+  struct ObjBurn has key, store {
     id: UID
   }
 
@@ -129,13 +130,13 @@ module contracts::game{
       game_address: tx_context::sender(ctx)
     };
 
-    let openGachaer = OpenGachaer {
+    let objBurn = ObjBurn {
       id: object::new(ctx),
     };
 
     transfer::public_share_object(config);
     transfer::public_share_object(upgrader);
-    transfer::public_share_object(openGachaer);
+    transfer::public_share_object(objBurn);
     transfer::public_transfer(game_cap, tx_context::sender(ctx));
   }
 
@@ -199,7 +200,8 @@ module contracts::game{
 
       hero
     }
-  
+
+  // 铸造盲盒， 新增了一个id属性，用type还是id来区分盲盒等级？ display 里描述的内容目前是固定的，是否用传进来的参数
   public fun mint_gacha(
     _: &GameCap,
     gacha_id: u64,
@@ -214,6 +216,7 @@ module contracts::game{
     gacha_ball
   }
 
+  // 铸造item   用type来区分头像 勋章等种类 还是新增item id属性
   public fun mint_item(
     _: &GameCap,
     collection: String,
@@ -240,6 +243,7 @@ module contracts::game{
     object::delete(id); 
   }
 
+  //设置强力升级的费用
   public fun set_upgrade_price(_: &GameCap, upgrader: &mut Upgrader , keys: vector<String>, values: vector<u64>){
     let i = 0;
     let len = vector::length(&keys);
@@ -254,12 +258,14 @@ module contracts::game{
   }
 
   /// === Upgrader functions ===
+  // 放置升级的英雄
   fun put_hero(hero: Hero, player_address: address, heroes_burned: u64, upgrader: &mut Upgrader) {
     hero::add_pending_upgrade(&mut hero, heroes_burned);
     dof::add<address, Hero>(&mut upgrader.id, player_address, hero);
     // event
   }
 
+  // 放置强力升级的英雄（收取arca）
   fun put_power_hero(
     hero: Hero,
     player_address: address,
@@ -272,6 +278,7 @@ module contracts::game{
       dof::add<address, Hero>(&mut upgrader.id, player_address, hero);
     }
 
+  // 管理员获取升级的英雄
   public fun get_for_upgrade(_: &GameCap, player_address: address, upgrader: &mut Upgrader): (Hero, ReturnTicket) {
     let hero = dof::remove<address, Hero>(&mut upgrader.id, player_address);
     let hero_address: address = object::id_address(&hero);
@@ -288,6 +295,7 @@ module contracts::game{
     (hero, ticket)
   }
 
+  // 管理员返还升级的英雄
   public fun return_upgraded_hero(hero: Hero, ticket: ReturnTicket) {
     let ReturnTicket {player_address, hero_id} = ticket;
     assert!(object::id_address<Hero>(&hero) == hero_id, EReturningWrongHero);
@@ -295,18 +303,21 @@ module contracts::game{
     transfer::public_transfer(hero, player_address);
   }
 
-  fun put_burn_hero(hero: Hero, hero_address: address, upgrader: &mut Upgrader) {
-    dof::add<address, Hero>(&mut upgrader.id, hero_address, hero);
+  // 放置销毁的英雄
+  fun put_burn_hero(hero: Hero, hero_address: address, obj_burn: &mut ObjBurn) {
+    dof::add<address, Hero>(&mut obj_burn.id, hero_address, hero);
     // event
   }
 
-  fun get_burn_hero_and_burn(_: &GameCap, hero_address: address, upgrader: &mut Upgrader) {
-    let burn_hero = dof::remove<address, Hero>(&mut upgrader.id, hero_address);
+  // 管理员burn英雄
+  fun get_burn_hero_and_burn(_: &GameCap, hero_address: address, obj_burn: &mut ObjBurn) {
+    let burn_hero = dof::remove<address, Hero>(&mut obj_burn.id, hero_address);
     hero::burn(burn_hero);
     // event
   }
   // upgrade
 
+  //管理员升级属性
   public fun upgrade_base(_: &GameCap, hero: &mut Hero, new_values: vector<u16>) {
     hero::edit_fields<u16>(hero, string::utf8(b"base"), new_values);
   }
@@ -324,20 +335,23 @@ module contracts::game{
   }
 
   /// === Open gacha functions ===
-  fun put_gacha(gacha: GachaBall, gacha_ball_address: address, open_gachaer: &mut OpenGachaer) {
-    dof::add<address, GachaBall>(&mut open_gachaer.id, gacha_ball_address, gacha);
+  // 放置销毁的盲盒
+  fun put_gacha(gacha: GachaBall, gacha_ball_address: address, obj_burn: &mut ObjBurn) {
+    dof::add<address, GachaBall>(&mut obj_burn.id, gacha_ball_address, gacha);
     // event
   }
 
-  fun get_gacha_and_burn(_: &GameCap, gacha_ball_address: address, open_gachaer: &mut OpenGachaer) {
-    let gacha_ball = dof::remove<address, GachaBall>(&mut open_gachaer.id, gacha_ball_address);
+  // 管理员销毁盲盒
+  fun get_gacha_and_burn(_: &GameCap, gacha_ball_address: address, obj_burn: &mut ObjBurn) {
+    let gacha_ball = dof::remove<address, GachaBall>(&mut obj_burn.id, gacha_ball_address);
     gacha::burn(gacha_ball);
     // event
   }
   /// === Player functions ===
 
   /// open a gacha ball
-  public fun open_gacha_ball(gacha_ball: GachaBall, open_gachaer: &mut OpenGachaer, ctx: &mut TxContext){
+  // 用户开盲盒
+  public fun open_gacha_ball(gacha_ball: GachaBall, obj_burn: &mut ObjBurn, ctx: &mut TxContext){
 
     assert!(VERSION == 1, EIncorrectVersion); 
 
@@ -347,7 +361,7 @@ module contracts::game{
     let gacha_ball_address: address = object::id_address(&gacha_ball);
     // burn gacha ball
     // gacha::burn(gacha_ball);
-    put_gacha(gacha_ball, gacha_ball_address, open_gachaer);
+    put_gacha(gacha_ball, gacha_ball_address, obj_burn);
 
     // create and emit an event
     let open_evt = GachaBallOpened { id: gacha_ball_id, user, type };
@@ -356,11 +370,13 @@ module contracts::game{
 
   // appearance_index is the index of the part inside the appearance vector
   // eg: eye is 0, appearance[0]
+  // TODO 锻造逻辑有点问题
   public fun makeover_hero(
     main_hero: Hero,
     to_burn: Hero,
     appearance_index: u64,
     upgrader: &mut Upgrader,
+    obj_burn: &mut ObjBurn,
     ctx: &mut TxContext) {
     assert!(VERSION == 1, EIncorrectVersion);
     assert!(
@@ -380,7 +396,7 @@ module contracts::game{
     event::emit(evt);
     //hero::burn(to_burn);
     let burn_hero_address = object::id_address(&to_burn);
-    put_burn_hero(to_burn, burn_hero_address, upgrader);
+    put_burn_hero(to_burn, burn_hero_address, obj_burn);
     put_hero(main_hero, tx_context::sender(ctx), 1, upgrader);
   }
 
@@ -388,6 +404,7 @@ module contracts::game{
     main_hero: Hero,
     to_burn: vector<Hero>,
     upgrader: &mut Upgrader,
+    obj_burn: &mut ObjBurn,
     ctx: &mut TxContext)
   {
     assert!(VERSION == 1, EIncorrectVersion);
@@ -403,7 +420,7 @@ module contracts::game{
       // hero::burn(burnable);
       let burn_hero_address = object::id_address(&burnable);
       vector::push_back(&mut burn_addresses, burn_hero_address);
-      put_burn_hero(burnable, burn_hero_address, upgrader);
+      put_burn_hero(burnable, burn_hero_address, obj_burn);
       i = i + 1;
     };
     vector::destroy_empty<Hero>(to_burn);
@@ -423,6 +440,7 @@ module contracts::game{
     to_burn: vector<Hero>,
     fee: Coin<ARCA>,
     upgrader: &mut Upgrader,
+    obj_burn: &mut ObjBurn,
     ctx: &mut TxContext
   )
   {
@@ -439,7 +457,7 @@ module contracts::game{
       // hero::burn(burnable);
       let burn_hero_address = object::id_address(&burnable);
       vector::push_back(&mut burn_addresses, burn_hero_address);
-      put_burn_hero(burnable, burn_hero_address, upgrader);
+      put_burn_hero(burnable, burn_hero_address, obj_burn);
       i = i + 1;
     };
     vector::destroy_empty<Hero>(to_burn);

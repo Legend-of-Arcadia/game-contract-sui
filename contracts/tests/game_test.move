@@ -13,7 +13,8 @@ module contracts::test_game {
     EWrongPowerUpgradeFee,
     GameCap,
     GameConfig,
-    Upgrader
+    Upgrader,
+    ObjBurn
   };
   use contracts::hero::{Self, Hero};
   use contracts::arca::ARCA;
@@ -72,9 +73,11 @@ module contracts::test_game {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
 
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, &mut obj_burn,ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
     };
 
     let new_stats: vector<u16> = vector[
@@ -141,9 +144,11 @@ module contracts::test_game {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
 
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, &mut obj_burn,ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
     };
 
     let new_base: vector<u16> = vector[
@@ -209,9 +214,11 @@ module contracts::test_game {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
 
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, &mut obj_burn,ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
     };
 
     let new_skills: vector<u16> = vector[
@@ -278,9 +285,11 @@ module contracts::test_game {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
 
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
     };
 
     let new_others: vector<u16> = vector[
@@ -343,9 +352,11 @@ module contracts::test_game {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
 
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      game::upgrade_hero(hero, vector::empty<Hero>(), &mut upgrader, ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector::empty<Hero>(), &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
     };
 
     ts::end(scenario);
@@ -375,11 +386,13 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, USER);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
       let hero1 = ts::take_from_sender<Hero>(&mut scenario);
       let hero = ts::take_from_sender<Hero>(&mut scenario);
       let appearance_index = 2u64;
-      game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, ts::ctx(&mut scenario));
+      game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
     };
 
     // game performs upgrade
@@ -436,10 +449,12 @@ module contracts::test_game {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
 
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
       //12_500_000_000
       let fee: Coin<ARCA> = coin::mint_for_testing<ARCA>(25_000_000_000, ts::ctx(&mut scenario));
-      game::power_upgrade_hero(hero, vector[hero1, hero2],fee,  &mut upgrader, ts::ctx(&mut scenario));
+      game::power_upgrade_hero(hero, vector[hero1, hero2],fee,  &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
     };
 
     let new_stats: vector<u16> = vector[
@@ -480,12 +495,14 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
       let coins = game::claim_upgrade_profits(&cap, &mut upgrader, ts::ctx(&mut scenario));
       assert!(coin::value<ARCA>(&coins) == 25_000_000_000, EWrongGameBalanceAfterUpgrade);
       transfer::public_transfer(coins, GAME);
       ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
     };
 
     ts::end(scenario);
@@ -520,10 +537,12 @@ module contracts::test_game {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
 
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
       //12_500_000_000
       let fee: Coin<ARCA> = coin::mint_for_testing<ARCA>(2_000_000_000, ts::ctx(&mut scenario));
-      game::power_upgrade_hero(hero, vector[hero1, hero2],fee,  &mut upgrader, ts::ctx(&mut scenario));
+      game::power_upgrade_hero(hero, vector[hero1, hero2],fee,  &mut upgrader, &mut obj_burn,ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
     };
 
     ts::end(scenario);
