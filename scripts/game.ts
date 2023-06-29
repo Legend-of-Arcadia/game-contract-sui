@@ -2,15 +2,16 @@ import { testnetConnection, fromB64, TransactionBlock, Ed25519Keypair, JsonRpcPr
 import * as dotenv from "dotenv";
 dotenv.config();
 
-const privKey: string = process.env.MY_PRIVATE_KEY!;
-const gameCapId = process.env.GAME_CAP_ID!;
-const packageId = process.env.PACKAGE_ID!;
+const privKey: string = process.env.PRIVATE_KEY!;
+const gameCapId = process.env.GAME_CAP!;
+const packageId = process.env.PACKAGE!;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
-  let privateKeyArray = Array.from(fromB64(privateKey));
-  privateKeyArray.shift();
-  return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  // let privateKeyArray = Array.from(fromB64(privateKey));
+  // privateKeyArray.shift();
+  //return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey.slice(2), "hex"), { skipValidation: true });
 }
 
 let keyPair = getKeyPair(privKey);
@@ -24,12 +25,12 @@ async function mintNFT() {
   let txb = new TransactionBlock();
 
   let [gacha] = txb.moveCall({
-    target: `${packageId}::game::admin_mint_gacha`,
+    target: `${packageId}::game::mint_gacha`,
     arguments: [
       txb.object(gameCapId),
+      txb.pure("19999", "u64"),
       txb.pure("initial collection", "string"),
       txb.pure("blue gacha", "string"),
-      txb.pure("100000", "u64"),
       txb.pure("rare", "string"),
     ]
   });

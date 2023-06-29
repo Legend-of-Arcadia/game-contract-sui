@@ -17,6 +17,7 @@ module contracts::game{
   use contracts::hero::{Self, Hero};
   use contracts::gacha::{Self, GachaBall};
   use contracts::item::{Self, Item};
+  use std::debug;
 
   const VERSION: u64 = 1;
 
@@ -96,7 +97,7 @@ module contracts::game{
     hero_id: address,
     player_address: address,
     burned_hero_id: address,
-    burned_hero_rarity: String
+    hero_part: u64
   }
 
   // game capability
@@ -371,7 +372,6 @@ module contracts::game{
 
   // appearance_index is the index of the part inside the appearance vector
   // eg: eye is 0, appearance[0]
-  // TODO There is a problem with the forging logic. The forged part was not checked, and the event did not record the forged part.
   public fun makeover_hero(
     main_hero: Hero,
     to_burn: Hero,
@@ -388,11 +388,17 @@ module contracts::game{
       EBodyPartCannotBeExchanged
     );
 
+    let main_hero_part= vector::borrow(hero::appearance_values(&main_hero), appearance_index);
+    let burn_hero_part= vector::borrow(hero::appearance_values(&to_burn), appearance_index);
+    debug::print(main_hero_part);
+    debug::print(burn_hero_part);
+    assert!(*main_hero_part != *burn_hero_part, ESameAppearancePart);
+
     let evt = MakeoverRequest {
       hero_id: object::id_address(&main_hero),
       player_address: tx_context::sender(ctx),
       burned_hero_id: object::id_address(&to_burn),
-      burned_hero_rarity: *hero::rarity(&to_burn)
+      hero_part: appearance_index
     };
     event::emit(evt);
     //hero::burn(to_burn);

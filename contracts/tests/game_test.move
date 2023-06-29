@@ -11,6 +11,7 @@ module contracts::test_game {
     EMustBurnAtLeastOneHero, 
     ENotWhitelisted,
     EWrongPowerUpgradeFee,
+    ESameAppearancePart,
     GameCap,
     GameConfig,
     Upgrader,
@@ -427,6 +428,39 @@ module contracts::test_game {
     ts::end(scenario);
   }
 
+  #[test]
+  #[expected_failure(abort_code = ESameAppearancePart)]
+  public fun makeover_test_fail() {
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    // mint a hero and send it to the user
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+
+      transfer::public_transfer(hero, USER);
+      transfer::public_transfer(hero1, USER);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+    };
+
+    //user starts the upgrade
+    ts::next_tx(&mut scenario, USER);
+    {
+      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
+      let hero1 = ts::take_from_sender<Hero>(&mut scenario);
+      let hero = ts::take_from_sender<Hero>(&mut scenario);
+      let appearance_index = 2u64;
+      game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
+      ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
+    };
+
+    ts::end(scenario);
+  }
 
   #[test]
   public fun power_upgrade_test() {
