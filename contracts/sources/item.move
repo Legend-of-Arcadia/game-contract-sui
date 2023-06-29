@@ -51,7 +51,7 @@ module contracts::item{
             // link empty right now
             // one example of a link is b"{example.com/{type}"
             string::utf8(b"https://lh3.googleusercontent.com/pw/AJFCJaVqjr41iECxSNLZ2POCLVwRuKPu5UE0MrCCGMCclzg9ssDjNqeCpPSYIWzryjLKRRGPD70_iVpo9m71wEWPssYU4DeL7BgZlAsofiFo9bqYtxcQqQ=w113-h86-no"),
-            string::utf8(b"Gacha ball"),
+            string::utf8(b"Item"),
             string::utf8(b"{initial_price}"),
             string::utf8(b"{type}"),
             string::utf8(b"{https://legendofarcadia.io}"),
