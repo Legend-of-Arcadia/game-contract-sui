@@ -18,6 +18,7 @@ module contracts::test_game {
   };
   use contracts::hero::{Self, Hero};
   use contracts::arca::ARCA;
+  use sui::object;
 
   // errors
   const EWrongStats: u64 = 0;
@@ -384,11 +385,13 @@ module contracts::test_game {
 
     //user starts the upgrade
     ts::next_tx(&mut scenario, USER);
+    let burn_hero;
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
       let hero1 = ts::take_from_sender<Hero>(&mut scenario);
       let hero = ts::take_from_sender<Hero>(&mut scenario);
+      burn_hero = object::id_address(&hero1);
       let appearance_index = 2u64;
       game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
@@ -400,14 +403,17 @@ module contracts::test_game {
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
       let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
       assert!(hero::pending_upgrade(&hero) == &1, EWrongHeroPendingUpgrade);
       game::upgrade_appearance(&cap, &mut hero, appearance);
       game::return_upgraded_hero(hero, ticket);
+      game::get_burn_hero_and_burn(&cap, burn_hero, &mut obj_burn);
 
       ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
     };
 
     //check

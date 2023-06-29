@@ -56,7 +56,7 @@ module contracts::game{
     profits: Balance<ARCA>
   }
 
-  // 目前我将需要销毁的盲盒和英雄都存在这个对象上了
+  // At present, the blind boxes and heroes that I need to destroy are all stored in this object
   struct ObjBurn has key, store {
     id: UID
   }
@@ -201,7 +201,8 @@ module contracts::game{
       hero
     }
 
-  // 铸造盲盒， 新增了一个id属性，用type还是id来区分盲盒等级？ display 里描述的内容目前是固定的，是否用传进来的参数
+  // For casting blind boxes, a new id attribute is added. Use type or id to distinguish the level of blind boxes?
+  // The content described in display is currently fixed, whether to use the parameters passed in
   public fun mint_gacha(
     _: &GameCap,
     gacha_id: u64,
@@ -216,7 +217,7 @@ module contracts::game{
     gacha_ball
   }
 
-  // 铸造item   用type来区分头像 勋章等种类 还是新增item id属性
+  // For casting items, use type to distinguish types of avatars, medals, etc., or add item id attributes
   public fun mint_item(
     _: &GameCap,
     collection: String,
@@ -243,7 +244,7 @@ module contracts::game{
     object::delete(id); 
   }
 
-  //设置强力升级的费用
+  // Set the cost of power upgrades
   public fun set_upgrade_price(_: &GameCap, upgrader: &mut Upgrader , keys: vector<String>, values: vector<u64>){
     let i = 0;
     let len = vector::length(&keys);
@@ -258,14 +259,14 @@ module contracts::game{
   }
 
   /// === Upgrader functions ===
-  // 放置升级的英雄
+  // place an upgraded hero
   fun put_hero(hero: Hero, player_address: address, heroes_burned: u64, upgrader: &mut Upgrader) {
     hero::add_pending_upgrade(&mut hero, heroes_burned);
     dof::add<address, Hero>(&mut upgrader.id, player_address, hero);
     // event
   }
 
-  // 放置强力升级的英雄（收取arca）
+  // Place heroes with powerful upgrades (charging arca)
   fun put_power_hero(
     hero: Hero,
     player_address: address,
@@ -278,7 +279,7 @@ module contracts::game{
       dof::add<address, Hero>(&mut upgrader.id, player_address, hero);
     }
 
-  // 管理员获取升级的英雄
+  // Admin gets upgraded heroes
   public fun get_for_upgrade(_: &GameCap, player_address: address, upgrader: &mut Upgrader): (Hero, ReturnTicket) {
     let hero = dof::remove<address, Hero>(&mut upgrader.id, player_address);
     let hero_address: address = object::id_address(&hero);
@@ -295,7 +296,7 @@ module contracts::game{
     (hero, ticket)
   }
 
-  // 管理员返还升级的英雄
+  // Admins return upgraded heroes
   public fun return_upgraded_hero(hero: Hero, ticket: ReturnTicket) {
     let ReturnTicket {player_address, hero_id} = ticket;
     assert!(object::id_address<Hero>(&hero) == hero_id, EReturningWrongHero);
@@ -303,21 +304,21 @@ module contracts::game{
     transfer::public_transfer(hero, player_address);
   }
 
-  // 放置销毁的英雄
+  // place destroyed hero
   fun put_burn_hero(hero: Hero, hero_address: address, obj_burn: &mut ObjBurn) {
     dof::add<address, Hero>(&mut obj_burn.id, hero_address, hero);
     // event
   }
 
-  // 管理员burn英雄
-  fun get_burn_hero_and_burn(_: &GameCap, hero_address: address, obj_burn: &mut ObjBurn) {
+  // admin burn hero
+  public fun get_burn_hero_and_burn(_: &GameCap, hero_address: address, obj_burn: &mut ObjBurn) {
     let burn_hero = dof::remove<address, Hero>(&mut obj_burn.id, hero_address);
     hero::burn(burn_hero);
     // event
   }
   // upgrade
 
-  //管理员升级属性
+  // Admin Upgrade Properties
   public fun upgrade_base(_: &GameCap, hero: &mut Hero, new_values: vector<u16>) {
     hero::edit_fields<u16>(hero, string::utf8(b"base"), new_values);
   }
@@ -335,14 +336,14 @@ module contracts::game{
   }
 
   /// === Open gacha functions ===
-  // 放置销毁的盲盒
+  // Place the destroyed blind box
   fun put_gacha(gacha: GachaBall, gacha_ball_address: address, obj_burn: &mut ObjBurn) {
     dof::add<address, GachaBall>(&mut obj_burn.id, gacha_ball_address, gacha);
     // event
   }
 
-  // 管理员销毁盲盒
-  fun get_gacha_and_burn(_: &GameCap, gacha_ball_address: address, obj_burn: &mut ObjBurn) {
+  // The administrator destroys the blind box
+  public fun get_gacha_and_burn(_: &GameCap, gacha_ball_address: address, obj_burn: &mut ObjBurn) {
     let gacha_ball = dof::remove<address, GachaBall>(&mut obj_burn.id, gacha_ball_address);
     gacha::burn(gacha_ball);
     // event
@@ -350,7 +351,7 @@ module contracts::game{
   /// === Player functions ===
 
   /// open a gacha ball
-  // 用户开盲盒
+  // User opens blind box
   public fun open_gacha_ball(gacha_ball: GachaBall, obj_burn: &mut ObjBurn, ctx: &mut TxContext){
 
     assert!(VERSION == 1, EIncorrectVersion); 
@@ -370,7 +371,7 @@ module contracts::game{
 
   // appearance_index is the index of the part inside the appearance vector
   // eg: eye is 0, appearance[0]
-  // TODO 锻造逻辑有点问题
+  // TODO There is a problem with the forging logic. The forged part was not checked, and the event did not record the forged part.
   public fun makeover_hero(
     main_hero: Hero,
     to_burn: Hero,
