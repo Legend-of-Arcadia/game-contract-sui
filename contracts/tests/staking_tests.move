@@ -1,12 +1,12 @@
 #[test_only]
 module contracts::staking_tests {
 
-    use contracts::arca::ARCA;
+    use contracts::arca::{Self, ARCA};
     use contracts::staking;
     use contracts::game;
 
     use sui::test_scenario as ts;
-    use sui::coin;
+    use sui::coin::{Self, TreasuryCap};
     use sui::clock;
     use sui::transfer;
 
@@ -50,6 +50,7 @@ module contracts::staking_tests {
         {   
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
+            arca::init_for_testing(ts::ctx(&mut scenario));
             game::init_for_test(ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
@@ -59,12 +60,12 @@ module contracts::staking_tests {
         {   
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             staking::init_for_testing(&cap, &clock, ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
         };
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
@@ -143,12 +144,12 @@ module contracts::staking_tests {
         {
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             staking::init_for_testing(&cap, &clock, ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
         };
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
@@ -202,7 +203,7 @@ module contracts::staking_tests {
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {   
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
-
+            arca::init_for_testing(ts::ctx(&mut scenario));
             game::init_for_test(ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
@@ -211,12 +212,12 @@ module contracts::staking_tests {
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             staking::init_for_testing(&cap, &clock, ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
         };
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
@@ -286,6 +287,7 @@ module contracts::staking_tests {
         {   
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
+            arca::init_for_testing(ts::ctx(&mut scenario));
             game::init_for_test(ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
@@ -294,12 +296,12 @@ module contracts::staking_tests {
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             staking::init_for_testing(&cap, &clock, ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
         };
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
@@ -353,7 +355,8 @@ module contracts::staking_tests {
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {   
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
-
+            
+            arca::init_for_testing(ts::ctx(&mut scenario));
             game::init_for_test(ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
@@ -362,12 +365,12 @@ module contracts::staking_tests {
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             staking::init_for_testing(&cap, &clock, ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
         };
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
@@ -424,6 +427,7 @@ module contracts::staking_tests {
         {   
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
+            arca::init_for_testing(ts::ctx(&mut scenario));
             game::init_for_test(ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
@@ -432,12 +436,12 @@ module contracts::staking_tests {
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             staking::init_for_testing(&cap, &clock, ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
         };
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
@@ -522,17 +526,17 @@ module contracts::staking_tests {
             let staking_pool = ts::take_shared<staking::StakingPool>(&mut scenario);
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             clock::increment_for_testing(&mut clock, staking::get_next_distribution_timestamp(&staking_pool)*1000);
 
             let timestamp_before = staking::get_next_distribution_timestamp(&staking_pool);
 
-            staking::distribute_rewards(&cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
+            staking::distribute_rewards(&mut cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
             
             assert!((staking::get_next_distribution_timestamp(&staking_pool) == (timestamp_before + 604_800)) , ENextDistributionNotCorrect);
 
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
             
             ts::return_shared(staking_pool);
             ts::return_shared(clock);
@@ -562,12 +566,12 @@ module contracts::staking_tests {
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             staking::init_for_testing(&cap, &clock, ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
         };
 
          ts::next_tx(&mut scenario, USER1_ADDRESS);
@@ -591,11 +595,11 @@ module contracts::staking_tests {
             let staking_pool = ts::take_shared<staking::StakingPool>(&mut scenario);
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
-            staking::distribute_rewards(&cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
+            staking::distribute_rewards(&mut cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
             
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
             
             ts::return_shared(staking_pool);
             ts::return_shared(clock);
@@ -615,6 +619,7 @@ module contracts::staking_tests {
         {   
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
+            arca::init_for_testing(ts::ctx(&mut scenario));
             game::init_for_test(ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
@@ -623,25 +628,25 @@ module contracts::staking_tests {
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             staking::init_for_testing(&cap, &clock, ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
         };
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
             let staking_pool = ts::take_shared<staking::StakingPool>(&mut scenario);
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             clock::increment_for_testing(&mut clock, staking::get_next_distribution_timestamp(&staking_pool)*1000);
 
-            staking::distribute_rewards(&cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
+            staking::distribute_rewards(&mut cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
             
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
             
             ts::return_shared(staking_pool);
             ts::return_shared(clock);
@@ -674,6 +679,7 @@ module contracts::staking_tests {
         {   
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
+            arca::init_for_testing(ts::ctx(&mut scenario));
             game::init_for_test(ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
@@ -682,12 +688,12 @@ module contracts::staking_tests {
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             staking::init_for_testing(&cap, &clock, ts::ctx(&mut scenario));
 
             ts::return_shared(clock);
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
         };
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
@@ -900,17 +906,17 @@ module contracts::staking_tests {
             let staking_pool = ts::take_shared<staking::StakingPool>(&mut scenario);
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
-            let cap = ts::take_from_sender<game::GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
             clock::increment_for_testing(&mut clock, staking::get_next_distribution_timestamp(&staking_pool)*1000);
 
             let timestamp_before = staking::get_next_distribution_timestamp(&staking_pool);
 
-            staking::distribute_rewards(&cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
+            staking::distribute_rewards(&mut cap, &mut staking_pool, &clock, ts::ctx(&mut scenario));
             
             assert!((staking::get_next_distribution_timestamp(&staking_pool) == (timestamp_before + 604_800)) , ENextDistributionNotCorrect);
 
-            ts::return_to_sender<game::GameCap>(&scenario, cap);
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, cap);
             
             ts::return_shared(staking_pool);
             ts::return_shared(clock);

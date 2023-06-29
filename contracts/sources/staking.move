@@ -3,17 +3,19 @@ module contracts::staking {
     use std::string::{Self, String};
     use std::vector;
 
-    use sui::coin::{Self, Coin};
-    use sui::transfer;
-    use sui::tx_context::{Self, TxContext};
-    use sui::object::{Self, UID};
     use sui::balance::{Self, Balance};
     use sui::clock::{Self, Clock};
+    use sui::coin::{Self, Coin, TreasuryCap};
+    use sui::dynamic_field as df;
     use sui::linked_table::{Self, LinkedTable};
+    use sui::object::{Self, UID};
     use sui::table::{Self, Table};
+    use sui::transfer;
+    use sui::tx_context::{Self, TxContext};
 
     use contracts::arca::ARCA;
-    use contracts::game::GameCap;
+
+    friend contracts::marketplace;
 
     const VERSION: u64 = 1;
 
@@ -58,7 +60,7 @@ module contracts::staking {
         vip_per_table: Table<u64, u64>, // vip level, percentage
     }
 
-    public fun create_pool(_cap: &GameCap, clock: &Clock, ctx: &mut TxContext) {
+    public fun create_pool(_cap: &TreasuryCap<ARCA>, clock: &Clock, ctx: &mut TxContext) {
         assert!(VERSION == 1, EVersionMismatch);
         let staking_pool = StakingPool{
             id: object::new(ctx),
@@ -70,6 +72,11 @@ module contracts::staking {
             vip_per_table: table::new<u64, u64>(ctx),
         };
         populate_vip_per_table(&mut staking_pool);
+        // marketplace fee part that is to be burned
+        df::add<String, Balance<ARCA>>(
+            &mut staking_pool.id,
+            string::utf8(b"to_burn"),
+            balance::zero<ARCA>());
         transfer::share_object(staking_pool);
     }
 
@@ -225,6 +232,7 @@ module contracts::staking {
         
         let i = 0;
         let holder_address = *option::borrow_with_default<address>(linked_table::front(&sp.veARCA_holders), &@0x0);
+        let timestamp = *&sp.next_distribution_timestamp;
 
         while( i < linked_table::length(&sp.veARCA_holders)) {
             if(holder_address == @0x0) {
@@ -237,7 +245,7 @@ module contracts::staking {
                 break
             };
 
-            let vip = calc_vip_level(value, sp.next_distribution_timestamp);
+            let vip = calc_vip_level(sp, holder_address, timestamp);
 
             if(!linked_table::contains(&sp.holders_vip_level, vip)){
                 let v = vector::empty<address>();
@@ -260,12 +268,20 @@ module contracts::staking {
         };
     }
 
-    public fun distribute_rewards(_cap: &GameCap, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext) {
+    public fun distribute_rewards(cap: &mut TreasuryCap<ARCA>, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext) {
 
         assert!(VERSION == 1, EVersionMismatch);
         
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
         assert!(current_timestamp >= sp.next_distribution_timestamp, EDistributionRewardsNotAvailable);
+
+        // burn to_burn
+        let to_burn_balance = df::borrow_mut<String, Balance<ARCA>>(&mut sp.id, string::utf8(b"to_burn"));
+        let to_burn_coin = coin::from_balance<ARCA>(
+            balance::withdraw_all(to_burn_balance),
+            ctx
+        );
+        coin::burn<ARCA>(cap, to_burn_coin);
 
         let rewards = balance::value<ARCA>(&sp.rewards);
         let rewards_left = balance::value<ARCA>(&sp.rewards);
@@ -386,8 +402,15 @@ module contracts::staking {
         vip_level
     }
 
-    fun calc_vip_level(value: &vector<u64>, next_distribution_timestamp: u64): u64 {
-        let veARCA_amount = calc_veARCA(*vector::borrow(value, 0), next_distribution_timestamp, *vector::borrow(value, 1), *vector::borrow(value, 2));
+    public fun calc_vip_level(sp: &StakingPool, holder: address, timestamp: u64): u64 {
+        assert!(VERSION == 1, EVersionMismatch);
+        
+        let value = linked_table::borrow(&sp.veARCA_holders, holder);
+        let veARCA_amount = calc_veARCA(
+            *vector::borrow(value, 0), 
+            timestamp, 
+            *vector::borrow(value, 1), 
+            *vector::borrow(value, 2));
         
         let vip_level = calc_vip_level_veARCA(veARCA_amount, 100);
 
@@ -467,7 +490,11 @@ module contracts::staking {
         sp.next_distribution_timestamp
     }
 
-    public fun update_percentage_table(_cap: &GameCap, sp: &mut StakingPool, key: u64, percentage: u64) {
+    public fun get_rewards_value(sp: &StakingPool): u64 {
+        balance::value(&sp.rewards)
+    }
+
+    public fun update_percentage_table(_cap: &TreasuryCap<ARCA>, sp: &mut StakingPool, key: u64, percentage: u64) {
 
         assert!(VERSION == 1, EVersionMismatch);
 
@@ -478,17 +505,32 @@ module contracts::staking {
         };
     }
 
-    public fun append_rewards(_cap: &GameCap, sp: &mut StakingPool, new_balance: Balance<ARCA>) {
+    public fun append_rewards(_cap: &TreasuryCap<ARCA>, sp: &mut StakingPool, new_balance: Balance<ARCA>) {
 
         assert!(VERSION == 1, EVersionMismatch);
 
         balance::join(&mut sp.rewards, new_balance);
     }
 
+    public(friend) fun marketplace_add_to_burn(sp: &mut StakingPool, c: Coin<ARCA>)
+    {   
+        assert!(VERSION == 1, EVersionMismatch);
+        balance::join(
+            df::borrow_mut<String, Balance<ARCA>>(&mut sp.id, string::utf8(b"to_burn")),
+            coin::into_balance<ARCA>(c)
+        );
+    }
+
+    public(friend) fun marketplace_add_rewards(sp: &mut StakingPool, c: Coin<ARCA>)
+    {
+        assert!(VERSION == 1, EVersionMismatch);
+        balance::join(&mut sp.rewards, coin::into_balance<ARCA>(c));
+    }
+
     // ============================================================
 
     #[test_only]
-    public fun init_for_testing(cap: &GameCap, clock: &Clock, ctx: &mut TxContext) {
+    public fun init_for_testing(cap: &TreasuryCap<ARCA>, clock: &Clock, ctx: &mut TxContext) {
         create_pool(cap, clock, ctx);
     }
 
@@ -497,5 +539,5 @@ module contracts::staking {
         let new_balance = balance::create_for_testing<ARCA>(5_000*DECIMALS);
 
         let _b = balance::join(&mut sp.rewards, new_balance);
-    }
+    }    
 }
