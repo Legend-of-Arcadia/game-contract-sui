@@ -34,7 +34,6 @@ async function airdrop(addresses: string[]) {
   let skillValues = [200, 201, 202, 203];
   let appearenceValues = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111];
   let statValues = [40, 0, 0, 0, 0, 0, 0, 0];
-  let otherValues = [34];
 
   let total = addresses.length;
   let count = 0;
@@ -52,7 +51,6 @@ async function airdrop(addresses: string[]) {
         txb.pure(skillValues),
         txb.pure(appearenceValues),
         txb.pure(statValues),
-        txb.pure(otherValues),
         txb.pure("1337"),
       ]
     }); 
