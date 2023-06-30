@@ -100,6 +100,11 @@ module contracts::game{
     hero_part: u64
   }
 
+  struct ChargeRequest has copy, drop {
+    user: address,
+    burned_heroes: vector<address>
+  }
+
   // game capability
   // allows to mint heros
   // and to set the prices for buying gacha balls
@@ -481,6 +486,27 @@ module contracts::game{
     put_power_hero(main_hero, tx_context::sender(ctx), l, fee, upgrader);
   }
 
+  public fun charge_hero(to_burn: vector<Hero>,obj_burn: &mut ObjBurn, ctx: &mut TxContext){
+    let l = vector::length<Hero>(&to_burn);
+    let i: u64 = 0;
+    let burn_addresses: vector<address> = vector::empty<address>();
+    while (i < l) {
+      let burnable = vector::pop_back<Hero>(&mut to_burn);
+      // hero::burn(burnable);
+      let burn_hero_address = object::id_address(&burnable);
+      vector::push_back(&mut burn_addresses, burn_hero_address);
+      put_burn_hero(burnable, burn_hero_address, obj_burn);
+      i = i + 1;
+    };
+    vector::destroy_empty<Hero>(to_burn);
+
+    let evt = ChargeRequest {
+      user: tx_context::sender(ctx),
+      burned_heroes: burn_addresses
+    };
+
+    event::emit(evt);
+  }
   // whitelist claim
   public fun whitelist_claim(
     config: &mut GameConfig,
