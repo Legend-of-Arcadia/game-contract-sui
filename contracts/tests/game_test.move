@@ -22,7 +22,7 @@ module contracts::test_game {
   use sui::object;
 
   // errors
-  const EWrongStats: u64 = 0;
+  const EWrongGrowths: u64 = 0;
   const EWrongAppearance: u64 = 1;
   const EWrongGameBalanceAfterUpgrade: u64 = 2;
   const EWrongHeroPendingUpgrade: u64 = 3;
@@ -49,7 +49,7 @@ module contracts::test_game {
 
 
   #[test]
-  public fun upgrade_stat_test() {
+  public fun upgrade_growth_test() {
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
 
@@ -82,7 +82,7 @@ module contracts::test_game {
       ts::return_shared(obj_burn);
     };
 
-    let new_stats: vector<u16> = vector[
+    let new_growths: vector<u16> = vector[
         200,
         120,
         30,
@@ -100,7 +100,7 @@ module contracts::test_game {
 
       let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
       assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
-      game::upgrade_stat(&cap, &mut hero, new_stats);
+      game::upgrade_growth(&cap, &mut hero, new_growths);
       game::return_upgraded_hero(hero, ticket);
 
       ts::return_to_sender<GameCap>(&scenario, cap);
@@ -111,7 +111,7 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, USER);
     {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
-      assert!(*hero::stat_values(&hero) == new_stats, EWrongStats);
+      assert!(*hero::growth_values(&hero) == new_growths, EWrongGrowths);
       assert!(hero::pending_upgrade(&hero) == &0, EWrongHeroPendingUpgrade);
       ts::return_to_sender<Hero>(&scenario, hero);
     };
@@ -181,7 +181,7 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, USER);
     {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
-      assert!(*hero::base_values(&hero) == new_base, EWrongStats);
+      assert!(*hero::base_values(&hero) == new_base, EWrongGrowths);
       assert!(hero::pending_upgrade(&hero) == &0, EWrongHeroPendingUpgrade);
       ts::return_to_sender<Hero>(&scenario, hero);
     };
@@ -252,7 +252,7 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, USER);
     {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
-      assert!(*hero::base_values(&hero) == new_skills, EWrongStats);
+      assert!(*hero::base_values(&hero) == new_skills, EWrongGrowths);
       assert!(hero::pending_upgrade(&hero) == &0, EWrongHeroPendingUpgrade);
       ts::return_to_sender<Hero>(&scenario, hero);
     };
@@ -324,7 +324,7 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, USER);
     {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
-      assert!(*hero::base_values(&hero) == new_others, EWrongStats);
+      assert!(*hero::base_values(&hero) == new_others, EWrongGrowths);
       assert!(hero::pending_upgrade(&hero) == &0, EWrongHeroPendingUpgrade);
       ts::return_to_sender<Hero>(&scenario, hero);
     };
@@ -497,7 +497,7 @@ module contracts::test_game {
       ts::return_shared(obj_burn);
     };
 
-    let new_stats: vector<u16> = vector[
+    let new_growths: vector<u16> = vector[
         2000,
         1290,
         370,
@@ -515,7 +515,7 @@ module contracts::test_game {
 
       let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
       assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
-      game::upgrade_stat(&cap, &mut hero, new_stats);
+      game::upgrade_growth(&cap, &mut hero, new_growths);
       game::return_upgraded_hero(hero, ticket);
 
       ts::return_to_sender<GameCap>(&scenario, cap);
@@ -526,7 +526,7 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, USER);
     {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
-      assert!(*hero::stat_values(&hero) == new_stats, EWrongStats);
+      assert!(*hero::growth_values(&hero) == new_growths, EWrongGrowths);
       assert!(hero::pending_upgrade(&hero) == &0, EWrongHeroPendingUpgrade);
       ts::return_to_sender<Hero>(&scenario, hero);
     };

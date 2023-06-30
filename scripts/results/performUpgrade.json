@@ -2,7 +2,7 @@
   "digest": "4gyo6mRRt4nLXXGEQxX4Vi4DQVGkyWobe2kU3feEHPSQ",
   "effects": {
     "messageVersion": "v1",
-    "status": { "status": "success" },
+    "growthus": { "growthus": "success" },
     "executedEpoch": "1",
     "gasUsed": {
       "computationCost": "1000000",

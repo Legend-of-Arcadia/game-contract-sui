@@ -34,7 +34,7 @@ async function mintHero() {
   let baseValues = [1, 2, 3, 4, 5, 6];
   let skillValues = [200, 201, 202, 203];
   let appearenceValues = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111];
-  let statValues = [40, 0, 0, 0, 0, 0, 0, 0];
+  let growthValues = [40, 0, 0, 0, 0, 0, 0, 0];
   let otherValues = [34];
   let txb = new TransactionBlock();
 
@@ -51,7 +51,7 @@ async function mintHero() {
       txb.pure(baseValues),
       txb.pure(skillValues),
       txb.pure(appearenceValues),
-      txb.pure(statValues),
+      txb.pure(growthValues),
       txb.pure(otherValues),
       txb.pure("1337", "string"),
     ]

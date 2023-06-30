@@ -34,9 +34,9 @@ async function upgradeHero(playerAddress: string) {
     ]
   });
 
-  // upgrade stats
+  // upgrade growths
   txb.moveCall({
-    target: `${packageId}::game::upgrade_stat`,
+    target: `${packageId}::game::upgrade_growth`,
     arguments: [
       txb.object(gameCap),
       hero,

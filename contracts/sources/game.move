@@ -332,8 +332,8 @@ module contracts::game{
     hero::edit_fields<u16>(hero, string::utf8(b"appearance"), new_values);
   }
 
-  public fun upgrade_stat(_: &GameCap, hero: &mut Hero, new_values: vector<u16>) {
-    hero::edit_fields<u16>(hero, string::utf8(b"stat"), new_values);
+  public fun upgrade_growth(_: &GameCap, hero: &mut Hero, new_values: vector<u16>) {
+    hero::edit_fields<u16>(hero, string::utf8(b"growth"), new_values);
   }
 
   /// === Open gacha functions ===

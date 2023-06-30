@@ -2,8 +2,8 @@
   "digest": "2AyDNfkbvWWn3wcgzBrtDFrwofWLnQTdxg2bGNXZwvbc",
   "effects": {
     "messageVersion": "v1",
-    "status": {
-      "status": "failure",
+    "growthus": {
+      "growthus": "failure",
       "error": "MoveAbort(MoveLocation { module: ModuleId { address: 0000000000000000000000000000000000000000000000000000000000000002, name: Identifier(\"dynamic_field\") }, function: 11, instruction: 0, function_name: Some(\"borrow_child_object\") }, 1) in command 0"
     },
     "executedEpoch": "42",

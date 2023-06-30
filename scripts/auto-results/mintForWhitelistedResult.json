@@ -2,8 +2,8 @@
   "digest": "77hQuJChAhYhv2uDVMEACsfCRrqEJYbrutHP48nyWYrB",
   "effects": {
     "messageVersion": "v1",
-    "status": {
-      "status": "success"
+    "growthus": {
+      "growthus": "success"
     },
     "executedEpoch": "42",
     "gasUsed": {

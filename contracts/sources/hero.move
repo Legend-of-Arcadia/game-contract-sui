@@ -90,7 +90,7 @@ module contracts::hero {
         df::add<String, vector<u16>>(&mut hero.id, string::utf8(b"base"), base_attributes_values);
         df::add<String, vector<u16>>(&mut hero.id, string::utf8(b"skill"), skill_attributes_values);
         df::add<String, vector<u16>>(&mut hero.id, string::utf8(b"appearance"), appearance_attributes_values);
-        df::add<String, vector<u16>>(&mut hero.id, string::utf8(b"stat"), growth_attributes_values);
+        df::add<String, vector<u16>>(&mut hero.id, string::utf8(b"growth"), growth_attributes_values);
         //df::add<String, vector<u8>>(&mut hero.id, string::utf8(b"others"), other_attributes_values);
 
         hero
@@ -117,7 +117,7 @@ module contracts::hero {
         df::remove<String, vector<u16>>(&mut hero.id, string::utf8(b"base"));
         df::remove<String, vector<u16>>(&mut hero.id, string::utf8(b"skill"));
         df::remove<String, vector<u16>>(&mut hero.id, string::utf8(b"appearance"));
-        df::remove<String, vector<u16>>(&mut hero.id, string::utf8(b"stat"));
+        df::remove<String, vector<u16>>(&mut hero.id, string::utf8(b"growth"));
         //df::remove<String, vector<u8>>(&mut hero.id, string::utf8(b"others"));
 
         let Hero {id, name: _, class: _, faction: _, rarity: _, external_id: _, pending_upgrade: _} = hero;
@@ -161,8 +161,8 @@ module contracts::hero {
         df::borrow<String, vector<u16>>(&hero.id, string::utf8(b"appearance"))
     }
 
-    public fun stat_values(hero: &Hero): &vector<u16> {
-        df::borrow<String, vector<u16>>(&hero.id, string::utf8(b"stat"))
+    public fun growth_values(hero: &Hero): &vector<u16> {
+        df::borrow<String, vector<u16>>(&hero.id, string::utf8(b"growth"))
     }
 
     // public fun others_values(hero: &Hero): &vector<u8> {
@@ -194,7 +194,7 @@ module contracts::unit_tests {
     const EWrongBaseValues: u64 = 6;
     const EWrongSkillValues: u64 = 7;
     const EWrongAppearanceValues: u64 = 8;
-    const EWrongStatValues: u64 = 9;
+    const EWrongGrowthValues: u64 = 9;
     const EWrongCustomValues: u64 = 10;
 
 
@@ -240,7 +240,7 @@ module contracts::unit_tests {
             111
         ];
 
-        let stat_values: vector<u16> = vector[
+        let growth_values: vector<u16> = vector[
             40,
             0,
             0,
@@ -263,7 +263,7 @@ module contracts::unit_tests {
             base_values,
             skill_values,
             appearance_values,
-            stat_values,
+            growth_values,
             external_id,
             ts::ctx(&mut scenario)
         );
@@ -282,7 +282,7 @@ module contracts::unit_tests {
             assert!(hero::base_values(&hero) == &base_values, EWrongBaseValues);
             assert!(hero::skill_values(&hero) == &skill_values, EWrongSkillValues);
             assert!(hero::appearance_values(&hero) == &appearance_values, EWrongAppearanceValues);
-            assert!(hero::stat_values(&hero) == &stat_values, EWrongStatValues);
+            assert!(hero::growth_values(&hero) == &growth_values, EWrongGrowthValues);
             //assert!(hero::others_values(&hero) == &others_values, EWrongBaseValues);
 
             ts::return_to_sender<Hero>(&scenario, hero);
@@ -298,7 +298,7 @@ module contracts::unit_tests {
             16
         ];
         
-        let new_stat_values: vector<u16> = vector[
+        let new_growth_values: vector<u16> = vector[
             102,
             1050,
             5000,
@@ -319,7 +319,7 @@ module contracts::unit_tests {
         {
             let hero = ts::take_from_sender<Hero>(&mut scenario);
             hero::edit_fields<u16>(&mut hero, string::utf8(b"base"), new_base_values);
-            hero::edit_fields<u16>(&mut hero, string::utf8(b"stat"), new_stat_values);
+            hero::edit_fields<u16>(&mut hero, string::utf8(b"growth"), new_growth_values);
             hero::add_field<vector<u16>>(&mut hero, new_field, new_field_values);
             ts::return_to_sender<Hero>(&scenario, hero);
         };
@@ -328,7 +328,7 @@ module contracts::unit_tests {
         {
             let hero = ts::take_from_sender<Hero>(&mut scenario);
             assert!(hero::base_values(&hero) == &new_base_values, EWrongBaseValues);
-            assert!(hero::stat_values(&hero) == &new_stat_values, EWrongStatValues);
+            assert!(hero::growth_values(&hero) == &new_growth_values, EWrongGrowthValues);
             assert!(hero::field(&hero, new_field) == &new_field_values, EWrongCustomValues);
             ts::return_to_sender<Hero>(&scenario, hero);
         };
