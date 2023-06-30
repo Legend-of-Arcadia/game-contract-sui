@@ -16,6 +16,7 @@ module contracts::item{
 
     struct Item has key, store {
         id: UID,
+        item_id: u64,
         collection: String,
         name: String,
         type: String,
@@ -40,7 +41,6 @@ module contracts::item{
             string::utf8(b"name"),
             string::utf8(b"image_url"),
             string::utf8(b"description"),
-            string::utf8(b"initial_price"),
             string::utf8(b"type"),
             string::utf8(b"project_url"),
         ];
@@ -50,9 +50,8 @@ module contracts::item{
             string::utf8(b"{name}"),
             // link empty right now
             // one example of a link is b"{example.com/{type}"
-            string::utf8(b"https://lh3.googleusercontent.com/pw/AJFCJaVqjr41iECxSNLZ2POCLVwRuKPu5UE0MrCCGMCclzg9ssDjNqeCpPSYIWzryjLKRRGPD70_iVpo9m71wEWPssYU4DeL7BgZlAsofiFo9bqYtxcQqQ=w113-h86-no"),
+            string::utf8(b"https://legendofarcadia.io/items/images/{item_id}"),
             string::utf8(b"Item"),
-            string::utf8(b"{initial_price}"),
             string::utf8(b"{type}"),
             string::utf8(b"{https://legendofarcadia.io}"),
         ];
@@ -65,6 +64,7 @@ module contracts::item{
     }
 
     public(friend) fun mint(
+        item_id: u64,
         collection: String,
         name: String,
         type: String,
@@ -74,6 +74,7 @@ module contracts::item{
 
         let new_item = Item {
             id,
+            item_id,
             collection,
             name,
             type,
@@ -85,7 +86,7 @@ module contracts::item{
     }
 
     public(friend) fun burn(item: Item) {
-        let Item {id, collection: _, name: _, type: _} = item;
+        let Item {id, item_id: _, collection: _, name: _, type: _} = item;
         event::emit(ItemBurned {id: object::uid_to_inner(&id)});
         object::delete(id);
     }

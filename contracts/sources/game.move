@@ -226,13 +226,14 @@ module contracts::game{
   // For casting items, use type to distinguish types of avatars, medals, etc., or add item id attributes
   public fun mint_item(
     _: &GameCap,
+    item_id: u64,
     collection: String,
     name: String,
     type: String,
     ctx: &mut TxContext
   ): Item {
 
-    let item = item::mint(collection, name, type, ctx);
+    let item = item::mint(item_id, collection, name, type, ctx);
 
     item
   }
