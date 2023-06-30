@@ -7,12 +7,14 @@ const playerPrivKey: string = process.env.PLAYER_PRIVATE_KEY!;
 const packageId = process.env.PACKAGE!;
 const gameCap = process.env.GAME_CAP!;
 const upgrader = process.env.UPGRADER!;
+const objBurn = process.env.OBJBURN!;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
-  let privateKeyArray = Array.from(fromB64(privateKey));
-  privateKeyArray.shift();
-  return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  // let privateKeyArray = Array.from(fromB64(privateKey));
+  // privateKeyArray.shift();
+  //return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey.slice(2), "hex"), { skipValidation: true });
 }
 
 // helper to find hero ID from transaction result
@@ -35,7 +37,7 @@ async function mintHero() {
   let skillValues = [200, 201, 202, 203];
   let appearenceValues = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111];
   let growthValues = [40, 0, 0, 0, 0, 0, 0, 0];
-  let otherValues = [34];
+  //let otherValues = [34];
   let txb = new TransactionBlock();
 
   
@@ -52,7 +54,7 @@ async function mintHero() {
       txb.pure(skillValues),
       txb.pure(appearenceValues),
       txb.pure(growthValues),
-      txb.pure(otherValues),
+      //txb.pure(otherValues),
       txb.pure("1337", "string"),
     ]
   });
@@ -71,6 +73,48 @@ async function mintHero() {
   return result;
 }
 
+
+// mint a hero and send it to a player
+async function mintHero2() {
+  let baseValues = [1, 2, 3, 4, 5, 6];
+  let skillValues = [200, 201, 202, 203];
+  let appearenceValues = [100, 101, 105, 103, 104, 105, 106, 107, 108, 109, 110, 111];
+  let growthValues = [40, 0, 0, 0, 0, 0, 0, 0];
+  //let otherValues = [34];
+  let txb = new TransactionBlock();
+
+
+
+  let hero = txb.moveCall({
+    target: `${packageId}::game::mint_hero`,
+    arguments: [
+      txb.object(gameCap),
+      txb.pure("Wo Long", "string"),
+      txb.pure("Assassin", "string"),
+      txb.pure("Flamexecuter"),
+      txb.pure("R"),
+      txb.pure(baseValues),
+      txb.pure(skillValues),
+      txb.pure(appearenceValues),
+      txb.pure(growthValues),
+      //txb.pure(otherValues),
+      txb.pure("1337", "string"),
+    ]
+  });
+
+  txb.transferObjects([hero], txb.pure(playerAddress));
+
+  let result = await mugen.signAndExecuteTransactionBlock({
+    transactionBlock: txb,
+    requestType: "WaitForLocalExecution",
+    options: {
+      showEffects: true,
+      showObjectChanges: true
+    },
+  });
+
+  return result;
+}
 // player puts their hero to makeover
 async function putHeroToMakeover(mainHeroId: string, heroId: string) {
 
@@ -83,10 +127,11 @@ async function putHeroToMakeover(mainHeroId: string, heroId: string) {
       txb.object(heroId),
       txb.pure("2", "u64"),
       txb.pure(upgrader),
+      txb.pure(objBurn),
     ]
   });
 
-  txb.setGasBudget(10000000);
+  
 
   let result = await player.signAndExecuteTransactionBlock({
     transactionBlock: txb,
@@ -106,7 +151,7 @@ async function putHeroToMakeover(mainHeroId: string, heroId: string) {
 async function main() {
 
   let mintResult1 = await mintHero();
-  let mintResult2 = await mintHero();
+  let mintResult2 = await mintHero2();
 
   let mainHeroId = getHeroId(mintResult1);
   let heroId = getHeroId(mintResult2);

@@ -171,7 +171,7 @@ async function mintHeroAndCharge() {
     ]
   });
 
-  txb.setGasBudget(10000000);
+  
 
   let result = await mugen.signAndExecuteTransactionBlock({
     transactionBlock: txb,

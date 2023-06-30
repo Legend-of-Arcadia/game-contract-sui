@@ -80,8 +80,8 @@ async function subscribeToMakeoverEvents() {
   }
 
 async function main(){
-  await subscribeToMakeoverEvents();
-
+  //await subscribeToMakeoverEvents();
+  await upgradeHero("0x0421a66d58e4acd151ec50a2c5aa6219ca3c13d18df816c6e93b0b7838e26f65");
 }
 
 main();

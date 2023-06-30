@@ -104,7 +104,7 @@ async function mintAndTransferArca() {
     typeArguments: [`${packageId}::arca::ARCA`]
   });
 
-  txb.setGasBudget(100000000);
+  //txb.setGasBudget(100000000);
 
   let result = await mugen.signAndExecuteTransactionBlock({
     transactionBlock: txb,
@@ -135,7 +135,7 @@ async function putForPowerUpgrade(heroId: string, heroesIds: string[], arcaCoinI
     ]
   });
 
-  txb.setGasBudget(100000000);
+  //txb.setGasBudget(100000000);
 
   let result = await player.signAndExecuteTransactionBlock({
     transactionBlock: txb,

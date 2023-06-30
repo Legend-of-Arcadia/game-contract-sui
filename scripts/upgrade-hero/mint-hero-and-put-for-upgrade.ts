@@ -88,7 +88,7 @@ async function putHeroToUpgrade(mainHeroId: string, heroesIds: string[]) {
     ]
   });
 
-  txb.setGasBudget(10000000);
+  
 
   let result = await player.signAndExecuteTransactionBlock({
     transactionBlock: txb,
