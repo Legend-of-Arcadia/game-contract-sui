@@ -1,5 +1,5 @@
 // exactly the same as upgrade but we are listening to PowerUpgradeReques event
-import { testnetConnection, fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner } from "@mysten/sui.js";
+import { testnetConnection, fromB64, TransactionBlock, Ed25519Keypair, JsonRpcProvider, RawSigner, Connection } from "@mysten/sui.js";
 import * as dotenv from "dotenv";
 dotenv.config({ path: __dirname + `/../.env` }); 
 
@@ -7,6 +7,7 @@ const mugenPrivKey: string = process.env.PRIVATE_KEY!;
 const packageId = process.env.PACKAGE!;
 const gameCap = process.env.GAME_CAP!;
 const upgrader = process.env.UPGRADER!;
+const objBurn = process.env.OBJBURN!;
 
 let keyPair = getKeyPair(mugenPrivKey);
 let provider = new JsonRpcProvider(testnetConnection);
@@ -14,9 +15,10 @@ let mugen = new RawSigner(keyPair, provider);
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
-  let privateKeyArray = Array.from(fromB64(privateKey));
-  privateKeyArray.shift();
-  return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  // let privateKeyArray = Array.from(fromB64(privateKey));
+  // privateKeyArray.shift();
+  //return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey.slice(2), "hex"), { skipValidation: true });
 }
 
 async function upgradeHero(playerAddress: string) {

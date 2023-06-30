@@ -487,7 +487,7 @@ module contracts::game{
     put_power_hero(main_hero, tx_context::sender(ctx), l, fee, upgrader);
   }
 
-  public fun charge_hero(to_burn: vector<Hero>,obj_burn: &mut ObjBurn, ctx: &mut TxContext){
+  public fun charge_hero(to_burn: vector<Hero>, obj_burn: &mut ObjBurn, ctx: &mut TxContext){
     let l = vector::length<Hero>(&to_burn);
     let i: u64 = 0;
     let burn_addresses: vector<address> = vector::empty<address>();
