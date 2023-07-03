@@ -58,6 +58,7 @@ async function airdrop(addresses: string[]) {
     txb.transferObjects([hero], txb.pure(addresses[i]));
   }
 
+  console.log(txb.blockData.transactions)
   let result = await mugen.signAndExecuteTransactionBlock({
     transactionBlock: txb,
     requestType: "WaitForLocalExecution",

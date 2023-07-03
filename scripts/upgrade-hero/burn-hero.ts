@@ -38,18 +38,49 @@ async function burnHero(burnHeroId: string[]) {
     let txb = new TransactionBlock();
 
     for (let i = 0; i < burnHeroId.length; i++) {
-        txb.moveCall({
-            target: `${packageId}::game::get_burn_hero_and_burn`,
+        let x = txb.moveCall({
+            target: `${packageId}::game::get_hero_and_burn`,
             arguments: [
-                txb.object(gameCap),
+                txb.pure(gameCap),
                 txb.pure(burnHeroId[i]),
                 txb.pure(objBurn),
             ]
         });
+
+        console.log(burnHeroId[i])
     }
+    // txb.setGasBudget(100000000)
+    // txb.setGasPrice(1000);
+    console.log(txb.blockData.transactions[0])
+    console.log(txb.blockData.transactions[1])
 
+    let result = await mugen.signAndExecuteTransactionBlock({
+        transactionBlock: txb,
+        requestType: "WaitForEffectsCert",
+        options: {
+            showEffects: false,
+            showObjectChanges: false
+        },
+    });
 
-    
+    return result;
+
+}
+
+// player puts their hero to makeover
+async function batchBurnHero(burnHeroIds: string[]) {
+
+    let txb = new TransactionBlock();
+
+    const burnHero = txb.pure(burnHeroIds, 'vector<address>');
+    let x = txb.moveCall({
+        target: `${packageId}::game::batch_burn_hero`,
+        arguments: [
+            txb.pure(gameCap),
+            burnHero,
+            txb.pure(objBurn),
+        ]
+    });
 
     let result = await mugen.signAndExecuteTransactionBlock({
         transactionBlock: txb,
@@ -61,13 +92,16 @@ async function burnHero(burnHeroId: string[]) {
     });
 
     return result;
-}
 
+}
 
 async function main() {
 
-    let result = await burnHero(["0x93b210774e6d33753391eabd0c446ad8442d91f2f818c3ee3bd29825cfb14179"]);
+    let result = await batchBurnHero(["0x675e1d75e262dbdfbdc17b2353b66878234ad568250253c1c05af2e8d32c68f3", "0x017eac5c9dca4f957ddc396f6712808dace50e7650d21f2b79e908ea847ced0e"]);
     console.log(result);
+
+    // let result = await test(["0xbef5f977f3ca30f079fabd9513e4b06a6e9063d42ab89480b1f16855c5fe45be", "0x9b92dce784819d711a4d62f299999a868958a1c139da6f706e272c80b49ab6b5"]);
+    // console.log(result);
 }
 
 main();

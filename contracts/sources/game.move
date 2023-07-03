@@ -318,9 +318,24 @@ module contracts::game{
   }
 
   // admin burn hero
-  public fun get_burn_hero_and_burn(_: &GameCap, hero_address: address, obj_burn: &mut ObjBurn) {
+  public fun get_hero_and_burn(_: &GameCap, hero_address: address, obj_burn: &mut ObjBurn) {
     let burn_hero = dof::remove<address, Hero>(&mut obj_burn.id, hero_address);
     hero::burn(burn_hero);
+    // event
+  }
+
+  public fun batch_burn_hero(_: &GameCap, hero_addresses: vector<address>, obj_burn: &mut ObjBurn) {
+    let l = vector::length(&hero_addresses);
+    let i = 0;
+
+    while (i < l) {
+      let burnable = vector::pop_back<address>(&mut hero_addresses);
+      let burn_hero = dof::remove<address, Hero>(&mut obj_burn.id, burnable);
+      hero::burn(burn_hero);
+      i = i + 1;
+    };
+
+    vector::destroy_empty<address>(hero_addresses);
     // event
   }
   // upgrade

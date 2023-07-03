@@ -410,7 +410,7 @@ module contracts::test_game {
       assert!(hero::pending_upgrade(&hero) == &1, EWrongHeroPendingUpgrade);
       game::upgrade_appearance(&cap, &mut hero, appearance);
       game::return_upgraded_hero(hero, ticket);
-      game::get_burn_hero_and_burn(&cap, burn_hero, &mut obj_burn);
+      game::get_hero_and_burn(&cap, burn_hero, &mut obj_burn);
 
       ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(upgrader);
