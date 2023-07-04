@@ -10,6 +10,7 @@ module contracts::gacha{
     use std::string::{Self, String};
 
     friend contracts::game;
+    friend contracts::activity;
 
     // one-time witness
     struct GACHA has drop {}
