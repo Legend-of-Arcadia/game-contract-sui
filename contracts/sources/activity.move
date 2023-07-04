@@ -44,7 +44,7 @@ module contracts::activity {
         collection: String
     }
 
-    //EVENT
+    // event
     struct BuyEvent has copy, drop {
         coin_type: TypeName,
         type: String,
@@ -135,7 +135,7 @@ module contracts::activity {
         let coin_type = type_name::get<COIN>();
         if (vec_map::contains(&config.coin_prices, &coin_type)) {
             let previous = vec_map::get_mut(&mut config.coin_prices, &coin_type);
-            *previous = *previous + price;
+            *previous = price;
         } else {
             vec_map::insert(&mut config.coin_prices, coin_type, price);
         };
@@ -228,6 +228,7 @@ module contracts::activity {
         };
     }
 
+    // asserts
     fun assert_coin_type_exist(contain: bool) {
         assert!(contain, ECoinTypeNoExist);
     }
