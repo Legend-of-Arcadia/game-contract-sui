@@ -7,13 +7,14 @@ const mugenPrivKey: string = process.env.PRIVATE_KEY!;
 const playerPrivKey: string = process.env.PLAYER_PRIVATE_KEY!;
 const packageId = process.env.PACKAGE!;
 const gameCap = process.env.GAME_CAP!;
-const config = process.env.CONFIG!;
+const config = process.env.GAME_CONFIG!;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
-  let privateKeyArray = Array.from(fromB64(privateKey));
-  privateKeyArray.shift();
-  return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  // let privateKeyArray = Array.from(fromB64(privateKey));
+  // privateKeyArray.shift();
+  //return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey.slice(2), "hex"), { skipValidation: true });
 }
 
 let keyPair = getKeyPair(mugenPrivKey);
@@ -36,7 +37,7 @@ async function mintForWhitelistedPlayer(playerAddress: string){
   let skillValues = [200, 201, 202, 203];
   let appearenceValues = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111];
   let growthValues = [40, 0, 0, 0, 0, 0, 0, 0];
-  let otherValues = [34];
+  //let otherValues = [34];
   let txb = new TransactionBlock();
 
   
@@ -53,7 +54,7 @@ async function mintForWhitelistedPlayer(playerAddress: string){
       txb.pure(skillValues),
       txb.pure(appearenceValues),
       txb.pure(growthValues),
-      txb.pure(otherValues),
+      //txb.pure(otherValues),
       txb.pure("1337", "string"),
     ]
   });
@@ -70,17 +71,19 @@ async function mintForWhitelistedPlayer(playerAddress: string){
       txb.pure(skillValues),
       txb.pure(appearenceValues),
       txb.pure(growthValues),
-      txb.pure(otherValues),
+      //txb.pure(otherValues),
       txb.pure("1337", "string"),
     ]
   });
 
   let heroes = txb.makeMoveVec({ objects: [hero1, hero2]});
 
+  let gacha_id = 19999
   let gachaBall = txb.moveCall({
     target: `${packageId}::game::mint_gacha`,
     arguments: [
       txb.object(gameCap),
+      txb.pure(gacha_id),
       txb.pure("Haloween collection", "string"),
       txb.pure("Grandia", "string"),
       txb.pure("elite"),

@@ -34,26 +34,20 @@ let playerAddress = playerKeyPair.getPublicKey().toSuiAddress();
 
 
 // player puts their hero to makeover
-async function burnHero(burnHeroId: string[]) {
+async function burnHero(burnGachaId: string[]) {
 
     let txb = new TransactionBlock();
 
-    for (let i = 0; i < burnHeroId.length; i++) {
+    for (let i = 0; i < burnGachaId.length; i++) {
         txb.moveCall({
-            target: `${packageId}::game::get_hero_and_burn`,
+            target: `${packageId}::game::get_gacha_and_burn`,
             arguments: [
                 txb.object(gameCap),
-                txb.pure(burnHeroId[i]),
+                txb.pure(burnGachaId[i]),
                 txb.object(objBurn),
             ]
         });
-
-        console.log(burnHeroId[i])
     }
-    // txb.setGasBudget(100000000)
-    // txb.setGasPrice(1000);
-    console.log(txb.blockData.transactions[0])
-    console.log(txb.blockData.transactions[1])
 
     let result = await mugen.signAndExecuteTransactionBlock({
         transactionBlock: txb,
@@ -68,70 +62,11 @@ async function burnHero(burnHeroId: string[]) {
 
 }
 
-// player puts their hero to makeover
-async function batchBurnHero(burnHeroIds: string[]) {
 
-    let txb = new TransactionBlock();
-
-    const burnHero = txb.pure(burnHeroIds, 'vector<address>');
-    let x = txb.moveCall({
-        target: `${packageId}::game::batch_burn_hero`,
-        arguments: [
-            txb.pure(gameCap),
-            burnHero,
-            txb.pure(objBurn),
-        ]
-    });
-
-    let result = await mugen.signAndExecuteTransactionBlock({
-        transactionBlock: txb,
-        requestType: "WaitForLocalExecution",
-        options: {
-            showEffects: true,
-            showObjectChanges: true
-        },
-    });
-
-    return result;
-
-}
-
-// player puts their hero to makeover
-async function test(burnHeroId: string[]) {
-
-    let txb = new TransactionBlock();
-
-    for (let i = 0; i < burnHeroId.length; i++) {
-        txb.moveCall({
-            target: `${packageId}::game::test2`,
-            arguments: [
-                txb.object(objBurn),
-            ]
-        });
-
-        console.log(burnHeroId[i])
-    }
-    // txb.setGasBudget(100000000)
-    // txb.setGasPrice(1000);
-    console.log(txb.blockData.transactions[0])
-    console.log(txb.blockData.transactions[1])
-
-    let result = await mugen.signAndExecuteTransactionBlock({
-        transactionBlock: txb,
-        requestType: "WaitForEffectsCert",
-        options: {
-            showEffects: false,
-            showObjectChanges: false
-        },
-    });
-
-    return result;
-
-}
 
 async function main() {
 
-    let result = await burnHero(["0xc2111ed4bfb67db704e0b3e4e0c52fbd0a85efdd7ef2697a235f07afea4bb56a", "0x2c54894f36f1eb99fa37c064582731bb0d73ddcb9f49f176301dc932fd0c7620"]);
+    let result = await burnHero(["0x98800d81bc2e818e1e095e13490121ce8b77a94627e78bed4ae28280e79b9c3e"]);
     console.log(result);
 
     // let result = await test(["0xbef5f977f3ca30f079fabd9513e4b06a6e9063d42ab89480b1f16855c5fe45be", "0x9b92dce784819d711a4d62f299999a868958a1c139da6f706e272c80b49ab6b5"]);

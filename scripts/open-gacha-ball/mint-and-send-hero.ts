@@ -9,9 +9,10 @@ const gameCap = process.env.GAME_CAP!;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
-  let privateKeyArray = Array.from(fromB64(privateKey));
-  privateKeyArray.shift();
-  return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  // let privateKeyArray = Array.from(fromB64(privateKey));
+  // privateKeyArray.shift();
+  //return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey.slice(2), "hex"), { skipValidation: true });
 }
 
 let keyPair = getKeyPair(mugenPrivKey);
@@ -27,7 +28,6 @@ async function mintHero(playerAddress: string) {
   let skillValues = [200, 201, 202, 203];
   let appearenceValues = [100, 101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111];
   let growthValues = [40, 0, 0, 0, 0, 0, 0, 0];
-  let otherValues = [34];
   let txb = new TransactionBlock();
 
   
@@ -44,7 +44,6 @@ async function mintHero(playerAddress: string) {
       txb.pure(skillValues),
       txb.pure(appearenceValues),
       txb.pure(growthValues),
-      txb.pure(otherValues),
       txb.pure("1337", "string"),
     ]
   });
@@ -80,7 +79,8 @@ async function subscribeToMakeoverEvents() {
 }
 
 async function main(){
-  await subscribeToMakeoverEvents();
+  //await subscribeToMakeoverEvents();
+  await mintHero("0x0421a66d58e4acd151ec50a2c5aa6219ca3c13d18df816c6e93b0b7838e26f65")
 }
 
 main();

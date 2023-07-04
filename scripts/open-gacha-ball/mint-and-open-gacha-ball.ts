@@ -7,12 +7,14 @@ const playerPrivKey: string = process.env.PLAYER_PRIVATE_KEY!;
 const packageId = process.env.PACKAGE!;
 const gameCap = process.env.GAME_CAP!;
 const upgrader = process.env.UPGRADER!;
+const objBurn = process.env.OBJBURN!;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
-  let privateKeyArray = Array.from(fromB64(privateKey));
-  privateKeyArray.shift();
-  return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  // let privateKeyArray = Array.from(fromB64(privateKey));
+  // privateKeyArray.shift();
+  //return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey.slice(2), "hex"), { skipValidation: true });
 }
 
 // helper to find gacha ball ID from transaction result
@@ -39,6 +41,7 @@ async function mintGachaBall() {
     target: `${packageId}::game::mint_gacha`,
     arguments: [
       txb.object(gameCap),
+      txb.pure(19999),
       txb.pure("Haloween", "string"),
       txb.pure("Grandia", "string"),
       txb.pure("VIP"),
@@ -68,6 +71,7 @@ async function openGachaBall(gachaBallId: string) {
     target: `${packageId}::game::open_gacha_ball`,
     arguments: [
       txb.object(gachaBallId),
+      txb.object(objBurn),
     ],
   });
 
