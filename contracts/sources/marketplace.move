@@ -12,6 +12,7 @@ module contracts::marketplace{
     use sui::tx_context::{Self, TxContext};
 
     use std::option::{Self, Option};
+    use std::type_name::{Self, TypeName};
 
     use contracts::arca::ARCA;
     use contracts::game::GameCap;
@@ -23,6 +24,7 @@ module contracts::marketplace{
     const ENoListingFound: u64 = 2;
     const EIncorrectVipLevel: u64 = 3;
     const EVersionMismatch: u64 = 4;
+    const EPaymentMismatch: u64 = 5;
 
     // constants
 
@@ -40,7 +42,8 @@ module contracts::marketplace{
     struct Marketplace has key, store {
         id: UID,
         main: Stand<ARCA>,
-        vip_fees: Table<u64, u64>
+        vip_fees: Table<u64, u64>,
+        finance_address: address,
     }
 
     // here we need key because we will add items dof
@@ -60,6 +63,7 @@ module contracts::marketplace{
     
 
     struct Listing has store {
+        coin_type: TypeName,
         item_id: address,
         price: u64,
         seller: address
@@ -116,7 +120,8 @@ module contracts::marketplace{
         let marketplace = Marketplace {
             id: object::new(ctx),
             main: arca_stand,
-            vip_fees
+            vip_fees,
+            finance_address: tx_context::sender(ctx)
         };
         transfer::public_share_object<Marketplace>(marketplace);
     }
@@ -124,6 +129,11 @@ module contracts::marketplace{
     public fun edit_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
         assert!(VERSION == 1, EVersionMismatch);
         *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level) = fee;
+    }
+
+    public fun edit_finance_address(_: &GameCap, marketplace: &mut Marketplace, new_finance_address: address) {
+        assert!(VERSION == 1, EVersionMismatch);
+        marketplace.finance_address = new_finance_address;
     }
 
     public fun take_profits_arca(
@@ -169,7 +179,9 @@ module contracts::marketplace{
         assert!(VERSION == 1, EVersionMismatch);
         let stand = &mut marketplace.main;
         let item_id: address = object::id_address(&item);
+        let coin_type = type_name::get<ARCA>();
         let listing = Listing{
+            coin_type,
             item_id,
             price,
             seller: tx_context::sender(ctx)
@@ -231,7 +243,8 @@ module contracts::marketplace{
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {item_id, price, seller} = listing;
+        let Listing {coin_type, item_id, price, seller} = listing;
+        assert!(coin_type == type_name::get<ARCA>(), EPaymentMismatch);
         assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
         // if it is not the last listing take the last and insert it in its place
         // make this one the last and remove it
@@ -278,7 +291,8 @@ module contracts::marketplace{
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {item_id, price, seller} = listing;
+        let Listing {coin_type, item_id, price, seller} = listing;
+        assert!(coin_type == type_name::get<ARCA>(), EPaymentMismatch);
         assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
         // if it is not the last listing take the last and insert it in its place
         // make this one the last and remove it
@@ -319,9 +333,128 @@ module contracts::marketplace{
 
     // TODO: for any Coin when LPs are available
     // public fun list_primary<Item: key+store, COIN>()
-    // public fun list_secondary<Item: key+store, COIN>()
     // public fun buy_primary<Item: key+store, COIN>()
-    // public fun buy_secondary<Item: key+store, COIN>()
+    public fun list_secondary<Item: key+store, COIN>(
+        marketplace: &mut Marketplace,
+        item: Item,
+        price: u64,
+        ctx: &mut TxContext
+    ) {
+        assert!(VERSION == 1, EVersionMismatch);
+        let stand = &mut marketplace.main;
+        let item_id: address = object::id_address(&item);
+        let coin_type = type_name::get<COIN>();
+        let listing = Listing{
+            coin_type,
+            item_id,
+            price,
+            seller: tx_context::sender(ctx)
+        };
+        let key = table::length<u64, Listing>(&stand.secondary_listings) + 1;
+        table::add<u64, Listing>(&mut stand.secondary_listings, key, listing);
+        dof::add<address, Item>(&mut stand.id, item_id, item);
+        // emit event
+        let evt = NewSecodaryListing {
+            seller: tx_context::sender(ctx),
+            item_id,
+            listing_key: key
+        };
+        event::emit(evt);
+    }
+
+    public fun buy_secondary<Item: key+store, COIN>(
+        payment: Coin<COIN>,
+        listing_number: u64,
+        marketplace: &mut Marketplace,
+        ctx: &mut TxContext
+    ): Item {
+        assert!(VERSION == 1, EVersionMismatch);
+        let stand = &mut marketplace.main;
+        assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
+        let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
+        let Listing {coin_type, item_id, price, seller} = listing;
+        assert!(coin_type == type_name::get<COIN>(), EPaymentMismatch);
+        assert!(price == coin::value<COIN>(&payment), EPaymentNotExact);
+        // if it is not the last listing take the last and insert it in its place
+        // make this one the last and remove it
+        let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
+        if (size > listing_number) {
+            let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
+            table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
+        };
+
+        fee_distribution(
+            &mut payment,
+            BASE_TRADING_FEE,
+            marketplace.finance_address,
+            ctx
+        );
+
+        transfer::public_transfer(payment, seller);
+        // event
+        let evt = ItemBought {
+            is_primary_listing: false,
+            buyer_vip_level: 0, // no vip
+            buyer: tx_context::sender(ctx),
+            seller,
+            item_id: item_id,
+            listing_key: listing_number // now this is occupied by the last listing
+        };
+        event::emit(evt);
+        // return item
+        dof::remove<address, Item>(&mut stand.id, item_id)
+    }
+
+    public fun buy_secondary_vip<Item: key+store, COIN>(
+        payment: Coin<COIN>,
+        listing_number: u64,
+        marketplace: &mut Marketplace,
+        sp: &mut StakingPool,
+        clock: &Clock,
+        ctx: &mut TxContext): Item
+    {
+        assert!(VERSION == 1, EVersionMismatch);
+        let stand = &mut marketplace.main;
+        assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
+        let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
+        let Listing {coin_type, item_id, price, seller} = listing;
+        assert!(coin_type == type_name::get<COIN>(), EPaymentMismatch);
+        assert!(price == coin::value<COIN>(&payment), EPaymentNotExact);
+        // if it is not the last listing take the last and insert it in its place
+        // make this one the last and remove it
+        let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
+        if (size > listing_number) {
+            let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
+            table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
+        };
+
+        // get base_trading fee based on vip level
+        let timestamp = clock::timestamp_ms(clock)/1000;
+        let vip_level = staking::calc_vip_level(sp, tx_context::sender(ctx), timestamp);
+        assert!(vip_level < 21, EIncorrectVipLevel);
+        let base_fee = *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level);
+        fee_distribution(
+            &mut payment,
+            base_fee,
+            marketplace.finance_address,
+            ctx
+        );
+
+        transfer::public_transfer(payment, seller);
+        // event
+        let evt = ItemBought {
+            is_primary_listing: false,
+            buyer_vip_level: vip_level,
+            buyer: tx_context::sender(ctx),
+            seller: seller,
+            item_id: item_id,
+            listing_key: listing_number // now this is occupied by the last listing
+        };
+        event::emit(evt);
+        // return item
+        dof::remove<address, Item>(&mut stand.id, item_id)
+    }
+
 
     fun fee_distribution_arca(
         payment: &mut Coin<ARCA>,
@@ -370,7 +503,19 @@ module contracts::marketplace{
     }
 
     // TODO: When Liquidity pools for other coins are available
-    // fun fee_distribution<COIN>
+    fun fee_distribution<COIN>(
+        payment: &mut Coin<COIN>,
+        base_fee_per: u64,
+        finance_address: address,
+        ctx: &mut TxContext
+    )
+    {
+        let base_value: u64 = (coin::value<COIN>(payment) / 10000) * base_fee_per;
+        let fee = coin::split<COIN>(payment, base_value, ctx);
+
+        transfer::public_transfer(fee, finance_address)
+
+    }
 
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext) {
