@@ -16,12 +16,6 @@ module contracts::activity {
     use contracts::gacha::{Self};
     use contracts::game::GameCap;
 
-    // struct ActivityConfig has key, store {
-    //     id: UID,
-    //     caps_created: u64,
-    //     game_address: address,
-    //     gacha_config: Table<u64, GachaConfig>
-    // }
 
     const EPaymentAmountInvalid: u64 = 0;
     const EOverflowMaxSupply: u64 = 1;
@@ -185,7 +179,6 @@ module contracts::activity {
         assert_current_time_ge_start_time(current_time, config.start_time);
         assert_current_time_lt_end_time(current_time, config.end_time);
         assert_total_supply(config.total_supply, config.max_supply, amount);
-        //assert_mint_amount(config, amount, ctx);
 
         let total: u64 = price * amount;
         // payment

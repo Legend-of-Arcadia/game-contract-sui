@@ -17,7 +17,6 @@ module contracts::game{
   use contracts::hero::{Self, Hero};
   use contracts::gacha::{Self, GachaBall};
   use contracts::item::{Self, Item};
-  use std::debug;
 
   const VERSION: u64 = 1;
 
@@ -406,8 +405,6 @@ module contracts::game{
 
     let main_hero_part= vector::borrow(hero::appearance_values(&main_hero), appearance_index);
     let burn_hero_part= vector::borrow(hero::appearance_values(&to_burn), appearance_index);
-    debug::print(main_hero_part);
-    debug::print(burn_hero_part);
     assert!(*main_hero_part != *burn_hero_part, ESameAppearancePart);
 
     let evt = MakeoverRequest {
