@@ -17,10 +17,11 @@ module contracts::gacha{
 
     struct GachaBall has key, store {
         id: UID,
-        gacha_id: u64,
+        token_type: u64,
         collection: String,
         name: String,
         type: String,
+        description: String
     }
 
     struct GachaBallMinted has copy, drop {
@@ -42,7 +43,6 @@ module contracts::gacha{
             string::utf8(b"name"),
             string::utf8(b"image_url"),
             string::utf8(b"description"),
-            string::utf8(b"initial_price"),
             string::utf8(b"type"),
             string::utf8(b"project_url"),
         ];
@@ -53,10 +53,9 @@ module contracts::gacha{
             // link empty right now
             // one example of a link is b"{example.com/{type}"
             string::utf8(b"https://lh3.googleusercontent.com/pw/AJFCJaVqjr41iECxSNLZ2POCLVwRuKPu5UE0MrCCGMCclzg9ssDjNqeCpPSYIWzryjLKRRGPD70_iVpo9m71wEWPssYU4DeL7BgZlAsofiFo9bqYtxcQqQ=w113-h86-no"),
-            string::utf8(b"Gacha ball"),
-            string::utf8(b"{initial_price}"),
+            string::utf8(b"{description}"),
             string::utf8(b"{type}"),
-            string::utf8(b"{https://legendofarcadia.io}"),
+            string::utf8(b"https://legendofarcadia.io"),
         ];
 
         let display = display::new_with_fields<GachaBall>(&publisher, keys, values, ctx);
@@ -67,20 +66,22 @@ module contracts::gacha{
     }
 
     public(friend) fun mint(
-        gacha_id: u64,
+        token_type: u64,
         collection: String,
         name: String,
         type: String,
+        description: String,
         ctx: &mut TxContext
     ): GachaBall {
         let id = object::new(ctx);
 
         let new_ball = GachaBall {
             id,
-            gacha_id,
+            token_type,
             collection,
             name,
             type,
+            description,
         };
 
         event::emit(GachaBallMinted {id: object::uid_to_inner(&new_ball.id)});
@@ -89,7 +90,7 @@ module contracts::gacha{
     }
 
     public(friend) fun burn(gacha_ball: GachaBall) {
-        let GachaBall {id, gacha_id: _, collection: _, name: _, type: _} = gacha_ball;
+        let GachaBall {id, token_type: _, collection: _, name: _, type: _, description: _} = gacha_ball;
         event::emit(GachaBallBurned {id: object::uid_to_inner(&id)});
         object::delete(id);
     }
@@ -113,7 +114,7 @@ module contracts::gacha{
     }
 
     public fun gachaId(gacha_ball: &GachaBall): &u64 {
-        &gacha_ball.gacha_id
+        &gacha_ball.token_type
     }
 
 }

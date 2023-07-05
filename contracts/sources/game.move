@@ -40,15 +40,8 @@ module contracts::game{
     id: UID,
     caps_created: u64,
     game_address: address
-    //gacha_config: Table<u64,GachaConfig>
   }
 
-  // struct GachaConfig has store {
-  //   open_fee:u64,
-  //   name: String,
-  //   type: String,
-  //   collection: String
-  // }
 
   // upgrader and hot potato
   struct Upgrader has key, store {
@@ -211,14 +204,15 @@ module contracts::game{
   // The content described in display is currently fixed, whether to use the parameters passed in
   public fun mint_gacha(
     _: &GameCap,
-    gacha_id: u64,
+    token_type: u64,
     collection: String,
     name: String,
     type: String,
+    description: String,
     ctx: &mut TxContext
   ): GachaBall {
 
-    let gacha_ball = gacha::mint(gacha_id, collection, name, type, ctx);
+    let gacha_ball = gacha::mint(token_type, collection, name, type, description, ctx);
 
     gacha_ball
   }
@@ -226,14 +220,15 @@ module contracts::game{
   // For casting items, use type to distinguish types of avatars, medals, etc., or add item id attributes
   public fun mint_item(
     _: &GameCap,
-    item_id: u64,
+    token_type: u64,
     collection: String,
     name: String,
     type: String,
+    description: String,
     ctx: &mut TxContext
   ): Item {
 
-    let item = item::mint(item_id, collection, name, type, ctx);
+    let item = item::mint(token_type, collection, name, type, description, ctx);
 
     item
   }
@@ -588,6 +583,7 @@ module contracts::game{
       string::utf8(b"Halloween"),
       string::utf8(b"Grandia"),
       string::utf8(b"VIP"),
+      string::utf8(b"test gacha"),
       ctx
     )
   }

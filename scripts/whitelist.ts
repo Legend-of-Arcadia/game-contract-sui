@@ -78,12 +78,12 @@ async function mintForWhitelistedPlayer(playerAddress: string){
 
   let heroes = txb.makeMoveVec({ objects: [hero1, hero2]});
 
-  let gacha_id = 19999
+  let token_type = 19999
   let gachaBall = txb.moveCall({
     target: `${packageId}::game::mint_gacha`,
     arguments: [
       txb.object(gameCap),
-      txb.pure(gacha_id),
+      txb.pure(token_type),
       txb.pure("Haloween collection", "string"),
       txb.pure("Grandia", "string"),
       txb.pure("elite"),

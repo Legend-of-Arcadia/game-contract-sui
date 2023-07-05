@@ -39,10 +39,11 @@ async function setConfig() {
     let end_time = 1691200800000 // 2023-08-05 10:00:00
     let max_supply = 1000
     let finance_address = "0xbe225c0731573a1a41afb36dd363754d24585cfc790929252656ea4e77435d6e"
-    let gacha_id = 19999
+    let token_type = 19999
     let name = "blue gacha"
     let type = "legend"
     let collection = "gacha"
+    let description = "Test gacha";
     let txb = new TransactionBlock();
 
     txb.moveCall({
@@ -53,10 +54,11 @@ async function setConfig() {
             txb.pure(end_time),
             txb.pure(max_supply),
             txb.pure(finance_address),
-            txb.pure(gacha_id),
+            txb.pure(token_type),
             txb.pure(name),
             txb.pure(type),
             txb.pure(collection),
+            txb.pure(description)
         ]
     });
 
@@ -76,7 +78,7 @@ async function setConfig() {
 // player puts their hero to makeover
 async function setPrice() {
 
-    let configId = "0xc0b96c0d7da9461eaee8f5489d059b9a2dc9c1ad7428b10eeb5b0ab771780847"
+    let configId = "0x3e15a9f680f6137aa4f20b38e07f62def7a72f67a19a28f035e0325531f31bca"
     let txb = new TransactionBlock();
     let price = 1000;
     const coinType = "0x2::sui::SUI";

@@ -72,14 +72,15 @@ async function mintHero() {
 }
 
 async function mintGacha() {
-  //    gacha_id: u64,
+  //    token_type: u64,
   //     collection: String,
   //     name: String,
   //     type: String,
-  let gacha_id = 10999;
+  let token_type = 10999;
   let collection = "gacha";
   let name = "test gacha";
   let type = "legend";
+  let description = "Test gacha";
   //let otherValues = [34];
   let txb = new TransactionBlock();
 
@@ -89,10 +90,11 @@ async function mintGacha() {
     target: `${packageId}::game::mint_gacha`,
     arguments: [
       txb.object(gameCapId),
-      txb.pure(gacha_id),
+      txb.pure(token_type),
       txb.pure(collection),
       txb.pure(name),
       txb.pure(type),
+      txb.pure(description),
     ]
   });
 
@@ -113,10 +115,11 @@ async function mintGacha() {
 
 
 async function mintItem() {
-  let item_id = 9999;
-  let collection = "gacha";
-  let name = "test gacha";
+  let token_type = 9999;
+  let collection = "item";
+  let name = "test item";
   let type = "legend";
+  let description = "Test Item";
   //let otherValues = [34];
   let txb = new TransactionBlock();
 
@@ -126,10 +129,11 @@ async function mintItem() {
     target: `${packageId}::game::mint_item`,
     arguments: [
       txb.object(gameCapId),
-      txb.pure(item_id),
+      txb.pure(token_type),
       txb.pure(collection),
       txb.pure(name),
       txb.pure(type),
+      txb.pure(description),
     ]
   });
 
@@ -187,22 +191,22 @@ async function mintHeroAndCharge() {
 
 async function main() {
 
-  let result = await mintHero();
-  var fs = require('fs');
-  fs.writeFile(`./auto-results/mintHeroResult.json`, JSON.stringify(result, null, 2), function(err: any) {
-    if (err) {
-        console.log(err);
-    }
-  });
+  // let result = await mintHero();
+  // var fs = require('fs');
+  // fs.writeFile(`./auto-results/mintHeroResult.json`, JSON.stringify(result, null, 2), function(err: any) {
+  //   if (err) {
+  //       console.log(err);
+  //   }
+  // });
 
-  let mintGachaResult = await mintGacha();
-  console.log(mintGachaResult)
+  // let mintGachaResult = await mintGacha();
+  // console.log(mintGachaResult)
 
   let mintItemResult = await mintItem();
   console.log(mintItemResult)
 
-  let chargeResult = await mintHeroAndCharge();
-  console.log(chargeResult)
+  // let chargeResult = await mintHeroAndCharge();
+  // console.log(chargeResult)
 }
 
 main();

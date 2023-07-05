@@ -16,10 +16,11 @@ module contracts::item{
 
     struct Item has key, store {
         id: UID,
-        item_id: u64,
+        token_type: u64,
         collection: String,
         name: String,
         type: String,
+        description: String,
     }
 
     struct ItemMinted has copy, drop {
@@ -50,8 +51,8 @@ module contracts::item{
             string::utf8(b"{name}"),
             // link empty right now
             // one example of a link is b"{example.com/{type}"
-            string::utf8(b"https://legendofarcadia.io/items/images/{item_id}"),
-            string::utf8(b"Item"),
+            string::utf8(b"https://legendofarcadia.io/items/images/{token_type}"),
+            string::utf8(b"{description}"),
             string::utf8(b"{type}"),
             string::utf8(b"{https://legendofarcadia.io}"),
         ];
@@ -64,20 +65,22 @@ module contracts::item{
     }
 
     public(friend) fun mint(
-        item_id: u64,
+        token_type: u64,
         collection: String,
         name: String,
         type: String,
+        description: String,
         ctx: &mut TxContext
     ): Item {
         let id = object::new(ctx);
 
         let new_item = Item {
             id,
-            item_id,
+            token_type,
             collection,
             name,
             type,
+            description,
         };
 
         event::emit(ItemMinted {id: object::uid_to_inner(&new_item.id)});
@@ -86,7 +89,7 @@ module contracts::item{
     }
 
     public(friend) fun burn(item: Item) {
-        let Item {id, item_id: _, collection: _, name: _, type: _} = item;
+        let Item {id, token_type: _, collection: _, name: _, type: _, description: _} = item;
         event::emit(ItemBurned {id: object::uid_to_inner(&id)});
         object::delete(id);
     }

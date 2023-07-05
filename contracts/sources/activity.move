@@ -38,10 +38,11 @@ module contracts::activity {
         total_supply: u64,
         finance_address: address,
         coin_prices: VecMap<TypeName, u64>,
-        gacha_id: u64,
+        token_type: u64,
         name: String,
         type: String,
-        collection: String
+        collection: String,
+        description: String,
     }
 
     // event
@@ -51,12 +52,12 @@ module contracts::activity {
         price: u64,
         amount: u64,
         total: u64,
-        gacha_ids: vector<address>,
+        token_types: vector<address>,
     }
 
     struct CreateConfigEvent has copy, drop {
         config: ID,
-        gacha_id: u64,
+        token_type: u64,
         type: String,
         name: String,
         collection: String,
@@ -83,10 +84,11 @@ module contracts::activity {
         end_time: u64,
         max_supply: u64,
         finance_address: address,
-        gacha_id: u64,
+        token_type: u64,
         name: String,
         type: String,
         collection: String,
+        description: String,
         ctx: &mut TxContext,
     ) {
         let config = ActivityConfig {
@@ -97,15 +99,16 @@ module contracts::activity {
             total_supply: 0,
             finance_address,
             coin_prices: vec_map::empty<TypeName, u64>(),
-            gacha_id,
+            token_type,
             name,
             type,
-            collection
+            collection,
+            description
         };
 
         event::emit(CreateConfigEvent {
             config: object::id(&config),
-            gacha_id,
+            token_type,
             type,
             name: config.name,
             collection,
@@ -121,7 +124,7 @@ module contracts::activity {
 
         let ActivityConfig{id, start_time:_, end_time: _,
             max_supply: _, total_supply:_, finance_address:_,
-            coin_prices:_, gacha_id:_, name:_, type:_, collection:_} = config;
+            coin_prices:_, token_type:_, name:_, type:_, collection:_, description: _} = config;
 
         object::delete(id);
     }
@@ -189,18 +192,19 @@ module contracts::activity {
         pay(config, total, paid, ctx);
         // mint nft
         let i = 0;
-        let gacha_ids: vector<address> = vector::empty<address>();
+        let token_types: vector<address> = vector::empty<address>();
         while (i < amount) {
             let gacha_ball = gacha::mint(
-                config.gacha_id,
+                config.token_type,
                 config.collection,
                 config.name,
                 config.type,
+                config.description,
                 ctx,
             );
 
-            let gacha_id = object::id_address(&gacha_ball);
-            vector::push_back(&mut gacha_ids, gacha_id);
+            let token_type = object::id_address(&gacha_ball);
+            vector::push_back(&mut token_types, token_type);
             transfer::public_transfer(gacha_ball, tx_context::sender(ctx));
             i = i + 1;
         };
@@ -213,7 +217,7 @@ module contracts::activity {
             price,
             amount,
             total,
-            gacha_ids,
+            token_types,
         });
     }
 
