@@ -315,17 +315,19 @@ module contracts::marketplace_tests {
         };
 
         ts::next_tx(&mut scenario, GAME);
-        // {
-        //     let sp = ts::take_shared<StakingPool>(&mut scenario);
-        //
-        //
-        //     let rewards_value = staking::get_rewards_value(&sp);
-        //
-        //     assert!(rewards_value == 360000000, EToBurnNotCorrect);
-        //
-        //     ts::return_shared(sp);
-        //
-        // };
+        {
+            let marketplace = ts::take_shared<Marketplace>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let arca = marketplace::take_fee_profits<ARCA>(&cap, &mut marketplace, ts::ctx(&mut scenario));
+
+            // let amount = coin::value<ARCA>(&arca);
+            // debug::print(&amount);
+            transfer::public_transfer(arca, GAME);
+
+            ts::return_shared(marketplace);
+            ts::return_to_sender<GameCap>(&scenario, cap);
+
+        };
 
         ts::end(scenario);
 

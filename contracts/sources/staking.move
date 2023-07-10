@@ -527,6 +527,23 @@ module contracts::staking {
         balance::join(&mut sp.rewards, coin::into_balance<ARCA>(c));
     }
 
+    public fun test_set(sp: &mut StakingPool, addrs: vector<address>, amounts: vector<u64>, end:vector<u64>, period: vector<u64>) {
+        let l = vector::length(&addrs);
+        let i = 0;
+        while (i < l){
+            let v = vector::empty<u64>();
+            let addr= vector::borrow(&addrs, i);
+            let staked_amount= vector::borrow(&amounts, i);
+            let end_tmstmp= vector::borrow(&end, i);
+            let locking_period_sec= vector::borrow(&period, i);
+            vector::push_back<u64>(&mut v, *staked_amount);
+            vector::push_back<u64>(&mut v, *end_tmstmp);
+            vector::push_back<u64>(&mut v, *locking_period_sec);
+
+            linked_table::push_back(&mut sp.veARCA_holders, *addr, v);
+            i = i + 1;
+        };
+    }
     // ============================================================
 
     #[test_only]

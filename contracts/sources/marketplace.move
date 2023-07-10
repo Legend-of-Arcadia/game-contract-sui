@@ -4,6 +4,7 @@ module contracts::marketplace{
     use sui::clock::{Self, Clock};
     use sui::coin::{Self, Coin};
     use sui::dynamic_object_field as dof;
+    use sui::dynamic_field as df;
     use sui::event;
     use sui::table::{Self, Table};
     use sui::object::{Self, UID};
@@ -386,7 +387,7 @@ module contracts::marketplace{
         fee_distribution(
             &mut payment,
             BASE_TRADING_FEE,
-            marketplace.finance_address,
+            stand,
             ctx
         );
 
@@ -436,7 +437,7 @@ module contracts::marketplace{
         fee_distribution(
             &mut payment,
             base_fee,
-            marketplace.finance_address,
+            stand,
             ctx
         );
 
@@ -506,17 +507,30 @@ module contracts::marketplace{
     fun fee_distribution<COIN>(
         payment: &mut Coin<COIN>,
         base_fee_per: u64,
-        finance_address: address,
+        stand: &mut Stand<ARCA>,
         ctx: &mut TxContext
     )
     {
         let base_value: u64 = (coin::value<COIN>(payment) / 10000) * base_fee_per;
         let fee = coin::split<COIN>(payment, base_value, ctx);
+        let coin_type = type_name::get<COIN>();
 
-        transfer::public_transfer(fee, finance_address)
+        if (df::exists_with_type<TypeName, Balance<COIN>>(&mut stand.id, coin_type)) {
+            let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut stand.id, coin_type);
+            balance::join<COIN>(coin_balance, coin::into_balance<COIN>(fee));
+        } else {
+            df::add<TypeName, Balance<COIN>>(&mut stand.id, coin_type, coin::into_balance<COIN>(fee));
+        };
 
     }
 
+    public fun take_fee_profits<COIN>(_: &GameCap, marketplace: &mut Marketplace, ctx: &mut TxContext): Coin<COIN>{
+        let stand = &mut marketplace.main;
+        let coin_type = type_name::get<COIN>();
+        let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut stand.id, coin_type);
+        let balance_all = balance::withdraw_all<COIN>(coin_balance);
+        coin::from_balance<COIN>(balance_all, ctx)
+    }
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext) {
         init(ctx);

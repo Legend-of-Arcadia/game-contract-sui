@@ -256,6 +256,7 @@ module contracts::game{
         table::remove<String, u64>(&mut upgrader.power_prices, *key);
       };
       table::add<String, u64>(&mut upgrader.power_prices, *key, *value);
+      i = i + 1;
     }
   }
 
