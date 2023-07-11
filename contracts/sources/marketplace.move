@@ -82,6 +82,7 @@ module contracts::marketplace{
         buyer_vip_level: u64,
         buyer: address,
         seller: address,
+        coin_type: TypeName,
         token_type: address,
         listing_key: u64
     }
@@ -224,6 +225,7 @@ module contracts::marketplace{
             buyer_vip_level: 0, // incosequential since no fees
             buyer: tx_context::sender(ctx),
             seller: @0x00, // Mugen is the seller
+            coin_type: type_name::get<ARCA>(),
             token_type: token_type,
             listing_key: listing_number // now this is occupied by the last listing
         };
@@ -271,6 +273,7 @@ module contracts::marketplace{
             buyer_vip_level: 0, // no vip
             buyer: tx_context::sender(ctx),
             seller,
+            coin_type: type_name::get<ARCA>(),
             token_type: token_type,
             listing_key: listing_number // now this is occupied by the last listing
         };
@@ -324,6 +327,7 @@ module contracts::marketplace{
             buyer_vip_level: vip_level,
             buyer: tx_context::sender(ctx),
             seller: seller,
+            coin_type,
             token_type: token_type,
             listing_key: listing_number // now this is occupied by the last listing
         };
@@ -398,6 +402,7 @@ module contracts::marketplace{
             buyer_vip_level: 0, // no vip
             buyer: tx_context::sender(ctx),
             seller,
+            coin_type,
             token_type: token_type,
             listing_key: listing_number // now this is occupied by the last listing
         };
@@ -448,6 +453,7 @@ module contracts::marketplace{
             buyer_vip_level: vip_level,
             buyer: tx_context::sender(ctx),
             seller: seller,
+            coin_type,
             token_type: token_type,
             listing_key: listing_number // now this is occupied by the last listing
         };
