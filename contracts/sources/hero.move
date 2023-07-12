@@ -1,11 +1,12 @@
 module contracts::hero {
 
-    use sui::object::{Self, UID};
+    use sui::object::{Self, UID, ID};
     use sui::tx_context::{Self, TxContext};
     use sui::dynamic_field as df;
     use sui::transfer;
     use sui::display;
     use sui::package;
+    use sui::event;
 
     use std::string::{Self, String};
 
@@ -33,6 +34,15 @@ module contracts::hero {
         pending_upgrade: u64 //heroes burned
     }
 
+    struct HeroMinted has copy,drop{
+        id:ID,
+        external_id: String
+    }
+
+    struct HeroBurned has copy,drop{
+        id:ID,
+        external_id: String
+    }
 
     fun init(otw: HERO, ctx: &mut TxContext) {
         let publisher = package::claim(otw, ctx);
@@ -93,6 +103,8 @@ module contracts::hero {
         df::add<String, vector<u16>>(&mut hero.id, string::utf8(b"growth"), growth_attributes_values);
         //df::add<String, vector<u8>>(&mut hero.id, string::utf8(b"others"), other_attributes_values);
 
+        event::emit(HeroMinted{id:object::uid_to_inner(&hero.id), external_id:hero.external_id});
+
         hero
     }
 
@@ -120,7 +132,8 @@ module contracts::hero {
         df::remove<String, vector<u16>>(&mut hero.id, string::utf8(b"growth"));
         //df::remove<String, vector<u8>>(&mut hero.id, string::utf8(b"others"));
 
-        let Hero {id, name: _, class: _, faction: _, rarity: _, external_id: _, pending_upgrade: _} = hero;
+        let Hero {id, name: _, class: _, faction: _, rarity: _, external_id, pending_upgrade: _} = hero;
+        event::emit(HeroBurned{id:object::uid_to_inner(&id), external_id });
         object::delete(id);
     }
 
