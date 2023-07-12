@@ -59,14 +59,14 @@ module contracts::marketplace{
     }
 
     struct Listing_P has store {
-        token_type: address,
+        item_id: address,
         price: u64
     }
     
 
     struct Listing has store {
         coin_type: TypeName,
-        token_type: address,
+        item_id: address,
         price: u64,
         seller: address
     }
@@ -76,7 +76,7 @@ module contracts::marketplace{
         coin_type: TypeName,
         price: u64,
         seller: address,
-        token_type: address,
+        item_id: address,
         listing_key: u64
     }
 
@@ -86,13 +86,13 @@ module contracts::marketplace{
         buyer: address,
         seller: address,
         coin_type: TypeName,
-        token_type: address,
+        item_id: address,
         listing_key: u64
     }
 
     struct ItemTake has copy, drop {
         seller: address,
-        token_type: address,
+        item_id: address,
         listing_key: u64
     }
 
@@ -168,14 +168,14 @@ module contracts::marketplace{
     {
         assert!(VERSION == 1, EVersionMismatch);
         let stand = &mut marketplace.main;
-        let token_type = object::id_address(&item);
+        let item_id = object::id_address(&item);
         let listing = Listing_P {
-            token_type,
+            item_id,
             price
         };
         let key = table::length<u64, Listing_P>(&stand.primary_listings) + 1;
         table::add<u64, Listing_P>(&mut stand.primary_listings, key, listing);
-        dof::add<address, Item>(&mut stand.id, token_type, item);
+        dof::add<address, Item>(&mut stand.id, item_id, item);
         // emit event
     }
 
@@ -189,23 +189,23 @@ module contracts::marketplace{
     {
         assert!(VERSION == 1, EVersionMismatch);
         let stand = &mut marketplace.main;
-        let token_type: address = object::id_address(&item);
+        let item_id: address = object::id_address(&item);
         let coin_type = type_name::get<ARCA>();
         let listing = Listing{
             coin_type,
-            token_type,
+            item_id,
             price,
             seller: tx_context::sender(ctx)
         };
         let key = table::length<u64, Listing>(&stand.secondary_listings) + 1;
         table::add<u64, Listing>(&mut stand.secondary_listings, key, listing);
-        dof::add<address, Item>(&mut stand.id, token_type, item);
+        dof::add<address, Item>(&mut stand.id, item_id, item);
         // emit event
         let evt = NewSecodaryListing {
             coin_type,
             price,
             seller: tx_context::sender(ctx),
-            token_type,
+            item_id,
             listing_key: key
         };
         event::emit(evt);
@@ -222,7 +222,7 @@ module contracts::marketplace{
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing_P>(&stand.primary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing_P>(&mut stand.primary_listings, listing_number);
-        let Listing_P {token_type, price} = listing;
+        let Listing_P {item_id, price} = listing;
         assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
         let size: u64 = table::length<u64, Listing_P>(&stand.primary_listings);
         if (size > listing_number) {
@@ -237,12 +237,12 @@ module contracts::marketplace{
             buyer: tx_context::sender(ctx),
             seller: @0x00, // Mugen is the seller
             coin_type: type_name::get<ARCA>(),
-            token_type: token_type,
+            item_id: item_id,
             listing_key: listing_number // now this is occupied by the last listing
         };
         event::emit(evt);
         // return item
-        dof::remove<address, Item>(&mut stand.id, token_type)
+        dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
     public fun buy_secondary_arca<Item: key+store, COIN>(
@@ -257,7 +257,7 @@ module contracts::marketplace{
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {coin_type, token_type, price, seller} = listing;
+        let Listing {coin_type, item_id, price, seller} = listing;
         assert!(coin_type == type_name::get<ARCA>(), EPaymentMismatch);
         assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
         // if it is not the last listing take the last and insert it in its place
@@ -285,12 +285,12 @@ module contracts::marketplace{
             buyer: tx_context::sender(ctx),
             seller,
             coin_type: type_name::get<ARCA>(),
-            token_type: token_type,
+            item_id: item_id,
             listing_key: listing_number // now this is occupied by the last listing
         };
         event::emit(evt);
         // return item
-        dof::remove<address, Item>(&mut stand.id, token_type)
+        dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
     public fun buy_secondary_vip_arca<Item: key+store>(
@@ -306,7 +306,7 @@ module contracts::marketplace{
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {coin_type, token_type, price, seller} = listing;
+        let Listing {coin_type, item_id, price, seller} = listing;
         assert!(coin_type == type_name::get<ARCA>(), EPaymentMismatch);
         assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
         // if it is not the last listing take the last and insert it in its place
@@ -339,12 +339,12 @@ module contracts::marketplace{
             buyer: tx_context::sender(ctx),
             seller: seller,
             coin_type,
-            token_type: token_type,
+            item_id: item_id,
             listing_key: listing_number // now this is occupied by the last listing
         };
         event::emit(evt);
         // return item
-        dof::remove<address, Item>(&mut stand.id, token_type)
+        dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
     // TODO: for any Coin when LPs are available
@@ -358,23 +358,23 @@ module contracts::marketplace{
     ) {
         assert!(VERSION == 1, EVersionMismatch);
         let stand = &mut marketplace.main;
-        let token_type: address = object::id_address(&item);
+        let item_id: address = object::id_address(&item);
         let coin_type = type_name::get<COIN>();
         let listing = Listing{
             coin_type,
-            token_type,
+            item_id,
             price,
             seller: tx_context::sender(ctx)
         };
         let key = table::length<u64, Listing>(&stand.secondary_listings) + 1;
         table::add<u64, Listing>(&mut stand.secondary_listings, key, listing);
-        dof::add<address, Item>(&mut stand.id, token_type, item);
+        dof::add<address, Item>(&mut stand.id, item_id, item);
         // emit event
         let evt = NewSecodaryListing {
             coin_type,
             price,
             seller: tx_context::sender(ctx),
-            token_type,
+            item_id,
             listing_key: key
         };
         event::emit(evt);
@@ -390,7 +390,7 @@ module contracts::marketplace{
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {coin_type, token_type, price, seller} = listing;
+        let Listing {coin_type, item_id, price, seller} = listing;
         assert!(coin_type == type_name::get<COIN>(), EPaymentMismatch);
         assert!(price == coin::value<COIN>(&payment), EPaymentNotExact);
         // if it is not the last listing take the last and insert it in its place
@@ -416,12 +416,12 @@ module contracts::marketplace{
             buyer: tx_context::sender(ctx),
             seller,
             coin_type,
-            token_type: token_type,
+            item_id: item_id,
             listing_key: listing_number // now this is occupied by the last listing
         };
         event::emit(evt);
         // return item
-        dof::remove<address, Item>(&mut stand.id, token_type)
+        dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
     public fun buy_secondary_vip<Item: key+store, COIN>(
@@ -436,7 +436,7 @@ module contracts::marketplace{
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {coin_type, token_type, price, seller} = listing;
+        let Listing {coin_type, item_id, price, seller} = listing;
         assert!(coin_type == type_name::get<COIN>(), EPaymentMismatch);
         assert!(price == coin::value<COIN>(&payment), EPaymentNotExact);
         // if it is not the last listing take the last and insert it in its place
@@ -467,12 +467,12 @@ module contracts::marketplace{
             buyer: tx_context::sender(ctx),
             seller: seller,
             coin_type,
-            token_type: token_type,
+            item_id: item_id,
             listing_key: listing_number // now this is occupied by the last listing
         };
         event::emit(evt);
         // return item
-        dof::remove<address, Item>(&mut stand.id, token_type)
+        dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
 
@@ -556,7 +556,7 @@ module contracts::marketplace{
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {coin_type: _, token_type, price: _, seller} = listing;
+        let Listing {coin_type: _, item_id, price: _, seller} = listing;
         assert!(seller == tx_context::sender(ctx), ENoItemSeller);
 
         // if it is not the last listing take the last and insert it in its place
@@ -569,13 +569,13 @@ module contracts::marketplace{
         // event
         let evt = ItemTake {
             seller,
-            token_type,
+            item_id,
             listing_key: listing_number // now this is occupied by the last listing
         };
         event::emit(evt);
 
         // return item
-        dof::remove<address, Item>(&mut stand.id, token_type)
+        dof::remove<address, Item>(&mut stand.id, item_id)
     }
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext) {
