@@ -23,6 +23,7 @@ module contracts::activity {
     const ECurrentTimeLTStartTime: u64 = 3;
     const ECurrentTimeGEEndTime: u64 = 4;
     const EPriceEQZero: u64 = 5;
+    const ETimeSet: u64 = 6;
 
     struct ActivityConfig has key, store {
         id: UID,
@@ -85,6 +86,7 @@ module contracts::activity {
         description: String,
         ctx: &mut TxContext,
     ) {
+        assert_time_set(start_time, end_time);
         let config = ActivityConfig {
             id: object::new(ctx),
             start_time,
@@ -252,5 +254,11 @@ module contracts::activity {
 
     fun assert_payment_amount(total: u64, paid_value: u64) {
         assert!(total <= paid_value, EPaymentAmountInvalid)
+    }
+
+    fun assert_time_set(start_time: u64, end_time: u64) {
+        if (start_time > 0 && end_time > 0) {
+            assert!(end_time >= start_time, ETimeSet);
+        };
     }
 }
