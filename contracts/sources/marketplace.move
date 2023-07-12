@@ -26,6 +26,7 @@ module contracts::marketplace{
     const EIncorrectVipLevel: u64 = 3;
     const EVersionMismatch: u64 = 4;
     const EPaymentMismatch: u64 = 5;
+    const ENoItemSeller: u64 = 2;
 
     // constants
 
@@ -72,6 +73,8 @@ module contracts::marketplace{
 
     // events
     struct NewSecodaryListing has copy, drop {
+        coin_type: TypeName,
+        price: u64,
         seller: address,
         token_type: address,
         listing_key: u64
@@ -83,6 +86,12 @@ module contracts::marketplace{
         buyer: address,
         seller: address,
         coin_type: TypeName,
+        token_type: address,
+        listing_key: u64
+    }
+
+    struct ItemTake has copy, drop {
+        seller: address,
         token_type: address,
         listing_key: u64
     }
@@ -193,6 +202,8 @@ module contracts::marketplace{
         dof::add<address, Item>(&mut stand.id, token_type, item);
         // emit event
         let evt = NewSecodaryListing {
+            coin_type,
+            price,
             seller: tx_context::sender(ctx),
             token_type,
             listing_key: key
@@ -360,6 +371,8 @@ module contracts::marketplace{
         dof::add<address, Item>(&mut stand.id, token_type, item);
         // emit event
         let evt = NewSecodaryListing {
+            coin_type,
+            price,
             seller: tx_context::sender(ctx),
             token_type,
             listing_key: key
@@ -536,6 +549,33 @@ module contracts::marketplace{
         let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut stand.id, coin_type);
         let balance_all = balance::withdraw_all<COIN>(coin_balance);
         coin::from_balance<COIN>(balance_all, ctx)
+    }
+
+    public fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &mut TxContext): Item {
+        assert!(VERSION == 1, EVersionMismatch);
+        let stand = &mut marketplace.main;
+        assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
+        let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
+        let Listing {coin_type: _, token_type, price: _, seller} = listing;
+        assert!(seller == tx_context::sender(ctx), ENoItemSeller);
+
+        // if it is not the last listing take the last and insert it in its place
+        // make this one the last and remove it
+        let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
+        if (size > listing_number) {
+            let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
+            table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
+        };
+        // event
+        let evt = ItemTake {
+            seller,
+            token_type,
+            listing_key: listing_number // now this is occupied by the last listing
+        };
+        event::emit(evt);
+
+        // return item
+        dof::remove<address, Item>(&mut stand.id, token_type)
     }
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext) {
