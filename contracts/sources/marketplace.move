@@ -26,7 +26,9 @@ module contracts::marketplace{
     const EIncorrectVipLevel: u64 = 3;
     const EVersionMismatch: u64 = 4;
     const EPaymentMismatch: u64 = 5;
-    const ENoItemSeller: u64 = 2;
+    const ENoItemSeller: u64 = 6;
+    const EVipLvExsit: u64 = 7;
+    const EVipLvNoExsit: u64 = 8;
 
     // constants
 
@@ -139,7 +141,20 @@ module contracts::marketplace{
 
     public fun edit_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
         assert!(VERSION == 1, EVersionMismatch);
+        assert!(table::contains(&mut marketplace.vip_fees, vip_level), EVipLvNoExsit);
         *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level) = fee;
+    }
+
+    public fun add_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
+        assert!(VERSION == 1, EVersionMismatch);
+        assert!(!table::contains(&mut marketplace.vip_fees, vip_level), EVipLvExsit);
+        table::add(&mut marketplace.vip_fees, vip_level, fee);
+    }
+
+    public fun remove_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64) {
+        assert!(VERSION == 1, EVersionMismatch);
+        assert!(table::contains(&mut marketplace.vip_fees, vip_level), EVipLvNoExsit);
+        table::remove(&mut marketplace.vip_fees, vip_level);
     }
 
     public fun edit_finance_address(_: &GameCap, marketplace: &mut Marketplace, new_finance_address: address) {
