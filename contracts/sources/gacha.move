@@ -113,7 +113,7 @@ module contracts::gacha{
         &gacha_ball.type
     }
 
-    public fun gachaId(gacha_ball: &GachaBall): &u64 {
+    public fun tokenType(gacha_ball: &GachaBall): &u64 {
         &gacha_ball.token_type
     }
 

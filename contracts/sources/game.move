@@ -69,7 +69,7 @@ module contracts::game{
     id: ID,
     // address of user that opened the ball
     user: address,
-    type: String
+    token_type: u64
   }
 
   struct UpgradeRequest has copy, drop {
@@ -376,13 +376,14 @@ module contracts::game{
     let gacha_ball_id = gacha::id(&gacha_ball);
     let user = tx_context::sender(ctx);
     let type = *gacha::type(&gacha_ball);
+    let token_type = *gacha::tokenType(&gacha_ball);
     let gacha_ball_address: address = object::id_address(&gacha_ball);
     // burn gacha ball
     // gacha::burn(gacha_ball);
     put_gacha(gacha_ball, gacha_ball_address, obj_burn);
 
     // create and emit an event
-    let open_evt = GachaBallOpened { id: gacha_ball_id, user, type };
+    let open_evt = GachaBallOpened { id: gacha_ball_id, user, token_type };
     event::emit(open_evt);
   }
 
