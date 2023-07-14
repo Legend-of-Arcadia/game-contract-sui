@@ -43,6 +43,13 @@ module contracts::arca {
         amount: u64
     }
 
+    struct UserWithdraw has copy, drop {
+        user: address,
+        amount: u64,
+        fee: u64,
+        salt: u64
+    }
+
     fun init(witness: ARCA, ctx: &mut TxContext) {
         let (treasury, metadata) = coin::create_currency(witness, 9, b"ARCA", b"", b"", option::none(), ctx);
 
@@ -92,6 +99,7 @@ module contracts::arca {
         amount: u64,
         expire_at: u64,
         salt: u64,
+        fee: u64,
         signed_message: vector<u8>,
         seen_messages: &mut SeenMessages,
         clock: & Clock,
@@ -103,6 +111,7 @@ module contracts::arca {
         vector::append(&mut msg, bcs::to_bytes<u64>(&amount));
         vector::append(&mut msg, bcs::to_bytes<u64>(&expire_at));
         vector::append(&mut msg, bcs::to_bytes<u64>(&salt));
+        vector::append(&mut msg, bcs::to_bytes<u64>(&fee));
 
         // assert that signature verifies
         // 1 is for SHA256 (hash function options in signature)
@@ -114,7 +123,14 @@ module contracts::arca {
         debug::print(&ecdsa_k1::secp256k1_verify(&signed_message, &seen_messages.mugen_pk, &msg, 1));
         assert!(!table::contains(&seen_messages.salt_table, salt), EInvalidSalt);
         table::add(&mut seen_messages.salt_table, salt, true);
-        let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amount);
+        let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amount - fee);
+
+        event::emit(UserWithdraw{
+            user: user_address,
+            amount,
+            salt,
+            fee
+        });
         coin::from_balance(coin_balance, ctx)
     }
 
