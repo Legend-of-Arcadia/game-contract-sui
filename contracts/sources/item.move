@@ -24,7 +24,8 @@ module contracts::item{
     }
 
     struct ItemMinted has copy, drop {
-        id: ID
+        id: ID,
+        token_type: u64
     }
 
     struct ItemBurned has copy, drop {
@@ -83,7 +84,7 @@ module contracts::item{
             description,
         };
 
-        event::emit(ItemMinted {id: object::uid_to_inner(&new_item.id)});
+        event::emit(ItemMinted {id: object::uid_to_inner(&new_item.id),token_type});
 
         new_item
     }

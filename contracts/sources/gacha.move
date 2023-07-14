@@ -25,7 +25,8 @@ module contracts::gacha{
     }
 
     struct GachaBallMinted has copy, drop {
-        id: ID
+        id: ID,
+        token_type: u64
     }
 
     struct GachaBallBurned has copy, drop {
@@ -84,7 +85,7 @@ module contracts::gacha{
             description,
         };
 
-        event::emit(GachaBallMinted {id: object::uid_to_inner(&new_ball.id)});
+        event::emit(GachaBallMinted {id: object::uid_to_inner(&new_ball.id),token_type});
 
         new_ball
     }
