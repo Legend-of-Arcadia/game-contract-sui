@@ -37,13 +37,17 @@ module contracts::arca_test {
             126
         ];
         let signed_message: vector<u8> =   vector[
-            196, 197, 251,   0, 121, 202,  22,  17,  38, 188, 145,
-            142,  46, 122,   9,  27, 171, 144,  51, 216,  41, 207,
-            249, 148, 116, 251, 208,   8, 152, 122, 117, 252,  59,
-            181, 211,   1, 155, 179,  27,  32, 155,  14, 161, 177,
-            154,  14, 101,  72, 253,  12, 218, 130,  93,  69, 195,
-            159, 100, 225, 107, 245,  95,  28, 108, 141
+            108,  39,  99,  41, 178, 183, 145, 121,  55,  51,  83,
+            108,  51,  19,  13, 161, 170, 251,  64, 158,  79, 200,
+            87, 101,  92,  48,  59, 123,  52, 153, 235,  25,  40,
+            54, 112, 212,  64, 212, 163,  46,  13,  78,  25, 226,
+            5,  71,  74, 211, 137,  75, 238, 234, 251, 152,  20,
+            240, 240,   1, 250, 157,  40, 218, 240,  97
         ];
+
+        let amount = 30*DECIMALS;
+        let fee = 300;
+
         let scenario = ts::begin(GAME);
         arca::init_for_testing(ts::ctx(&mut scenario));
         let coin = coin::mint_for_testing<ARCA>(30*DECIMALS, ts::ctx(&mut scenario));
@@ -65,9 +69,9 @@ module contracts::arca_test {
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
             let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
             arca::set_mugen_pk(&treasury,mugen_pk,&mut seen_messages);
-            let coin_arca = arca::withdraw(&mut arca_counter, 1000, 0, 1, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
+            let coin_arca = arca::withdraw(&mut arca_counter, amount, 0, 1, fee, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
 
-            assert!(coin::value(&coin_arca) == 1000, 1);
+            assert!(coin::value(&coin_arca) == amount - fee, 1);
             transfer::public_transfer(coin_arca, GAME);
             ts::return_shared(arca_counter);
             ts::return_shared(seen_messages);
@@ -88,13 +92,16 @@ module contracts::arca_test {
             126
         ];
         let signed_message: vector<u8> =   vector[
-            46,  29,  82, 160,  14, 170,  91,  67, 117, 168, 164,
-            74, 217, 106,  19, 218, 155, 180,  88,  17, 134,  66,
-            163, 122,  76, 244, 214, 236,  85,  82, 131, 130,  55,
-            196,  39,  85, 164, 137, 168,  59,  60, 224, 148,  83,
-            41, 109, 139, 253,  42,  92, 197, 201,  82,  66,  35,
-            224, 104, 165,  21, 242, 130, 116,  32,  54
+            135,  21,  92,  94, 197, 233, 230, 228, 234,  46, 114,
+            29, 163,  17, 103,  89,  95, 254, 198,  70, 163,  76,
+            252,  83,  67, 137, 249,  11,   5,   4, 174,  19,  15,
+            32, 113, 201,  38, 172, 157,  45, 157,  55, 209, 160,
+            224, 140, 189, 115,  65, 219,  20, 154, 130, 182, 193,
+            117, 157,  99,  92, 124,  65, 189,  95,  74
         ];
+
+        let amount = 1000;
+        let fee = 3;
         let scenario = ts::begin(GAME);
         arca::init_for_testing(ts::ctx(&mut scenario));
         let coin = coin::mint_for_testing<ARCA>(30*DECIMALS, ts::ctx(&mut scenario));
@@ -116,9 +123,9 @@ module contracts::arca_test {
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
             let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
             arca::set_mugen_pk(&treasury,mugen_pk,&mut seen_messages);
-            let coin_arca = arca::withdraw(&mut arca_counter, 30*DECIMALS, 0, 1, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
+            let coin_arca = arca::withdraw(&mut arca_counter, amount, 0, 1, fee, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
 
-            assert!(coin::value(&coin_arca) == 30*DECIMALS, 1);
+            assert!(coin::value(&coin_arca) == amount - fee, 1);
             transfer::public_transfer(coin_arca, GAME);
             ts::return_shared(arca_counter);
             ts::return_shared(seen_messages);
@@ -139,13 +146,16 @@ module contracts::arca_test {
             126
         ];
         let signed_message: vector<u8> =   vector[
-            65, 169, 161, 146,  36, 102, 185, 104,  44,  48, 108,
-            20,  59,  17,  16, 190, 202, 174,  49, 197,  22, 142,
-            12,  22, 247,   9,   3,  19, 170,  34,  48, 193,  14,
-            208,  73,   7, 242,  64, 226,  82,  16, 185,  14, 203,
-            48,  90,  42, 174, 113, 201, 214, 191, 197,  65, 217,
-            26, 162, 142, 157, 236,  76, 149, 194,   0
+            58,  41, 102, 210, 232, 170, 182, 167, 236, 232,  25,
+            22, 170, 207,  27, 230, 229,   6, 171, 107,  74,  66,
+            165,  26,  53, 252,  95,  68, 223,   6, 129, 199,  41,
+            238,  94, 124,  19,  11,  13, 111,  92, 236, 252, 220,
+            221,  54,  44,  81, 148,  61, 245, 241, 212,   4,  55,
+            251, 105,  61,  97, 141,  54,  68, 206, 127
         ];
+
+        let amount = 30*DECIMALS;
+        let fee = 0;
         let scenario = ts::begin(GAME);
         arca::init_for_testing(ts::ctx(&mut scenario));
         let coin = coin::mint_for_testing<ARCA>(30*DECIMALS, ts::ctx(&mut scenario));
@@ -168,9 +178,9 @@ module contracts::arca_test {
             let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
             arca::set_mugen_pk(&treasury,mugen_pk,&mut seen_messages);
             clock::increment_for_testing(&mut clock, 1689304580000);
-            let coin_arca = arca::withdraw(&mut arca_counter, 30*DECIMALS, 1691982960, 1, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
+            let coin_arca = arca::withdraw(&mut arca_counter, amount, 1691982960, 1, fee, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
 
-            assert!(coin::value(&coin_arca) == 30*DECIMALS, 1);
+            assert!(coin::value(&coin_arca) == amount - fee, 1);
             transfer::public_transfer(coin_arca, GAME);
             ts::return_shared(arca_counter);
             ts::return_shared(seen_messages);
