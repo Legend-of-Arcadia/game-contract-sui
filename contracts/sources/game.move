@@ -375,7 +375,7 @@ module contracts::game{
 
     let gacha_ball_id = gacha::id(&gacha_ball);
     let user = tx_context::sender(ctx);
-    let type = *gacha::type(&gacha_ball);
+    //let type = *gacha::type(&gacha_ball);
     let token_type = *gacha::tokenType(&gacha_ball);
     let gacha_ball_address: address = object::id_address(&gacha_ball);
     // burn gacha ball
