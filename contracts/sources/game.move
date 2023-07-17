@@ -46,7 +46,8 @@ module contracts::game{
   struct Upgrader has key, store {
     id: UID,
     power_prices: Table<String, u64>,
-    profits: Balance<ARCA>
+    profits: Balance<ARCA>,
+    upgrader_obj: Table<address, address>
   }
 
   // At present, the blind boxes and heroes that I need to destroy are all stored in this object
@@ -119,7 +120,8 @@ module contracts::game{
     let upgrader = Upgrader {
       id: object::new(ctx),
       power_prices: power_upgrade_prices,
-      profits: balance::zero<ARCA>()
+      profits: balance::zero<ARCA>(),
+      upgrader_obj: table::new<address, address>(ctx)
     };
 
     let config = GameConfig {
@@ -263,8 +265,10 @@ module contracts::game{
   /// === Upgrader functions ===
   // place an upgraded hero
   fun put_hero(hero: Hero, player_address: address, heroes_burned: u64, upgrader: &mut Upgrader) {
+    let addr = object::id_address(&hero);
     hero::add_pending_upgrade(&mut hero, heroes_burned);
-    dof::add<address, Hero>(&mut upgrader.id, player_address, hero);
+    table::add(&mut upgrader.upgrader_obj, addr, player_address);
+    dof::add<address, Hero>(&mut upgrader.id, addr, hero);
     // event
   }
 
@@ -276,20 +280,17 @@ module contracts::game{
     fee: Coin<ARCA>, 
     upgrader: &mut Upgrader) 
     {
+      let addr = object::id_address(&hero);
       hero::add_pending_upgrade(&mut hero, heroes_burned);
-      dof::add<address, Coin<ARCA>>(&mut upgrader.id, object::id_address(&hero), fee);
-      dof::add<address, Hero>(&mut upgrader.id, player_address, hero);
+      balance::join<ARCA>(&mut upgrader.profits, coin::into_balance<ARCA>(fee));
+      table::add(&mut upgrader.upgrader_obj, addr, player_address);
+      dof::add<address, Hero>(&mut upgrader.id, addr, hero);
     }
 
   // Admin gets upgraded heroes
-  public fun get_for_upgrade(_: &GameCap, player_address: address, upgrader: &mut Upgrader): (Hero, ReturnTicket) {
-    let hero = dof::remove<address, Hero>(&mut upgrader.id, player_address);
-    let hero_address: address = object::id_address(&hero);
-    if (dof::exists_<address>(&mut upgrader.id, hero_address)) {
-      let fee: Coin<ARCA> = dof::remove<address, Coin<ARCA>>(&mut upgrader.id, hero_address);
-      balance::join<ARCA>(&mut upgrader.profits, coin::into_balance<ARCA>(fee));
-    };
-
+  public fun get_for_upgrade(_: &GameCap, hero_address: address, upgrader: &mut Upgrader): (Hero, ReturnTicket) {
+    let hero = dof::remove<address, Hero>(&mut upgrader.id, hero_address);
+    let player_address = table::remove(&mut upgrader.upgrader_obj, hero_address);
     let ticket = ReturnTicket {
       player_address,
       hero_id: hero_address

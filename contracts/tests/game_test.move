@@ -53,6 +53,7 @@ module contracts::test_game {
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
 
+    let hero_address;
     // mint three heroes and send it to the user
     ts::next_tx(&mut scenario, GAME);
     {
@@ -60,6 +61,8 @@ module contracts::test_game {
       let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
       let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
       let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+
+      hero_address = object::id_address(&hero);
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
@@ -98,7 +101,7 @@ module contracts::test_game {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
+      let (hero, ticket) = game::get_for_upgrade(&cap, hero_address, &mut upgrader);
       assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
       game::upgrade_growth(&cap, &mut hero, new_growths);
       game::return_upgraded_hero(hero, ticket);
@@ -124,6 +127,7 @@ module contracts::test_game {
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
 
+    let hero_address;
     // mint three heroes and send it to the user
     ts::next_tx(&mut scenario, GAME);
     {
@@ -132,6 +136,7 @@ module contracts::test_game {
       let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
       let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
 
+      hero_address = object::id_address(&hero);
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       transfer::public_transfer(hero2, USER);
@@ -168,7 +173,7 @@ module contracts::test_game {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
+      let (hero, ticket) = game::get_for_upgrade(&cap, hero_address, &mut upgrader);
       assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
       game::upgrade_base(&cap, &mut hero, new_base);
       game::return_upgraded_hero(hero, ticket);
@@ -194,6 +199,7 @@ module contracts::test_game {
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
 
+    let hero_address;
     // mint three heroes and send it to the user
     ts::next_tx(&mut scenario, GAME);
     {
@@ -202,6 +208,7 @@ module contracts::test_game {
       let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
       let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
 
+      hero_address = object::id_address(&hero);
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       transfer::public_transfer(hero2, USER);
@@ -239,7 +246,7 @@ module contracts::test_game {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
+      let (hero, ticket) = game::get_for_upgrade(&cap, hero_address, &mut upgrader);
       assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
       game::upgrade_base(&cap, &mut hero, new_skills);
       game::return_upgraded_hero(hero, ticket);
@@ -265,6 +272,7 @@ module contracts::test_game {
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
 
+    let hero_address;
     // mint three heroes and send it to the user
     ts::next_tx(&mut scenario, GAME);
     {
@@ -273,6 +281,7 @@ module contracts::test_game {
       let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
       let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
 
+      hero_address = object::id_address(&hero);
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       transfer::public_transfer(hero2, USER);
@@ -311,7 +320,7 @@ module contracts::test_game {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
+      let (hero, ticket) = game::get_for_upgrade(&cap, hero_address, &mut upgrader);
       assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
       game::upgrade_base(&cap, &mut hero, new_others);
       game::return_upgraded_hero(hero, ticket);
@@ -370,6 +379,7 @@ module contracts::test_game {
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
 
+    let hero_address;
     // mint a hero and send it to the user
     ts::next_tx(&mut scenario, GAME);
     {
@@ -377,6 +387,7 @@ module contracts::test_game {
       let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
       let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
 
+      hero_address = object::id_address(&hero);
       game::upgrade_appearance(&cap, &mut hero1, appearance);
 
       transfer::public_transfer(hero, USER);
@@ -406,7 +417,7 @@ module contracts::test_game {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
+      let (hero, ticket) = game::get_for_upgrade(&cap, hero_address, &mut upgrader);
       assert!(hero::pending_upgrade(&hero) == &1, EWrongHeroPendingUpgrade);
       game::upgrade_appearance(&cap, &mut hero, appearance);
       game::return_upgraded_hero(hero, ticket);
@@ -467,6 +478,7 @@ module contracts::test_game {
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
 
+    let hero_address;
     // mint a hero and send it to the user
     ts::next_tx(&mut scenario, GAME);
     {
@@ -475,6 +487,7 @@ module contracts::test_game {
       let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
       let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
 
+      hero_address = object::id_address(&hero);
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       transfer::public_transfer(hero2, USER);
@@ -513,7 +526,7 @@ module contracts::test_game {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
+      let (hero, ticket) = game::get_for_upgrade(&cap, hero_address, &mut upgrader);
       assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
       game::upgrade_growth(&cap, &mut hero, new_growths);
       game::return_upgraded_hero(hero, ticket);
