@@ -15,7 +15,6 @@ module contracts::arca {
     use sui::address;
     use sui::bcs;
     use sui::ecdsa_k1;
-    use std::debug;
 
     const DECIMALS: u64 = 1_000_000_000;
     const TOTAL_SUPPLY_ARCA: u64 = 1_000_000_000;
@@ -117,10 +116,6 @@ module contracts::arca {
         // 1 is for SHA256 (hash function options in signature)
         assert!(ecdsa_k1::secp256k1_verify(&signed_message, &seen_messages.mugen_pk, &msg, 1), EInvalidSignature);
 
-        debug::print(&msg);
-        debug::print(&signed_message);
-        debug::print(&seen_messages.mugen_pk);
-        debug::print(&ecdsa_k1::secp256k1_verify(&signed_message, &seen_messages.mugen_pk, &msg, 1));
         assert!(!table::contains(&seen_messages.salt_table, salt), EInvalidSalt);
         table::add(&mut seen_messages.salt_table, salt, true);
         let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amount - fee);

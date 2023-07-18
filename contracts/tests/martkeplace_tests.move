@@ -13,7 +13,7 @@ module contracts::marketplace_tests {
     use sui::transfer;
 
     use std::option;
-    use std::string;
+    //use std::string;
 
     const EToBurnNotCorrect: u64 = 0;
 
@@ -210,7 +210,7 @@ module contracts::marketplace_tests {
                 &mut sp,
                 coin2,
                 &clock,
-                string::utf8(b"1y"),
+                31_556_926,
                 ts::ctx(&mut scenario)
             );
 
@@ -378,7 +378,7 @@ module contracts::marketplace_tests {
                 &mut sp,
                 coin2,
                 &clock,
-                string::utf8(b"1y"),
+                31_556_926,
                 ts::ctx(&mut scenario)
             );
 
