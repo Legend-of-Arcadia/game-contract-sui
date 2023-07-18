@@ -7,7 +7,7 @@ const privKey: string = process.env.PRIVATE_KEY!;
 const packagePath: string = process.env.PACKAGE_PATH!;
 const cliPath: string = process.env.CLI_PATH!;
 const packageId: string = process.env.PACKAGE!;
-const upgradeCapId:string = "0x441f3f02107f8a27ecfbf79e2daaa67aaf0924f155a8beee9b268ce22dd09066"
+const upgradeCapId:string = process.env.UPGRADE_CAP!;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
