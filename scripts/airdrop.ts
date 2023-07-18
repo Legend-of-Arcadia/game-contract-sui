@@ -75,8 +75,17 @@ async function airdrop(addresses: string[]) {
 async function main() {
   let addresses = ['0x0421a66d58e4acd151ec50a2c5aa6219ca3c13d18df816c6e93b0b7838e26f65', '0x9e4edd0140d46f36d58772b8ba62f7c11c5d15cddaf7bcb3f9bef6fdcb4f8a86', '0x5fc4018050c3f30499bcd7e18b028596bd5f25557080725f1fd586a6d5def2b1', '0x611ae9aba751de462aa8347a0d4428584193a64373bb717e389f17c8df21a52b'];
 
-  let result = await airdrop(addresses);
-  console.log(result);
+  for(let i = 0; i< 10; i++) {
+    let result = await airdrop(addresses)
+    console.log(result);
+  }
+
+  await sleep(100)
 }
 
 main();
+
+function sleep(seconds: number) {
+  const milliseconds = seconds * 1000;
+  return new Promise(resolve => setTimeout(resolve, milliseconds));
+};

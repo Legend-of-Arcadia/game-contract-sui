@@ -1,6 +1,7 @@
 [package]
 name = "contracts"
 version = "0.0.1"
+# published-at = "0x7a6d11c17f41f09e13ce41c2a03ad708c11994e10ac15acf0ecba2f6d5974218"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "testnet" }

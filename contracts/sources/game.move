@@ -537,6 +537,12 @@ module contracts::game{
     vector::destroy_empty<GachaBall>(gacha_balls);
   }
 
+
+  public fun create_game_cap_by_admin(config: &GameConfig, ctx: &mut TxContext): GameCap{
+    assert!(config.game_address == tx_context::sender(ctx), 1);
+    let game_cap = GameCap { id: object::new(ctx) };
+    game_cap
+  }
   // === Test-only ===
 
   #[test_only]
