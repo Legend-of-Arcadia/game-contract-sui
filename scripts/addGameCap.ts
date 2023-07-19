@@ -3,6 +3,7 @@ import * as dotenv from "dotenv";
 dotenv.config();
 
 const privKey: string = process.env.PRIVATE_KEY as string;
+const playerPrivKey: string = process.env.PLAYER_PRIVATE_KEY!;
 const gameCapId = process.env.GAME_CAP as string;
 const packageId = process.env.PACKAGE as string;
 const upgraderId = process.env.UPGRADER as string;

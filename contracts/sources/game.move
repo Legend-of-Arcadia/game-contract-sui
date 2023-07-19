@@ -33,6 +33,7 @@ module contracts::game{
   const ENotWhitelisted: u64 = 9;
   const EBodyPartCannotBeExchanged: u64 = 10;
   const ESameAppearancePart: u64 = 11;
+  const ENoGameAdmin:u64 = 12;
 
   // config struct
   struct GameConfig has key, store {
@@ -232,15 +233,13 @@ module contracts::game{
     item
   }
 
-  public fun create_game_cap(_: &GameCap, config: &mut GameConfig, ctx: &mut TxContext): GameCap {
+  public fun create_game_cap(_: &GameCap, ctx: &mut TxContext): GameCap {
     let game_cap = GameCap { id: object::new(ctx) };
-    config.caps_created = config.caps_created + 1;
     game_cap
   }
 
   // burn the game cap
-  public fun burn_game_cap(game_cap: GameCap, config: &mut GameConfig){
-    config.caps_created = config.caps_created - 1;
+  public fun burn_game_cap(game_cap: GameCap){
     let GameCap { id } = game_cap;
     object::delete(id); 
   }
@@ -539,7 +538,7 @@ module contracts::game{
 
 
   public fun create_game_cap_by_admin(config: &GameConfig, ctx: &mut TxContext): GameCap{
-    assert!(config.game_address == tx_context::sender(ctx), 1);
+    assert!(config.game_address == tx_context::sender(ctx), ENoGameAdmin);
     let game_cap = GameCap { id: object::new(ctx) };
     game_cap
   }
