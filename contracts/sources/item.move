@@ -113,4 +113,7 @@ module contracts::item{
         &item.type
     }
 
+    public fun token_type(item: &Item): &u64 {
+        &item.token_type
+    }
 }
