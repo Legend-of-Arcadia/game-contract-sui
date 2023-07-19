@@ -57,7 +57,9 @@ module contracts::marketplace{
         id: UID,
         primary_listings: Table<u64, Listing_P>,
         secondary_listings: Table<u64, Listing>,
-        income: Balance<COIN> // from primary sells
+        income: Balance<COIN>, // from primary sells
+        primary_list_index: u64,
+        secondary_list_index: u64
     }
 
     struct Listing_P has store {
@@ -104,7 +106,9 @@ module contracts::marketplace{
             id: object::new(ctx),
             primary_listings: table::new<u64, Listing_P>(ctx),
             secondary_listings: table::new<u64, Listing>(ctx),
-            income: balance::zero<ARCA>()
+            income: balance::zero<ARCA>(),
+            primary_list_index: 0,
+            secondary_list_index: 0
         };
 
         let vip_fees = table::new<u64, u64>(ctx);
@@ -212,7 +216,8 @@ module contracts::marketplace{
             price,
             seller: tx_context::sender(ctx)
         };
-        let key = table::length<u64, Listing>(&stand.secondary_listings) + 1;
+        stand.secondary_list_index = stand.secondary_list_index + 1;
+        let key = stand.secondary_list_index;
         table::add<u64, Listing>(&mut stand.secondary_listings, key, listing);
         dof::add<address, Item>(&mut stand.id, item_id, item);
         // emit event
@@ -277,11 +282,11 @@ module contracts::marketplace{
         assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
         // if it is not the last listing take the last and insert it in its place
         // make this one the last and remove it
-        let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
-        if (size > listing_number) {
-            let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
-            table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
-        };
+        // let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
+        // if (size > listing_number) {
+        //     let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
+        //     table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
+        // };
 
         fee_distribution_arca(
             &mut payment, 
@@ -326,11 +331,11 @@ module contracts::marketplace{
         assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
         // if it is not the last listing take the last and insert it in its place
         // make this one the last and remove it
-        let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
-        if (size > listing_number) {
-            let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
-            table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
-        };
+        // let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
+        // if (size > listing_number) {
+        //     let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
+        //     table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
+        // };
         
         // get base_trading fee based on vip level
         let timestamp = clock::timestamp_ms(clock)/1000;
@@ -381,7 +386,8 @@ module contracts::marketplace{
             price,
             seller: tx_context::sender(ctx)
         };
-        let key = table::length<u64, Listing>(&stand.secondary_listings) + 1;
+        stand.secondary_list_index = stand.secondary_list_index + 1;
+        let key = stand.secondary_list_index;
         table::add<u64, Listing>(&mut stand.secondary_listings, key, listing);
         dof::add<address, Item>(&mut stand.id, item_id, item);
         // emit event
@@ -410,11 +416,11 @@ module contracts::marketplace{
         assert!(price == coin::value<COIN>(&payment), EPaymentNotExact);
         // if it is not the last listing take the last and insert it in its place
         // make this one the last and remove it
-        let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
-        if (size > listing_number) {
-            let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
-            table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
-        };
+        // let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
+        // if (size > listing_number) {
+        //     let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
+        //     table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
+        // };
 
         fee_distribution(
             &mut payment,
@@ -456,11 +462,11 @@ module contracts::marketplace{
         assert!(price == coin::value<COIN>(&payment), EPaymentNotExact);
         // if it is not the last listing take the last and insert it in its place
         // make this one the last and remove it
-        let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
-        if (size > listing_number) {
-            let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
-            table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
-        };
+        // let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
+        // if (size > listing_number) {
+        //     let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
+        //     table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
+        // };
 
         // get base_trading fee based on vip level
         let timestamp = clock::timestamp_ms(clock)/1000;

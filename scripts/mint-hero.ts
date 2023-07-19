@@ -191,19 +191,19 @@ async function mintHeroAndCharge() {
 
 async function main() {
 
-  // let result = await mintHero();
-  // var fs = require('fs');
-  // fs.writeFile(`./auto-results/mintHeroResult.json`, JSON.stringify(result, null, 2), function(err: any) {
-  //   if (err) {
-  //       console.log(err);
-  //   }
-  // });
+  let result = await mintHero();
+  var fs = require('fs');
+  fs.writeFile(`./auto-results/mintHeroResult.json`, JSON.stringify(result, null, 2), function(err: any) {
+    if (err) {
+        console.log(err);
+    }
+  });
 
   // let mintGachaResult = await mintGacha();
   // console.log(mintGachaResult)
 
-  let mintItemResult = await mintItem();
-  console.log(mintItemResult)
+  // let mintItemResult = await mintItem();
+  // console.log(mintItemResult)
 
   // let chargeResult = await mintHeroAndCharge();
   // console.log(chargeResult)
