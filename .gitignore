@@ -3,3 +3,6 @@ Move.lock
 node_modules/
 .env
 sui.log**
+contracts/sources/MoveStdlib
+/contracts/sources/Sui
+.idea
