@@ -38,18 +38,16 @@ module contracts::marketplace_tests {
         ts::next_tx(&mut scenario, GAME);
         {
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
             let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
-            staking::init_for_testing(&treasury, &clock, ts::ctx(&mut scenario));
+            staking::init_for_testing(&treasury, ts::ctx(&mut scenario));
 
             let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
             transfer::public_transfer(hero, GAME);
 
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, treasury);
-            ts::return_shared(clock);
         };
 
         ts::next_tx(&mut scenario, GAME);
@@ -108,18 +106,16 @@ module contracts::marketplace_tests {
         ts::next_tx(&mut scenario, GAME);
         {
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
             let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
-            staking::init_for_testing(&treasury, &clock, ts::ctx(&mut scenario));
+            staking::init_for_testing(&treasury, ts::ctx(&mut scenario));
 
             let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
             transfer::public_transfer(hero, GAME);
 
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, treasury);
-            ts::return_shared(clock);
         };
 
         ts::next_tx(&mut scenario, GAME);
@@ -183,18 +179,16 @@ module contracts::marketplace_tests {
         ts::next_tx(&mut scenario, GAME);
         {
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
             let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
-            staking::init_for_testing(&treasury, &clock, ts::ctx(&mut scenario));
+            staking::init_for_testing(&treasury, ts::ctx(&mut scenario));
 
             let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
             transfer::public_transfer(hero, GAME);
 
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, treasury);
-            ts::return_shared(clock);
         };
 
         ts::next_tx(&mut scenario, GAME);
@@ -273,18 +267,16 @@ module contracts::marketplace_tests {
         ts::next_tx(&mut scenario, GAME);
         {
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
             let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
-            staking::init_for_testing(&treasury, &clock, ts::ctx(&mut scenario));
+            staking::init_for_testing(&treasury, ts::ctx(&mut scenario));
 
             let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
             transfer::public_transfer(hero, GAME);
 
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, treasury);
-            ts::return_shared(clock);
         };
 
         ts::next_tx(&mut scenario, GAME);
@@ -351,18 +343,16 @@ module contracts::marketplace_tests {
         ts::next_tx(&mut scenario, GAME);
         {
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
             let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
-            staking::init_for_testing(&treasury, &clock, ts::ctx(&mut scenario));
+            staking::init_for_testing(&treasury, ts::ctx(&mut scenario));
 
             let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
             transfer::public_transfer(hero, GAME);
 
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, treasury);
-            ts::return_shared(clock);
         };
 
         ts::next_tx(&mut scenario, GAME);
@@ -439,18 +429,16 @@ module contracts::marketplace_tests {
         ts::next_tx(&mut scenario, GAME);
         {
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
             let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
 
-            staking::init_for_testing(&treasury, &clock, ts::ctx(&mut scenario));
+            staking::init_for_testing(&treasury, ts::ctx(&mut scenario));
 
             let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
             transfer::public_transfer(hero, GAME);
 
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, treasury);
-            ts::return_shared(clock);
         };
 
         ts::next_tx(&mut scenario, GAME);

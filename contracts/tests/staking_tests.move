@@ -1,16 +1,80 @@
 #[test_only]
 module contracts::staking_tests {
     //
-    // use contracts::arca::{Self, ARCA};
-    // use contracts::staking;
-    // use contracts::game;
-    //
-    // use sui::test_scenario as ts;
-    // use sui::coin::{Self, TreasuryCap};
-    // use sui::clock;
-    // use sui::transfer;
-    //
-    // use std::string;
+    use contracts::arca::{Self, ARCA};
+    use contracts::staking;
+    use contracts::game;
+
+    use sui::test_scenario as ts;
+    use sui::coin::{Self, TreasuryCap};
+    use sui::clock;
+    use std::vector;
+
+    use std::string;
+    use contracts::staking::{WeekReward, StakingPool};
+    //use sui::balance;
+
+    const GAME: address = @0x111;
+    const USER1_ADDRESS: address = @0x222;
+    const DECIMALS: u64 = 1_000_000_000;
+    #[test]
+    fun test_merkle() {
+        let scenario = ts::begin(GAME);
+
+
+        let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        clock::share_for_testing(clock);
+
+        game::init_for_test(ts::ctx(&mut scenario));
+        arca::init_for_testing(ts::ctx(&mut scenario));
+
+        let coin = coin::mint_for_testing<ARCA>(30*DECIMALS, ts::ctx(&mut scenario));
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
+            staking::init_for_testing(&treasury, ts::ctx(&mut scenario));
+
+
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, treasury);
+        };
+
+        ts::next_tx(&mut scenario, GAME);
+        {
+            //public fun create_week_reward(_: &mut TreasuryCap<ARCA>, name: String, merkle_root: vector<u8>, total_reward: u64, ctx: &mut TxContext){
+            let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let name = string::utf8(b"2023-7-19");
+            let merkle_root = x"76355b7a319f1fa85e831800eea9d8e041801fab8c3daadc7ff0f416cc9d36ee";
+            let total_reward = 1000*DECIMALS;
+            staking::create_week_reward(&mut treasury, name, merkle_root, total_reward, ts::ctx(&mut scenario));
+
+
+            staking::append_rewards(&treasury, &mut sp, coin::into_balance(coin));
+            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, treasury);
+            ts::return_shared(sp);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let week_reward = ts::take_shared<WeekReward>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let name = string::utf8(b"2023-7-19");
+            let amount = 30000000000;
+            let proof = vector::empty<vector<u8>>();
+            vector::push_back(&mut proof, x"9a8fbbcafadbc2a8442cdc69a5729fd5b49e3c947c9ca01af40dfff38bf25383");
+            vector::push_back(&mut proof, x"0b6cec191caa87f23ccd4019bcaa750699d47a26049aa0d912f1ca2f494f30ba");
+
+            staking::claim(&mut sp, &mut week_reward, name, amount, proof, ts::ctx(&mut scenario));
+            ts::return_shared(week_reward);
+            ts::return_shared(sp);
+
+        };
+
+
+        ts::end(scenario);
+
+    }
+
     //
     // const EVeARCAAmountNotMuch: u64 = 0;
     // const ENotCorrectAmmountTransfered: u64 = 1;

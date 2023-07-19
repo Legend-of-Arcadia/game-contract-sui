@@ -1,6 +1,5 @@
 module contracts::staking {
     //use std::option;
-    use std::hash;
     use sui::bcs;
     use std::string::{Self, String};
     use std::vector;
@@ -17,6 +16,8 @@ module contracts::staking {
 
     use contracts::arca::ARCA;
     use contracts::merkle_proof;
+    //use std::debug;
+    use sui::hash as hash2;
 
     friend contracts::marketplace;
 
@@ -58,7 +59,6 @@ module contracts::staking {
         id: UID,
         liquidity: Balance<ARCA>,
         rewards: Balance<ARCA>,
-        next_distribution_timestamp: u64,
         veARCA_holders: LinkedTable<address, vector<u64>>,
         holders_vip_level: LinkedTable<u64, vector<address>>,
         vip_per_table: Table<u64, u64>, // vip level, percentage
@@ -80,13 +80,12 @@ module contracts::staking {
         amount: u64,
     }
 
-    public fun create_pool(_cap: &TreasuryCap<ARCA>, clock: &Clock, ctx: &mut TxContext) {
+    public fun create_pool(_cap: &TreasuryCap<ARCA>, ctx: &mut TxContext) {
         assert!(VERSION == 1, EVersionMismatch);
         let staking_pool = StakingPool{
             id: object::new(ctx),
             liquidity: balance::zero<ARCA>(),
             rewards: balance::zero<ARCA>(),
-            next_distribution_timestamp: (clock::timestamp_ms(clock)/1000) + WEEK_TO_UNIX_SECONDS,
             veARCA_holders: linked_table::new<address, vector<u64>>(ctx),
             holders_vip_level: linked_table::new<u64, vector<address>>(ctx),
             vip_per_table: table::new<u64, u64>(ctx),
@@ -244,46 +243,6 @@ module contracts::staking {
         arca
     }
 
-    // fun classify_vip_addresses(sp: &mut StakingPool, clock: &Clock) {
-    //
-    //     let i = 0;
-    //     let holder_address = *option::borrow_with_default<address>(linked_table::front(&sp.veARCA_holders), &@0x0);
-    //     let timestamp = *&sp.next_distribution_timestamp;
-    //
-    //     while( i < linked_table::length(&sp.veARCA_holders)) {
-    //         if(holder_address == @0x0) {
-    //             break
-    //         };
-    //
-    //         let value = linked_table::borrow(&sp.veARCA_holders, holder_address);
-    //
-    //         if (*vector::borrow(value, 1) > clock::timestamp_ms(clock)) {
-    //             break
-    //         };
-    //
-    //         let vip = calc_vip_level(sp, holder_address, timestamp);
-    //
-    //         if(!linked_table::contains(&sp.holders_vip_level, vip)){
-    //             let v = vector::empty<address>();
-    //
-    //             vector::push_back<address>(&mut v, holder_address);
-    //
-    //             linked_table::push_back(&mut sp.holders_vip_level, vip, v);
-    //         } else {
-    //             let v = linked_table::borrow_mut(&mut sp.holders_vip_level, vip);
-    //
-    //             vector::push_back(v, holder_address);
-    //         };
-    //
-    //         if(option::is_none(linked_table::next(&sp.veARCA_holders, holder_address))) {
-    //             break
-    //         };
-    //
-    //         holder_address = *option::borrow(linked_table::next(&sp.veARCA_holders, holder_address));
-    //         i = i + 1;
-    //     };
-    // }
-
     public fun create_week_reward(_: &mut TreasuryCap<ARCA>, name: String, merkle_root: vector<u8>, total_reward: u64, ctx: &mut TxContext){
         assert!(VERSION == 1, EVersionMismatch);
         let week_reward = WeekReward{
@@ -309,7 +268,12 @@ module contracts::staking {
         let user = tx_context::sender(ctx);
         assert!(!table::contains(&mut week_reward.claimed_address, user), 1);
         if (vector::length(&week_reward.merkle_root) > 0) {
-            let leaf = hash::sha2_256(bcs::to_bytes<Leaf>(& Leaf{week_reward_name, user, amount}));
+            let x = bcs::to_bytes<Leaf>(& Leaf{week_reward_name, user, amount});
+            // let leaf = hash::sha2_256(bcs::to_bytes<Leaf>(& Leaf{week_reward_name, user, amount}));
+            let leaf = hash2::keccak256(&x);
+            // debug::print(&bcs::to_bytes<Leaf>(& Leaf{week_reward_name, user, amount}));
+            // debug::print(&leaf);
+            // debug::print(&leaf2);
             let verified = merkle_proof::verify(&merkle_proof, week_reward.merkle_root, leaf);
             assert!(verified, EProofInvalid);
         };
@@ -358,15 +322,12 @@ module contracts::staking {
         (veARCA_amount as u64)
     }
 
-    //
-    // public fun public_calc_veARCA(initial: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {
-    //
-    //     assert!(VERSION == 1, EVersionMismatch);
-    //
-    //     let current_timestamp = clock::timestamp_ms(clock);
-    //
-    //     calc_veARCA(initial, current_timestamp, end_date, locking_period_sec)
-    // }
+    public fun public_calc_veARCA(initial: u64, end_date: u64, locking_period_sec: u64, clock: &Clock): u64 {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
+        calc_veARCA(initial, clock, end_date, locking_period_sec)
+    }
 
     public fun calc_vip_level_veARCA( veARCA_amount: u64, vip_level_veARCA: &vector<u128>): u64 {
 
@@ -479,12 +440,6 @@ module contracts::staking {
         linked_table::length(&sp.veARCA_holders)
     }
 
-    public fun get_next_distribution_timestamp(sp: &StakingPool): u64 {
-
-        assert!(VERSION == 1, EVersionMismatch);
-
-        sp.next_distribution_timestamp
-    }
 
     public fun get_rewards_value(sp: &StakingPool): u64 {
         balance::value(&sp.rewards)
@@ -500,6 +455,20 @@ module contracts::staking {
             table::add(&mut sp.vip_per_table, key, percentage);
         };
     }
+
+    public fun update_vip_veARCA_vector(_cap: &TreasuryCap<ARCA>, sp: &mut StakingPool, index: u64, veARCA_amount: u64, decimals: u64) {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
+        let value: u128 = (veARCA_amount as u128) * (decimals as u128) * (DECIMALS as u128);
+
+        if(index >= vector::length(&sp.vip_level_veARCA)) {
+            vector::push_back(&mut sp.vip_level_veARCA, value);
+        } else {
+            *vector::borrow_mut(&mut sp.vip_level_veARCA, index) = value;
+        };
+    }
+
 
     public fun append_rewards(_cap: &TreasuryCap<ARCA>, sp: &mut StakingPool, new_balance: Balance<ARCA>) {
 
@@ -526,8 +495,8 @@ module contracts::staking {
     // ============================================================
 
     #[test_only]
-    public fun init_for_testing(cap: &TreasuryCap<ARCA>, clock: &Clock, ctx: &mut TxContext) {
-        create_pool(cap, clock, ctx);
+    public fun init_for_testing(cap: &TreasuryCap<ARCA>, ctx: &mut TxContext) {
+        create_pool(cap,  ctx);
     }
 
     #[test_only]
