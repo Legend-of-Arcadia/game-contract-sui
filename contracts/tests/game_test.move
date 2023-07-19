@@ -6,20 +6,12 @@ module contracts::test_game {
   use sui::test_scenario as ts;
   use sui::transfer;
 
-  use contracts::game::{
-    Self,
-    EMustBurnAtLeastOneHero, 
-    ENotWhitelisted,
-    EWrongPowerUpgradeFee,
-    ESameAppearancePart,
-    GameCap,
-    GameConfig,
-    Upgrader,
-    ObjBurn
-  };
+  use contracts::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket};
   use contracts::hero::{Self, Hero};
   use contracts::arca::ARCA;
   use sui::object;
+  use contracts::gacha::GachaBall;
+  use std::string;
 
   // errors
   const EWrongGrowths: u64 = 0;
@@ -689,4 +681,95 @@ module contracts::test_game {
   //   ts::end(scenario);
   // }
 
+  #[test]
+  public fun box_ticket_test() {
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    // mint three heroes and send it to the user
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let gacha = game::mint_test_gacha(&cap, ts::ctx(&mut scenario));
+
+      transfer::public_transfer(gacha, USER);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+    };
+
+    //user starts the upgrade
+    ts::next_tx(&mut scenario, USER);
+    {
+
+      let gacha_ball = ts::take_from_sender<GachaBall>(&mut scenario);
+
+      let game_config = ts::take_shared<GameConfig>(&mut scenario);
+
+      game::open_gacha_ball(gacha_ball, &game_config, ts::ctx(&mut scenario));
+      ts::return_shared(game_config);
+    };
+
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let box_ticket = ts::take_from_sender<BoxTicket>(&mut scenario);
+      game::burn_box_ticket(box_ticket)
+    };
+    ts::end(scenario);
+  }
+
+  #[test]
+  public fun box_ticket_mint_test() {
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    // mint three heroes and send it to the user
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let gacha = game::mint_test_gacha(&cap, ts::ctx(&mut scenario));
+
+      transfer::public_transfer(gacha, USER);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+    };
+
+    //user starts the upgrade
+    ts::next_tx(&mut scenario, USER);
+    {
+
+      let gacha_ball = ts::take_from_sender<GachaBall>(&mut scenario);
+
+      let game_config = ts::take_shared<GameConfig>(&mut scenario);
+
+      game::open_gacha_ball(gacha_ball, &game_config, ts::ctx(&mut scenario));
+      ts::return_shared(game_config);
+    };
+
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let box_ticket = ts::take_from_sender<BoxTicket>(&mut scenario);
+      let name = string::utf8(b"Tang Jia");
+      let class = string::utf8(b"Fighter");
+      let faction = string::utf8(b"Flamexecuter");
+      let rarity = string::utf8(b"SR");
+      let base_attributes_values: vector<u16> = vector[1,2,3,4,5,6];
+      let skill_attributes_values: vector<u16> = vector[31, 32, 33, 34];
+      let appearance_attributes_values: vector<u16> = vector[21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
+      let growth_attributes_values: vector<u16> = vector [0, 0, 0, 0, 0, 0, 0, 0];
+      let external_id = string::utf8(b"1337");
+      let hero =game::mint_hero_by_ticket(
+        box_ticket,
+        name,
+        class,
+        faction,
+        rarity,
+        base_attributes_values,
+        skill_attributes_values,
+        appearance_attributes_values,
+        growth_attributes_values,
+        external_id,
+        ts::ctx(&mut scenario),
+      );
+      transfer::public_transfer(hero, USER);
+    };
+    ts::end(scenario);
+  }
 }

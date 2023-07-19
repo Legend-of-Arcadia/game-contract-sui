@@ -42,6 +42,11 @@ module contracts::game{
     game_address: address
   }
 
+  //airdrop
+  struct BoxTicket has key, store {
+    id: UID,
+    gacha_ball: GachaBall,
+  }
 
   // upgrader and hot potato
   struct Upgrader has key, store {
@@ -70,6 +75,7 @@ module contracts::game{
     id: ID,
     // address of user that opened the ball
     user: address,
+    ticket_id: ID,
     token_type: u64
   }
 
@@ -96,6 +102,11 @@ module contracts::game{
   struct ChargeRequest has copy, drop {
     user: address,
     burned_heroes: vector<address>
+  }
+
+  struct BoxTicketBurn has copy, drop {
+    box_ticket_id: ID,
+    gacha_ball_id: ID
   }
 
   // game capability
@@ -169,36 +180,63 @@ module contracts::game{
   }
 
   public fun mint_hero(
-      _: &GameCap,
-      name: String,
-      class: String,
-      faction: String,
-      rarity: String,
-      base_attributes_values: vector<u16>,
-      skill_attributes_values: vector<u16>,
-      appearence_attributes_values: vector<u16>,
-      growth_attributes_values: vector<u16>,
-      //other_attributes_values: vector<u8>,
-      external_id: String,
-      ctx: &mut TxContext
-      ): Hero {
+    _: &GameCap,
+    name: String,
+    class: String,
+    faction: String,
+    rarity: String,
+    base_attributes_values: vector<u16>,
+    skill_attributes_values: vector<u16>,
+    appearence_attributes_values: vector<u16>,
+    growth_attributes_values: vector<u16>,
+    external_id: String,
+    ctx: &mut TxContext
+  ): Hero {
+    let hero = hero::mint(
+      name,
+      class,
+      faction,
+      rarity,
+      base_attributes_values,
+      skill_attributes_values,
+      appearence_attributes_values,
+      growth_attributes_values,
+      external_id,
+      ctx,
+    );
 
-      let hero = hero::mint(
-        name,
-        class,
-        faction,
-        rarity,
-        base_attributes_values,
-        skill_attributes_values,
-        appearence_attributes_values,
-        growth_attributes_values,
-        //other_attributes_values,
-        external_id,
-        ctx,
-      );
+    hero
+  }
 
-      hero
-    }
+  public fun mint_hero_by_ticket(
+    box_ticket: BoxTicket,
+    name: String,
+    class: String,
+    faction: String,
+    rarity: String,
+    base_attributes_values: vector<u16>,
+    skill_attributes_values: vector<u16>,
+    appearence_attributes_values: vector<u16>,
+    growth_attributes_values: vector<u16>,
+    external_id: String,
+    ctx: &mut TxContext
+  ): Hero {
+    burn_box_ticket(box_ticket);
+    let hero = hero::mint(
+      name,
+      class,
+      faction,
+      rarity,
+      base_attributes_values,
+      skill_attributes_values,
+      appearence_attributes_values,
+      growth_attributes_values,
+      external_id,
+      ctx,
+    );
+
+    hero
+  }
 
   // For casting blind boxes, a new id attribute is added. Use type or id to distinguish the level of blind boxes?
   // The content described in display is currently fixed, whether to use the parameters passed in
@@ -233,6 +271,12 @@ module contracts::game{
     item
   }
 
+  public fun burn_box_ticket(box_ticket: BoxTicket) {
+    let BoxTicket {id, gacha_ball} = box_ticket;
+    event::emit(BoxTicketBurn {box_ticket_id: object::uid_to_inner(&id), gacha_ball_id: object::id(&gacha_ball)});
+    gacha::burn(gacha_ball);
+    object::delete(id);
+  }
   public fun create_game_cap(_: &GameCap, ctx: &mut TxContext): GameCap {
     let game_cap = GameCap { id: object::new(ctx) };
     game_cap
@@ -368,7 +412,7 @@ module contracts::game{
 
   /// open a gacha ball
   // User opens blind box
-  public fun open_gacha_ball(gacha_ball: GachaBall, obj_burn: &mut ObjBurn, ctx: &mut TxContext){
+  public fun open_gacha_ball(gacha_ball: GachaBall, game_config: &GameConfig, ctx: &mut TxContext){
 
     assert!(VERSION == 1, EIncorrectVersion); 
 
@@ -376,14 +420,17 @@ module contracts::game{
     let user = tx_context::sender(ctx);
     //let type = *gacha::type(&gacha_ball);
     let token_type = *gacha::tokenType(&gacha_ball);
-    let gacha_ball_address: address = object::id_address(&gacha_ball);
-    // burn gacha ball
-    // gacha::burn(gacha_ball);
-    put_gacha(gacha_ball, gacha_ball_address, obj_burn);
+
+    let ticket = BoxTicket{
+      id: object::new(ctx),
+      gacha_ball,
+    };
 
     // create and emit an event
-    let open_evt = GachaBallOpened { id: gacha_ball_id, user, token_type };
+    let open_evt = GachaBallOpened { id: gacha_ball_id, user,ticket_id: object::uid_to_inner(&ticket.id), token_type };
     event::emit(open_evt);
+
+    transfer::public_transfer(ticket, game_config.game_address);
   }
 
   // appearance_index is the index of the part inside the appearance vector
@@ -551,32 +598,31 @@ module contracts::game{
 
   #[test_only]
   public fun mint_test_hero(cap: &GameCap, ctx: &mut TxContext): Hero {
-      let name = string::utf8(b"Tang Jia");
-      let class = string::utf8(b"Fighter");
-      let faction = string::utf8(b"Flamexecuter");
-      let rarity = string::utf8(b"SR");
-      let base_attributes_values: vector<u16> = vector[1,2,3,4,5,6];
-      let skill_attributes_values: vector<u16> = vector[31, 32, 33, 34];
-      let appearance_attributes_values: vector<u16> = vector[21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
-      let growth_attributes_values: vector<u16> = vector [0, 0, 0, 0, 0, 0, 0, 0];
-      //let other_attributes_values: vector<u8> = vector[9];
-      let external_id = string::utf8(b"1337");
+    let name = string::utf8(b"Tang Jia");
+    let class = string::utf8(b"Fighter");
+    let faction = string::utf8(b"Flamexecuter");
+    let rarity = string::utf8(b"SR");
+    let base_attributes_values: vector<u16> = vector[1,2,3,4,5,6];
+    let skill_attributes_values: vector<u16> = vector[31, 32, 33, 34];
+    let appearance_attributes_values: vector<u16> = vector[21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
+    let growth_attributes_values: vector<u16> = vector [0, 0, 0, 0, 0, 0, 0, 0];
+    let external_id = string::utf8(b"1337");
 
-      let hero = mint_hero(
-        cap,
-        name,
-        class,
-        faction,
-        rarity,
-        base_attributes_values,
-        skill_attributes_values,
-        appearance_attributes_values,
-        growth_attributes_values,
-        //other_attributes_values,
-        external_id,
-        ctx,
-      );
-      hero
+
+    let hero = mint_hero(
+      cap,
+      name,
+      class,
+      faction,
+      rarity,
+      base_attributes_values,
+      skill_attributes_values,
+      appearance_attributes_values,
+      growth_attributes_values,
+      external_id,
+      ctx,
+    );
+    hero
   }
 
   #[test_only]
