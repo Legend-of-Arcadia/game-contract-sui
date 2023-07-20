@@ -12,7 +12,9 @@ function constructMessageToSign(
     amount: number,
     expire_at: number,
     salt: number,
-    fee: number
+    fee: number,
+    chain_id: number,
+    packageAddress: string
 ){
     let msgToSign: Array<Uint8Array> = [];
     let bcs = new BCS(getSuiMoveConfig());
@@ -23,6 +25,9 @@ function constructMessageToSign(
     const expire_atBytes = bcs.ser(["u64", BCS.U64], expire_at).toString("base64");
     const saltBytes = bcs.ser(["u64", BCS.U64], salt).toString("base64");
     const feeBytes = bcs.ser(["u64", BCS.U64], fee).toString("base64");
+    const chain_idBytes = bcs.ser(["u64", BCS.U64], chain_id).toString("base64");
+
+    const packageAddressBytes: Uint8Array = new Uint8Array(Buffer.from(packageAddress.slice(2), 'hex'));
 
     msgToSign.push(addressBytes);
 
@@ -31,6 +36,8 @@ function constructMessageToSign(
     msgToSign.push(Buffer.from(expire_atBytes, 'base64'));
     msgToSign.push(Buffer.from(saltBytes, 'base64'));
     msgToSign.push(Buffer.from(feeBytes, 'base64'));
+    msgToSign.push(Buffer.from(chain_idBytes, 'base64'));
+    msgToSign.push(packageAddressBytes);
 
     return msgToSign;
 }
@@ -39,18 +46,22 @@ function constructMessageToSign(
 // put user address here
 const userAddress = "0x0000000000000000000000000000000000000000000000000000000000000111";
 
-const amount = 30000000000;
+const amount = 1000;
 
 const expire_at = 0;
 const salt = 1;
-const fee = 300;
+const fee = 3;
+const chain_id = 99;//1 mainnet 99 testnet
+const packageAddress = "0xa23f846f3f65c18dd46ea114cd07f2368c4f4f2c392a69957f7ac81f257a03ea"
 
 const msgToSign = constructMessageToSign(
     userAddress,
     amount,
     expire_at,
     salt,
-    fee
+    fee,
+    chain_id,
+    packageAddress
 );
 
 // get a private key

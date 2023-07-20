@@ -100,6 +100,8 @@ module contracts::arca {
         expire_at: u64,
         salt: u64,
         fee: u64,
+        chain_id: u64,
+        package_address: address,
         signed_message: vector<u8>,
         seen_messages: &mut SeenMessages,
         clock: & Clock,
@@ -112,6 +114,8 @@ module contracts::arca {
         vector::append(&mut msg, bcs::to_bytes<u64>(&expire_at));
         vector::append(&mut msg, bcs::to_bytes<u64>(&salt));
         vector::append(&mut msg, bcs::to_bytes<u64>(&fee));
+        vector::append(&mut msg, bcs::to_bytes<u64>(&chain_id));
+        vector::append(&mut msg, address::to_bytes(package_address));
 
         // assert that signature verifies
         // 1 is for SHA256 (hash function options in signature)
