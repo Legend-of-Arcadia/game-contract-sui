@@ -106,10 +106,41 @@ async function setPrice() {
 
 }
 
+async function setArcaPrice() {
+
+    let configId = "0xcda3da3c1daca742473c1971d5a0490818e41583b662fd26a4224b29796e1f9d"
+    let txb = new TransactionBlock();
+    let price = 1000;
+    const coinType = `${packageId}::arca::ARCA`;
+    console.log(coinType)
+
+    txb.moveCall({
+        target: `${packageId}::activity::set_price`,
+        typeArguments: [coinType],
+        arguments: [
+            txb.object(gameCap),
+            txb.object(configId),
+            txb.pure(price),
+        ]
+    });
+
+    let result = await mugen.signAndExecuteTransactionBlock({
+        transactionBlock: txb,
+        requestType: "WaitForLocalExecution",
+        options: {
+            showEffects: true,
+            showObjectChanges: true
+        },
+    });
+
+    return result;
+
+}
+
 async function main() {
 
     //let result = await setConfig();
-    let result = await setPrice();
+    let result = await setArcaPrice();
     console.log(result);
 
 }

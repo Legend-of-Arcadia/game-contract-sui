@@ -10,6 +10,7 @@ const upgrader = process.env.UPGRADER!;
 const objBurn = process.env.OBJBURN!;
 const gameConfig = process.env.GAME_CONFIG!;
 const TreasuryCap = process.env.TREASURY_CAP as string;
+const arcaCounter = process.env.ARCACOUNTER as string;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
@@ -34,59 +35,18 @@ let player = new RawSigner(playerKeyPair, provider);
 let playerAddress = playerKeyPair.getPublicKey().toSuiAddress();
 
 
-async function buyBox() {
+async function deposit() {
 
-    let configId = "0x3e15a9f680f6137aa4f20b38e07f62def7a72f67a19a28f035e0325531f31bca"
+    //public fun deposit(payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, ctx: &mut TxContext)
     let txb = new TransactionBlock();
-    let amount = 5;
-    const coinType = "0x2::sui::SUI";
-    const paid = txb.splitCoins(txb.gas, [txb.pure(5000)]);
-    const clock = "0x6";
-
-    txb.moveCall({
-        target: `${packageId}::activity::buy`,
-        typeArguments: [coinType],
-        arguments: [
-            txb.object(configId),
-            paid,
-            txb.pure(amount),
-            txb.object(clock),
-        ]
-    });
-
-    let result = await player.signAndExecuteTransactionBlock({
-        transactionBlock: txb,
-        requestType: "WaitForLocalExecution",
-        options: {
-            showEffects: true,
-            showObjectChanges: true
-        },
-    });
-
-    return result;
-
-}
-
-
-async function buyBoxByArca() {
-
     let arcaResult = await mintAndTransferArca();
     let arcaCoinId = getArcaCoinId(arcaResult);
-    let configId = "0xcda3da3c1daca742473c1971d5a0490818e41583b662fd26a4224b29796e1f9d"
-    let txb = new TransactionBlock();
-    let amount = 5;
-    const coinType = `${packageId}::arca::ARCA`;
-    //const paid = txb.splitCoins(txb.gas, [txb.pure(5000)]);
-    const clock = "0x6";
 
     txb.moveCall({
-        target: `${packageId}::activity::buy`,
-        typeArguments: [coinType],
+        target: `${packageId}::arca::deposit`,
         arguments: [
-            txb.object(configId),
             txb.object(arcaCoinId),
-            txb.pure(amount),
-            txb.object(clock),
+            txb.object(arcaCounter),
         ]
     });
 
@@ -102,6 +62,7 @@ async function buyBoxByArca() {
     return result;
 
 }
+
 
 async function mintAndTransferArca() {
 
@@ -112,7 +73,7 @@ async function mintAndTransferArca() {
         arguments: [
             txb.object(TreasuryCap),
             // 6_666_000_000
-            txb.pure("5000", "u64"),
+            txb.pure("1000", "u64"),
             txb.pure(playerAddress, "address")
         ],
         typeArguments: [`${packageId}::arca::ARCA`]
@@ -142,7 +103,7 @@ function getArcaCoinId(result: any) {
 async function main() {
 
     //let result = await setConfig();
-    let result = await buyBoxByArca();
+    let result = await deposit();
     console.log(result);
 
 }

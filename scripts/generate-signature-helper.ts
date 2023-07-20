@@ -44,15 +44,15 @@ function constructMessageToSign(
 
 
 // put user address here
-const userAddress = "0x0000000000000000000000000000000000000000000000000000000000000111";
+const userAddress = "0x0421a66d58e4acd151ec50a2c5aa6219ca3c13d18df816c6e93b0b7838e26f65";
 
 const amount = 1000;
 
-const expire_at = 0;
+const expire_at = 1692519168;
 const salt = 1;
-const fee = 3;
+const fee = 0;
 const chain_id = 99;//1 mainnet 99 testnet
-const packageAddress = "0xa23f846f3f65c18dd46ea114cd07f2368c4f4f2c392a69957f7ac81f257a03ea"
+const packageAddress = "0xc69c87d31fc58cb07373997c285fffb113f513fedc26355e0fa036449f4573f3"
 
 const msgToSign = constructMessageToSign(
     userAddress,

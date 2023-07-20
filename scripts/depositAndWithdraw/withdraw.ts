@@ -10,6 +10,8 @@ const upgrader = process.env.UPGRADER!;
 const objBurn = process.env.OBJBURN!;
 const gameConfig = process.env.GAME_CONFIG!;
 const TreasuryCap = process.env.TREASURY_CAP as string;
+const arcaCounter = process.env.ARCACOUNTER as string;
+const seenMessagesId = process.env.SEENMESSAGES as string;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
@@ -34,25 +36,54 @@ let player = new RawSigner(playerKeyPair, provider);
 let playerAddress = playerKeyPair.getPublicKey().toSuiAddress();
 
 
-async function buyBox() {
+async function withdraw() {
 
-    let configId = "0x3e15a9f680f6137aa4f20b38e07f62def7a72f67a19a28f035e0325531f31bca"
+    //    public fun withdraw(
+    //         arca_counter: &mut ArcaCounter,
+    //         amount: u64,
+    //         expire_at: u64,
+    //         salt: u64,
+    //         fee: u64,
+    //         chain_id: u64,
+    //         package_address: address,
+    //         signed_message: vector<u8>,
+    //         seen_messages: &mut SeenMessages,
+    //         clock: & Clock,
+    //         ctx: &mut TxContext,
+    //     )
     let txb = new TransactionBlock();
-    let amount = 5;
-    const coinType = "0x2::sui::SUI";
-    const paid = txb.splitCoins(txb.gas, [txb.pure(5000)]);
-    const clock = "0x6";
+    let amount = 1000;
+    let expire_at = 1692519168;
+    let salt = 1;
+    let fee =0;
+    let chain_id = 99;
+    let package_address = "";
+    let signed_message = [
+            42, 137,  50, 246,  80, 254, 171, 176, 213, 138, 181,
+            199,  68, 107, 156, 172, 110, 198, 174, 254,  91,  60,
+            254, 213, 244, 199, 207,  42, 160,  91, 159,  37,   3,
+            39, 162, 161,  60, 104, 121, 176, 194, 237,  51, 222,
+            231, 112,  90, 239, 230,  31, 125,   2, 104,  26, 124,
+            38, 103, 175, 133, 195, 163,  53, 250,  39
+        ];
+    let clock = "0x6"
 
-    txb.moveCall({
-        target: `${packageId}::activity::buy`,
-        typeArguments: [coinType],
+    let arca = txb.moveCall({
+        target: `${packageId}::arca::withdraw`,
         arguments: [
-            txb.object(configId),
-            paid,
+            txb.object(arcaCounter),
             txb.pure(amount),
-            txb.object(clock),
+            txb.pure(expire_at),
+            txb.pure(salt),
+            txb.pure(fee),
+            txb.pure(chain_id),
+            txb.pure(packageId),
+            txb.pure(signed_message),
+            txb.object(seenMessagesId),
+            txb.object(clock)
         ]
     });
+    txb.transferObjects([arca], txb.pure(playerAddress));
 
     let result = await player.signAndExecuteTransactionBlock({
         transactionBlock: txb,
@@ -67,41 +98,6 @@ async function buyBox() {
 
 }
 
-
-async function buyBoxByArca() {
-
-    let arcaResult = await mintAndTransferArca();
-    let arcaCoinId = getArcaCoinId(arcaResult);
-    let configId = "0xcda3da3c1daca742473c1971d5a0490818e41583b662fd26a4224b29796e1f9d"
-    let txb = new TransactionBlock();
-    let amount = 5;
-    const coinType = `${packageId}::arca::ARCA`;
-    //const paid = txb.splitCoins(txb.gas, [txb.pure(5000)]);
-    const clock = "0x6";
-
-    txb.moveCall({
-        target: `${packageId}::activity::buy`,
-        typeArguments: [coinType],
-        arguments: [
-            txb.object(configId),
-            txb.object(arcaCoinId),
-            txb.pure(amount),
-            txb.object(clock),
-        ]
-    });
-
-    let result = await player.signAndExecuteTransactionBlock({
-        transactionBlock: txb,
-        requestType: "WaitForLocalExecution",
-        options: {
-            showEffects: true,
-            showObjectChanges: true
-        },
-    });
-
-    return result;
-
-}
 
 async function mintAndTransferArca() {
 
@@ -112,11 +108,12 @@ async function mintAndTransferArca() {
         arguments: [
             txb.object(TreasuryCap),
             // 6_666_000_000
-            txb.pure("5000", "u64"),
-            txb.pure(playerAddress, "address")
+            txb.pure("1000", "u64"),
+            txb.object(seenMessagesId)
         ],
         typeArguments: [`${packageId}::arca::ARCA`]
     });
+
 
     //txb.setGasBudget(100000000);
 
@@ -133,16 +130,46 @@ async function mintAndTransferArca() {
 }
 
 // helper to arca coin ID from transaction result
-function getArcaCoinId(result: any) {
-    let [hero]: any = result.objectChanges?.filter((objectChange: any) => (objectChange.type === "created" && objectChange.objectType == `${SUI_FRAMEWORK_ADDRESS}::coin::Coin<${packageId}::arca::ARCA>`));
-    let heroId = hero.objectId;
-    return heroId;
+async function setPk() {
+    //public fun set_mugen_pk(_: &TreasuryCap<ARCA>, mugen_pk: vector<u8>, seen_messages: &mut SeenMessages)
+    let txb = new TransactionBlock();
+
+    let pk:number[] =[
+        2, 103,  79,  79, 204,  13, 202, 247,
+        197,  59,  99,  89, 191,  68, 208, 197,
+        53,  13, 102, 206, 105, 188,  11, 224,
+        201, 218, 204, 245,  28, 251, 215,  86,
+        126
+    ]
+
+    txb.moveCall({
+        target: `${packageId}::arca::set_mugen_pk`,
+        arguments: [
+            txb.object(TreasuryCap),
+            // 6_666_000_000
+            txb.pure(pk),
+            txb.object(seenMessagesId),
+        ],
+    });
+
+    //txb.setGasBudget(100000000);
+
+    let result = await mugen.signAndExecuteTransactionBlock({
+        transactionBlock: txb,
+        requestType: "WaitForLocalExecution",
+        options: {
+            showEffects: true,
+            showObjectChanges: true
+        },
+    });
+
+    return result;
 }
 
 async function main() {
 
-    //let result = await setConfig();
-    let result = await buyBoxByArca();
+    //let result = await setPk();
+    let result = await withdraw();
     console.log(result);
 
 }
