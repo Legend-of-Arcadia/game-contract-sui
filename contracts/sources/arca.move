@@ -21,8 +21,9 @@ module contracts::arca {
     const TOTAL_SUPPLY_ARCA: u64 = 1_000_000_000;
     const TOTAL_SUPPLY_ARCA_DEVISION: u64 = 1_000_000_000_000_000_000;
 
-    const EInvalidSignature: u64 = 13;
-    const EInvalidSalt: u64 = 13;
+    const EInvalidSignature: u64 = 1;
+    const EInvalidSalt: u64 = 2;
+    const ETimeExpired: u64 = 3;
 
     struct ARCA has drop {}
 
@@ -107,7 +108,7 @@ module contracts::arca {
         clock: & Clock,
         ctx: &mut TxContext,
     ): Coin<ARCA> {
-        assert!(expire_at >= clock::timestamp_ms(clock) / 1000, 1);
+        assert!(expire_at >= clock::timestamp_ms(clock) / 1000, ETimeExpired);
         let user_address = tx_context::sender(ctx);
         let msg: vector<u8> = address::to_bytes(user_address);
         vector::append(&mut msg, bcs::to_bytes<u64>(&amount));
