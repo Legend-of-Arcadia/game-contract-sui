@@ -60,8 +60,6 @@ module contracts::staking {
         liquidity: Balance<ARCA>,
         rewards: Balance<ARCA>,
         veARCA_holders: LinkedTable<address, vector<u64>>,
-        holders_vip_level: LinkedTable<u64, vector<address>>,
-        vip_per_table: Table<u64, u64>, // vip level, percentage
         vip_level_veARCA: vector<u128>,
     }
 
@@ -87,11 +85,8 @@ module contracts::staking {
             liquidity: balance::zero<ARCA>(),
             rewards: balance::zero<ARCA>(),
             veARCA_holders: linked_table::new<address, vector<u64>>(ctx),
-            holders_vip_level: linked_table::new<u64, vector<address>>(ctx),
-            vip_per_table: table::new<u64, u64>(ctx),
             vip_level_veARCA: vector::empty<u128>(),
         };
-        populate_vip_per_table(&mut staking_pool);
         populate_vip_level_veARCA(&mut staking_pool, 100);
         // marketplace fee part that is to be burned
         df::add<String, Balance<ARCA>>(
@@ -101,29 +96,6 @@ module contracts::staking {
         transfer::share_object(staking_pool);
     }
 
-    fun populate_vip_per_table(sp: &mut StakingPool) {
-        table::add(&mut sp.vip_per_table, 0, 0);
-        table::add(&mut sp.vip_per_table, 1, 48);
-        table::add(&mut sp.vip_per_table, 2, 96);
-        table::add(&mut sp.vip_per_table, 3, 144);
-        table::add(&mut sp.vip_per_table, 4, 192);
-        table::add(&mut sp.vip_per_table, 5, 220);
-        table::add(&mut sp.vip_per_table, 6, 288);
-        table::add(&mut sp.vip_per_table, 7, 336);
-        table::add(&mut sp.vip_per_table, 8, 384);
-        table::add(&mut sp.vip_per_table, 9, 432);
-        table::add(&mut sp.vip_per_table, 10, 450);
-        table::add(&mut sp.vip_per_table, 11, 528);
-        table::add(&mut sp.vip_per_table, 12, 576);
-        table::add(&mut sp.vip_per_table, 13, 624);
-        table::add(&mut sp.vip_per_table, 14, 672);
-        table::add(&mut sp.vip_per_table, 15, 700);
-        table::add(&mut sp.vip_per_table, 16, 768);
-        table::add(&mut sp.vip_per_table, 17, 816);
-        table::add(&mut sp.vip_per_table, 18, 864);
-        table::add(&mut sp.vip_per_table, 19, 912);
-        table::add(&mut sp.vip_per_table, 20, 950);
-    }
 
     fun populate_vip_level_veARCA(sp: &mut StakingPool, decimals: u64) {
         vector::push_back<u128>(&mut sp.vip_level_veARCA, 3*(decimals as u128)*(DECIMALS as u128));
@@ -443,17 +415,6 @@ module contracts::staking {
 
     public fun get_rewards_value(sp: &StakingPool): u64 {
         balance::value(&sp.rewards)
-    }
-
-    public fun update_percentage_table(_cap: &TreasuryCap<ARCA>, sp: &mut StakingPool, key: u64, percentage: u64) {
-
-        assert!(VERSION == 1, EVersionMismatch);
-
-        if(table::contains(&sp.vip_per_table, key)) {
-            *table::borrow_mut(&mut sp.vip_per_table, key) = percentage;
-        } else {
-            table::add(&mut sp.vip_per_table, key, percentage);
-        };
     }
 
     public fun update_vip_veARCA_vector(_cap: &TreasuryCap<ARCA>, sp: &mut StakingPool, index: u64, veARCA_amount: u64, decimals: u64) {
