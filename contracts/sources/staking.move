@@ -16,8 +16,7 @@ module contracts::staking {
 
     use contracts::arca::ARCA;
     use contracts::merkle_proof;
-    //use std::debug;
-    use sui::hash as hash2;
+    use sui::hash;
 
     friend contracts::marketplace;
 
@@ -144,7 +143,7 @@ module contracts::staking {
 
         assert!(!linked_table::contains(&sp.veARCA_holders, tx_context::sender(ctx)), EOngoingStaking);
 
-        assert!(staking_period >= DAY_TO_UNIX_SECONDS && staking_period<= YEAR_TO_UNIX_SECONDS, ENotCorrectStakingPeriod);
+        assert!(staking_period >= WEEK_TO_UNIX_SECONDS && staking_period<= YEAR_TO_UNIX_SECONDS, ENotCorrectStakingPeriod);
 
         let arca_amount = coin::value(&arca);
         let staked_amount = arca_amount*100;
@@ -241,8 +240,7 @@ module contracts::staking {
         assert!(!table::contains(&mut week_reward.claimed_address, user), 1);
         if (vector::length(&week_reward.merkle_root) > 0) {
             let x = bcs::to_bytes<Leaf>(& Leaf{week_reward_name, user, amount});
-            // let leaf = hash::sha2_256(bcs::to_bytes<Leaf>(& Leaf{week_reward_name, user, amount}));
-            let leaf = hash2::keccak256(&x);
+            let leaf = hash::keccak256(&x);
             // debug::print(&bcs::to_bytes<Leaf>(& Leaf{week_reward_name, user, amount}));
             // debug::print(&leaf);
             // debug::print(&leaf2);
