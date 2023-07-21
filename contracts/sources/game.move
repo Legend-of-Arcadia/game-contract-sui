@@ -34,6 +34,7 @@ module contracts::game{
   const EBodyPartCannotBeExchanged: u64 = 10;
   const ESameAppearancePart: u64 = 11;
   const ENoGameAdmin:u64 = 12;
+  const EGenderismatch:u64 = 13;
 
   // config struct
   struct GameConfig has key, store {
@@ -447,13 +448,17 @@ module contracts::game{
       appearance_index != 0 &&
       appearance_index != 4 &&
       appearance_index != 7 &&
-      appearance_index <=10,
+      appearance_index <=9,
       EBodyPartCannotBeExchanged
     );
 
     let main_hero_part= vector::borrow(hero::appearance_values(&main_hero), appearance_index);
     let burn_hero_part= vector::borrow(hero::appearance_values(&to_burn), appearance_index);
     assert!(*main_hero_part != *burn_hero_part, ESameAppearancePart);
+
+    let main_hero_gender= vector::borrow(hero::base_values(&main_hero), 2);
+    let burn_hero_gender= vector::borrow(hero::base_values(&to_burn), 2);
+    assert!(*main_hero_gender == *burn_hero_gender, EGenderismatch);
 
     let evt = MakeoverRequest {
       hero_id: object::id_address(&main_hero),

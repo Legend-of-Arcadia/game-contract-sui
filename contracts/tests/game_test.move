@@ -6,7 +6,7 @@ module contracts::test_game {
   use sui::test_scenario as ts;
   use sui::transfer;
 
-  use contracts::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket};
+  use contracts::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, EGenderismatch, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket};
   use contracts::hero::{Self, Hero};
   use contracts::arca::ARCA;
   use sui::object;
@@ -370,6 +370,73 @@ module contracts::test_game {
       let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
 
       game::upgrade_appearance(&cap, &mut hero1, appearance);
+
+      transfer::public_transfer(hero, USER);
+      transfer::public_transfer(hero1, USER);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+    };
+
+    //user starts the upgrade
+    ts::next_tx(&mut scenario, USER);
+    let burn_hero;
+    {
+      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
+      let hero1 = ts::take_from_sender<Hero>(&mut scenario);
+      let hero = ts::take_from_sender<Hero>(&mut scenario);
+      burn_hero = object::id_address(&hero1);
+      let appearance_index = 2u64;
+      game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
+      ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
+    };
+
+    // game performs upgrade
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
+
+      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
+      assert!(hero::pending_upgrade(&hero) == &1, EWrongHeroPendingUpgrade);
+      game::upgrade_appearance(&cap, &mut hero, appearance);
+      game::return_upgraded_hero(hero, ticket);
+      game::get_hero_and_burn(&cap, burn_hero, &mut obj_burn);
+
+      ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(upgrader);
+      ts::return_shared(obj_burn);
+    };
+
+    //check
+    ts::next_tx(&mut scenario, USER);
+    {
+      let hero = ts::take_from_sender<Hero>(&mut scenario);
+      assert!(*hero::appearance_values(&hero) == appearance, EWrongAppearance);
+      ts::return_to_sender<Hero>(&scenario, hero);
+    };
+
+    ts::end(scenario);
+  }
+
+  #[test]
+  #[expected_failure(abort_code = EGenderismatch)]
+  public fun makeover_test_fail_gender() {
+    let appearance = vector[21, 22, 28, 24, 25, 26, 27, 28, 29, 30, 31];
+    let base = vector[1,2,5,4,5,6];
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    // mint a hero and send it to the user
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+
+      game::upgrade_appearance(&cap, &mut hero1, appearance);
+      game::upgrade_base(&cap, &mut hero1, base);
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
