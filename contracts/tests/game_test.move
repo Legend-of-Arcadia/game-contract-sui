@@ -550,8 +550,12 @@ module contracts::test_game {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
       //12_500_000_000
-      let fee: Coin<ARCA> = coin::mint_for_testing<ARCA>(25_000_000_000, ts::ctx(&mut scenario));
+      let fee: Coin<ARCA> = coin::mint_for_testing<ARCA>(35_000_000_000, ts::ctx(&mut scenario));
       game::power_upgrade_hero(hero, vector[hero1, hero2],fee,  &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
+      ts::next_tx(&mut scenario, USER);
+      let coin = ts::take_from_sender<Coin<ARCA>>(&mut scenario);
+      assert!(coin::value<ARCA>(&coin) == 10000000000, EWrongHeroPendingUpgrade);
+      ts::return_to_sender<Coin<ARCA>>(&scenario, coin);
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
     };

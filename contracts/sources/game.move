@@ -521,7 +521,11 @@ module contracts::game{
     assert!(l > 0, EMustBurnAtLeastOneHero);
     let main_rarity = hero::rarity(&main_hero);
     let correct_price: u64 = *table::borrow<String, u64>(&mut upgrader.power_prices, *main_rarity) * l;
-    assert!(coin::value(&fee) == correct_price, EWrongPowerUpgradeFee);
+    let fee_value: u64 = coin::value(&fee);
+    assert!(fee_value >= correct_price, EWrongPowerUpgradeFee);
+    if (fee_value > correct_price) {
+      transfer::public_transfer(coin::split(&mut fee, fee_value - correct_price, ctx), tx_context::sender(ctx));
+    };
     let i: u64 = 0;
     let burn_addresses: vector<address> = vector::empty<address>();
     while (i < l) {
