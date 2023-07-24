@@ -6,12 +6,13 @@ module contracts::staking_tests {
     use contracts::game;
 
     use sui::test_scenario as ts;
-    use sui::coin::{Self, TreasuryCap};
+    use sui::coin::{Self};
     use sui::clock;
     use std::vector;
 
     use std::string;
     use contracts::staking::{WeekReward, StakingPool};
+    use contracts::game::GameCap;
     //use sui::balance;
 
     const GAME: address = @0x111;
@@ -31,26 +32,26 @@ module contracts::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(30*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
-            staking::init_for_testing(&treasury, ts::ctx(&mut scenario));
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
 
-            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, treasury);
+            ts::return_to_sender<GameCap>(&scenario, cap);
         };
 
         ts::next_tx(&mut scenario, GAME);
         {
             //public fun create_week_reward(_: &mut TreasuryCap<ARCA>, name: String, merkle_root: vector<u8>, total_reward: u64, ctx: &mut TxContext){
-            let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
             let sp = ts::take_shared<StakingPool>(&mut scenario);
             let name = string::utf8(b"2023-7-19");
             let merkle_root = x"76355b7a319f1fa85e831800eea9d8e041801fab8c3daadc7ff0f416cc9d36ee";
             let total_reward = 1000*DECIMALS;
-            staking::create_week_reward(&mut treasury, name, merkle_root, total_reward, ts::ctx(&mut scenario));
+            staking::create_week_reward(&cap, name, merkle_root, total_reward, ts::ctx(&mut scenario));
 
 
-            staking::append_rewards(&treasury, &mut sp, coin::into_balance(coin));
-            ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, treasury);
+            staking::append_rewards(&cap, &mut sp, coin::into_balance(coin));
+            ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_shared(sp);
         };
 

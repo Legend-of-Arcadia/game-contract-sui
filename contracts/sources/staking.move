@@ -6,13 +6,14 @@ module contracts::staking {
 
     use sui::balance::{Self, Balance};
     use sui::clock::{Self, Clock};
-    use sui::coin::{Self, Coin, TreasuryCap};
+    use sui::coin::{Self, Coin};
     use sui::dynamic_field as df;
     use sui::linked_table::{Self, LinkedTable};
     use sui::object::{Self, UID};
     use sui::table::{Self, Table};
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
+    use contracts::game::GameCap;
 
     use contracts::arca::ARCA;
     use contracts::merkle_proof;
@@ -77,7 +78,7 @@ module contracts::staking {
         amount: u64,
     }
 
-    public fun create_pool(_cap: &TreasuryCap<ARCA>, ctx: &mut TxContext) {
+    public fun create_pool(_: &GameCap, ctx: &mut TxContext) {
         assert!(VERSION == 1, EVersionMismatch);
         let staking_pool = StakingPool{
             id: object::new(ctx),
@@ -214,7 +215,7 @@ module contracts::staking {
         arca
     }
 
-    public fun create_week_reward(_: &mut TreasuryCap<ARCA>, name: String, merkle_root: vector<u8>, total_reward: u64, ctx: &mut TxContext){
+    public fun create_week_reward(_: &GameCap, name: String, merkle_root: vector<u8>, total_reward: u64, ctx: &mut TxContext){
         assert!(VERSION == 1, EVersionMismatch);
         let week_reward = WeekReward{
             id: object::new(ctx),
@@ -241,9 +242,6 @@ module contracts::staking {
         if (vector::length(&week_reward.merkle_root) > 0) {
             let x = bcs::to_bytes<Leaf>(& Leaf{week_reward_name, user, amount});
             let leaf = hash::keccak256(&x);
-            // debug::print(&bcs::to_bytes<Leaf>(& Leaf{week_reward_name, user, amount}));
-            // debug::print(&leaf);
-            // debug::print(&leaf2);
             let verified = merkle_proof::verify(&merkle_proof, week_reward.merkle_root, leaf);
             assert!(verified, EProofInvalid);
         };
@@ -262,7 +260,7 @@ module contracts::staking {
         object::delete(id);
     }
 
-    public fun receive_rewards(_cap: &TreasuryCap<ARCA>, sp: &mut StakingPool, amount: u64, ctx: &mut TxContext): Coin<ARCA> {
+    public fun receive_rewards(_: &GameCap, sp: &mut StakingPool, amount: u64, ctx: &mut TxContext): Coin<ARCA> {
         assert!(VERSION == 1, EVersionMismatch);
 
         let coin = coin::take<ARCA>(&mut sp.rewards, amount, ctx);
@@ -415,7 +413,7 @@ module contracts::staking {
         balance::value(&sp.rewards)
     }
 
-    public fun update_vip_veARCA_vector(_cap: &TreasuryCap<ARCA>, sp: &mut StakingPool, index: u64, veARCA_amount: u64, decimals: u64) {
+    public fun update_vip_veARCA_vector(_: &GameCap, sp: &mut StakingPool, index: u64, veARCA_amount: u64, decimals: u64) {
 
         assert!(VERSION == 1, EVersionMismatch);
 
@@ -429,7 +427,7 @@ module contracts::staking {
     }
 
 
-    public fun append_rewards(_cap: &TreasuryCap<ARCA>, sp: &mut StakingPool, new_balance: Balance<ARCA>) {
+    public fun append_rewards(_: &GameCap, sp: &mut StakingPool, new_balance: Balance<ARCA>) {
 
         assert!(VERSION == 1, EVersionMismatch);
 
@@ -454,7 +452,7 @@ module contracts::staking {
     // ============================================================
 
     #[test_only]
-    public fun init_for_testing(cap: &TreasuryCap<ARCA>, ctx: &mut TxContext) {
+    public fun init_for_testing(cap: &GameCap, ctx: &mut TxContext) {
         create_pool(cap,  ctx);
     }
 
