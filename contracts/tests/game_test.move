@@ -6,10 +6,10 @@ module contracts::test_game {
   use sui::test_scenario as ts;
   use sui::transfer;
 
-  use contracts::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, EGenderismatch, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket, ArcaCounter, SeenMessages};
+  use contracts::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, EGenderismatch, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket, ArcaCounter, SeenMessages,UpgradeTicket};
   use contracts::hero::{Self, Hero};
   use contracts::arca::ARCA;
-  use sui::object;
+  //use sui::object;
   use contracts::gacha::GachaBall;
   use std::string;
   use sui::clock;
@@ -71,7 +71,7 @@ module contracts::test_game {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, &mut obj_burn,ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader,ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
     };
@@ -90,14 +90,11 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
-      assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
-      game::upgrade_growth(&cap, &mut hero, new_growths);
-      game::return_upgraded_hero(hero, ticket);
+      game::upgrade_growth_by_ticket(&mut upgrade_ticket, new_growths);
+      game::return_upgraded_hero_by_ticket(upgrade_ticket);
 
-      ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(upgrader);
     };
 
@@ -140,11 +137,9 @@ module contracts::test_game {
       let hero = ts::take_from_sender<Hero>(&mut scenario);
 
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, &mut obj_burn,ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader,ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
-      ts::return_shared(obj_burn);
     };
 
     let new_base: vector<u16> = vector[
@@ -160,14 +155,10 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
-      assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
-      game::upgrade_base(&cap, &mut hero, new_base);
-      game::return_upgraded_hero(hero, ticket);
-
-      ts::return_to_sender<GameCap>(&scenario, cap);
+      game::upgrade_base_by_ticket(&mut upgrade_ticket, new_base);
+      game::return_upgraded_hero_by_ticket(upgrade_ticket);
       ts::return_shared(upgrader);
     };
 
@@ -212,7 +203,7 @@ module contracts::test_game {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, &mut obj_burn,ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
     };
@@ -231,14 +222,11 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
-      assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
-      game::upgrade_base(&cap, &mut hero, new_skills);
-      game::return_upgraded_hero(hero, ticket);
+      game::upgrade_base_by_ticket(&mut upgrade_ticket, new_skills);
+      game::return_upgraded_hero_by_ticket(upgrade_ticket);
 
-      ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(upgrader);
     };
 
@@ -283,7 +271,7 @@ module contracts::test_game {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector[hero1, hero2], &mut upgrader, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
     };
@@ -303,14 +291,11 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
-      assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
-      game::upgrade_base(&cap, &mut hero, new_others);
-      game::return_upgraded_hero(hero, ticket);
+      game::upgrade_base_by_ticket(&mut upgrade_ticket, new_others);
+      game::return_upgraded_hero_by_ticket(upgrade_ticket);
 
-      ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(upgrader);
     };
 
@@ -350,7 +335,7 @@ module contracts::test_game {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      game::upgrade_hero(hero, vector::empty<Hero>(), &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
+      game::upgrade_hero(hero, vector::empty<Hero>(), &mut upgrader, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
     };
@@ -380,15 +365,13 @@ module contracts::test_game {
 
     //user starts the upgrade
     ts::next_tx(&mut scenario, USER);
-    let burn_hero;
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
       let hero1 = ts::take_from_sender<Hero>(&mut scenario);
       let hero = ts::take_from_sender<Hero>(&mut scenario);
-      burn_hero = object::id_address(&hero1);
       let appearance_index = 2u64;
-      game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
+      game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
     };
@@ -397,16 +380,12 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
-      assert!(hero::pending_upgrade(&hero) == &1, EWrongHeroPendingUpgrade);
-      game::upgrade_appearance(&cap, &mut hero, appearance);
-      game::return_upgraded_hero(hero, ticket);
-      game::get_hero_and_burn(&cap, burn_hero, &mut obj_burn);
+      game::upgrade_appearance_by_ticket(&mut upgrade_ticket, appearance);
+      game::return_upgraded_hero_by_ticket(upgrade_ticket);
 
-      ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
     };
@@ -447,15 +426,13 @@ module contracts::test_game {
 
     //user starts the upgrade
     ts::next_tx(&mut scenario, USER);
-    let burn_hero;
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
       let hero1 = ts::take_from_sender<Hero>(&mut scenario);
       let hero = ts::take_from_sender<Hero>(&mut scenario);
-      burn_hero = object::id_address(&hero1);
       let appearance_index = 2u64;
-      game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
+      game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
     };
@@ -464,16 +441,12 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
-      assert!(hero::pending_upgrade(&hero) == &1, EWrongHeroPendingUpgrade);
-      game::upgrade_appearance(&cap, &mut hero, appearance);
-      game::return_upgraded_hero(hero, ticket);
-      game::get_hero_and_burn(&cap, burn_hero, &mut obj_burn);
+      game::upgrade_appearance_by_ticket(&mut upgrade_ticket, appearance);
+      game::return_upgraded_hero_by_ticket(upgrade_ticket);
 
-      ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
     };
@@ -515,7 +488,7 @@ module contracts::test_game {
       let hero1 = ts::take_from_sender<Hero>(&mut scenario);
       let hero = ts::take_from_sender<Hero>(&mut scenario);
       let appearance_index = 2u64;
-      game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
+      game::makeover_hero(hero, hero1, appearance_index, &mut upgrader, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
     };
@@ -553,7 +526,7 @@ module contracts::test_game {
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
       //12_500_000_000
       let fee: Coin<ARCA> = coin::mint_for_testing<ARCA>(35_000_000_000, ts::ctx(&mut scenario));
-      game::power_upgrade_hero(hero, vector[hero1, hero2],fee,  &mut upgrader, &mut obj_burn, ts::ctx(&mut scenario));
+      game::power_upgrade_hero(hero, vector[hero1, hero2],fee,  &mut upgrader, ts::ctx(&mut scenario));
       ts::next_tx(&mut scenario, USER);
       let coin = ts::take_from_sender<Coin<ARCA>>(&mut scenario);
       assert!(coin::value<ARCA>(&coin) == 10000000000, EWrongHeroPendingUpgrade);
@@ -576,14 +549,11 @@ module contracts::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
 
-      let (hero, ticket) = game::get_for_upgrade(&cap, USER, &mut upgrader);
-      assert!(hero::pending_upgrade(&hero) == &2, EWrongHeroPendingUpgrade);
-      game::upgrade_growth(&cap, &mut hero, new_growths);
-      game::return_upgraded_hero(hero, ticket);
+      game::upgrade_growth_by_ticket(&mut upgrade_ticket, new_growths);
+      game::return_upgraded_hero_by_ticket(upgrade_ticket);
 
-      ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(upgrader);
     };
 
@@ -595,7 +565,7 @@ module contracts::test_game {
       assert!(hero::pending_upgrade(&hero) == &0, EWrongHeroPendingUpgrade);
       ts::return_to_sender<Hero>(&scenario, hero);
     };
-    
+
     // withdraw upgrader profits
     ts::next_tx(&mut scenario, GAME);
     {
@@ -645,7 +615,7 @@ module contracts::test_game {
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
       //12_500_000_000
       let fee: Coin<ARCA> = coin::mint_for_testing<ARCA>(2_000_000_000, ts::ctx(&mut scenario));
-      game::power_upgrade_hero(hero, vector[hero1, hero2],fee,  &mut upgrader, &mut obj_burn,ts::ctx(&mut scenario));
+      game::power_upgrade_hero(hero, vector[hero1, hero2],fee,  &mut upgrader, ts::ctx(&mut scenario));
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
     };
