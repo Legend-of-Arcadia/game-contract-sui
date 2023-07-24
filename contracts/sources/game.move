@@ -17,7 +17,7 @@ module contracts::game{
   use sui::clock::{Self, Clock};
   use sui::address;
 
-  use contracts::arca::ARCA;
+  use loa::arca::ARCA;
   use contracts::hero::{Self, Hero};
   use contracts::gacha::{Self, GachaBall};
   use contracts::item::{Self, Item};

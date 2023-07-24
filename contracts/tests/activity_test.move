@@ -7,7 +7,7 @@ module contracts::activity_test {
     };
     use contracts::activity::{Self,ActivityConfig};
     use std::string::{Self};
-    use contracts::arca::ARCA;
+    use loa::arca::ARCA;
     use sui::clock;
     use sui::coin::{Self, Coin};
 

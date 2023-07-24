@@ -15,7 +15,7 @@ module contracts::marketplace{
     use std::option::{Self, Option};
     use std::type_name::{Self, TypeName};
 
-    use contracts::arca::ARCA;
+    use loa::arca::ARCA;
     use contracts::game::GameCap;
     use contracts::staking::{Self, StakingPool};
 

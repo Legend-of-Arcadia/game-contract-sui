@@ -8,7 +8,7 @@ module contracts::test_game {
 
   use contracts::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, EGenderismatch, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket, ArcaCounter, SeenMessages,UpgradeTicket};
   use contracts::hero::{Self, Hero};
-  use contracts::arca::ARCA;
+  use loa::arca::ARCA;
   //use sui::object;
   use contracts::gacha::GachaBall;
   use std::string;

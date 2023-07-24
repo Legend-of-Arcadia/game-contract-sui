@@ -1,7 +1,7 @@
 #[test_only]
 module contracts::marketplace_tests {
 
-    use contracts::arca::{Self, ARCA};
+    use loa::arca::{ARCA};
     use contracts::marketplace::{Self, Marketplace};
     use contracts::hero::Hero;
     use contracts::staking::{Self, StakingPool};
@@ -33,7 +33,7 @@ module contracts::marketplace_tests {
 
         game::init_for_test(ts::ctx(&mut scenario));
         marketplace::init_for_testing(ts::ctx(&mut scenario));
-        arca::init_for_testing(ts::ctx(&mut scenario));
+        //arca::init_for_testing(ts::ctx(&mut scenario));
 
         ts::next_tx(&mut scenario, GAME);
         {
@@ -101,7 +101,7 @@ module contracts::marketplace_tests {
 
         game::init_for_test(ts::ctx(&mut scenario));
         marketplace::init_for_testing(ts::ctx(&mut scenario));
-        arca::init_for_testing(ts::ctx(&mut scenario));
+        //arca::init_for_testing(ts::ctx(&mut scenario));
 
         ts::next_tx(&mut scenario, GAME);
         {
@@ -174,7 +174,7 @@ module contracts::marketplace_tests {
 
         game::init_for_test(ts::ctx(&mut scenario));
         marketplace::init_for_testing(ts::ctx(&mut scenario));
-        arca::init_for_testing(ts::ctx(&mut scenario));
+        //arca::init_for_testing(ts::ctx(&mut scenario));
 
         ts::next_tx(&mut scenario, GAME);
         {
@@ -262,7 +262,7 @@ module contracts::marketplace_tests {
 
         game::init_for_test(ts::ctx(&mut scenario));
         marketplace::init_for_testing(ts::ctx(&mut scenario));
-        arca::init_for_testing(ts::ctx(&mut scenario));
+        //arca::init_for_testing(ts::ctx(&mut scenario));
 
         ts::next_tx(&mut scenario, GAME);
         {
@@ -338,7 +338,7 @@ module contracts::marketplace_tests {
 
         game::init_for_test(ts::ctx(&mut scenario));
         marketplace::init_for_testing(ts::ctx(&mut scenario));
-        arca::init_for_testing(ts::ctx(&mut scenario));
+        //arca::init_for_testing(ts::ctx(&mut scenario));
 
         ts::next_tx(&mut scenario, GAME);
         {
@@ -424,7 +424,7 @@ module contracts::marketplace_tests {
 
         game::init_for_test(ts::ctx(&mut scenario));
         marketplace::init_for_testing(ts::ctx(&mut scenario));
-        arca::init_for_testing(ts::ctx(&mut scenario));
+        //arca::init_for_testing(ts::ctx(&mut scenario));
 
         ts::next_tx(&mut scenario, GAME);
         {

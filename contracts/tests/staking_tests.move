@@ -1,7 +1,7 @@
 #[test_only]
 module contracts::staking_tests {
     //
-    use contracts::arca::{Self, ARCA};
+    use loa::arca::{ARCA};
     use contracts::staking;
     use contracts::game;
 
@@ -27,7 +27,6 @@ module contracts::staking_tests {
         clock::share_for_testing(clock);
 
         game::init_for_test(ts::ctx(&mut scenario));
-        arca::init_for_testing(ts::ctx(&mut scenario));
 
         let coin = coin::mint_for_testing<ARCA>(30*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);

@@ -15,7 +15,7 @@ module contracts::staking {
     use sui::tx_context::{Self, TxContext};
     use contracts::game::GameCap;
 
-    use contracts::arca::ARCA;
+    use loa::arca::ARCA;
     use contracts::merkle_proof;
     use sui::hash;
 
