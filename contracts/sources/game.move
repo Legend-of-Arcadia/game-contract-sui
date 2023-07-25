@@ -205,6 +205,13 @@ module contracts::game{
     config.game_address = new_address;
   }
 
+  public fun set_mint_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
+    config.mint_address = new_address;
+  }
+
+  public fun set_upgrade_address(_: &GameCap, new_address: address, upgrader: &mut Upgrader) {
+    upgrader.upgrade_address = new_address;
+  }
   /// claim profits
   public fun claim_upgrade_profits(_: &GameCap, upgrader: &mut Upgrader , ctx: &mut TxContext): Coin<ARCA> {
     let total: Balance<ARCA> = balance::withdraw_all<ARCA>(&mut upgrader.profits);
