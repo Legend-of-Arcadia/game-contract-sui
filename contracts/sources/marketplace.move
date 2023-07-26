@@ -192,7 +192,8 @@ module contracts::marketplace{
             item_id,
             price
         };
-        let key = table::length<u64, Listing_P>(&stand.primary_listings) + 1;
+        stand.secondary_list_index = stand.secondary_list_index + 1;
+        let key = stand.secondary_list_index;
         table::add<u64, Listing_P>(&mut stand.primary_listings, key, listing);
         dof::add<address, Item>(&mut stand.id, item_id, item);
         // emit event
@@ -244,11 +245,11 @@ module contracts::marketplace{
         let listing = table::remove<u64, Listing_P>(&mut stand.primary_listings, listing_number);
         let Listing_P {item_id, price} = listing;
         assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
-        let size: u64 = table::length<u64, Listing_P>(&stand.primary_listings);
-        if (size > listing_number) {
-            let last_listing = table::remove<u64, Listing_P>(&mut stand.primary_listings, size);
-            table::add<u64, Listing_P>(&mut stand.primary_listings, listing_number, last_listing);
-        };
+        // let size: u64 = table::length<u64, Listing_P>(&stand.primary_listings);
+        // if (size > listing_number) {
+        //     let last_listing = table::remove<u64, Listing_P>(&mut stand.primary_listings, size);
+        //     table::add<u64, Listing_P>(&mut stand.primary_listings, listing_number, last_listing);
+        // };
         balance::join<ARCA>(&mut stand.income, coin::into_balance<ARCA>(payment));
         // event
         let evt = ItemBought {
@@ -582,11 +583,11 @@ module contracts::marketplace{
 
         // if it is not the last listing take the last and insert it in its place
         // make this one the last and remove it
-        let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
-        if (size > listing_number) {
-            let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
-            table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
-        };
+        // let size: u64 = table::length<u64, Listing>(&stand.secondary_listings);
+        // if (size > listing_number) {
+        //     let last_listing = table::remove<u64, Listing>(&mut stand.secondary_listings, size);
+        //     table::add<u64, Listing>(&mut stand.secondary_listings, listing_number, last_listing);
+        // };
         // event
         let evt = ItemTake {
             seller,
