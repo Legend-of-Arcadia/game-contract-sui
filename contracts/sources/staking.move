@@ -78,8 +78,7 @@ module contracts::staking {
         amount: u64,
     }
 
-    public fun create_pool(_: &GameCap, ctx: &mut TxContext) {
-        assert!(VERSION == 1, EVersionMismatch);
+    fun init(ctx: &mut TxContext){
         let staking_pool = StakingPool{
             id: object::new(ctx),
             liquidity: balance::zero<ARCA>(),
@@ -452,8 +451,8 @@ module contracts::staking {
     // ============================================================
 
     #[test_only]
-    public fun init_for_testing(cap: &GameCap, ctx: &mut TxContext) {
-        create_pool(cap,  ctx);
+    public fun init_for_testing(_: &GameCap, ctx: &mut TxContext) {
+        init(ctx);
     }
 
     #[test_only]
