@@ -2,17 +2,19 @@
 module contracts::staking_tests {
     //
     use loa::arca::{ARCA};
-    use contracts::staking;
+    //use contracts::staking::{Self, StakingPool};
     use contracts::game;
+    use multisig::multisig::{Self, MultiSignature};
 
     use sui::test_scenario as ts;
-    use sui::coin::{Self};
+    use sui::coin::{Self, Coin};
     use sui::clock;
     use std::vector;
 
     use std::string;
-    use contracts::staking::{WeekReward, StakingPool};
-    use contracts::game::GameCap;
+    use contracts::staking::{Self, WeekReward, StakingPool};
+    use contracts::game::{GameCap, GameConfig};
+    use std::debug;
     //use sui::balance;
 
     const GAME: address = @0x111;
@@ -28,7 +30,7 @@ module contracts::staking_tests {
 
         game::init_for_test(ts::ctx(&mut scenario));
 
-        let coin = coin::mint_for_testing<ARCA>(30*DECIMALS, ts::ctx(&mut scenario));
+        let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
@@ -70,6 +72,38 @@ module contracts::staking_tests {
 
         };
 
+
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+            let config = ts::take_shared<GameConfig>(&mut scenario);
+            staking::withdraw_activity_profits_request(&mut config, &mut multi_signature, GAME, 30*DECIMALS,ts::ctx(&mut scenario));
+
+            ts::return_shared(multi_signature);
+            ts::return_shared(config);
+        };
+
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+            let config = ts::take_shared<GameConfig>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
+            let b = staking::withdraw_activity_profits_execute(&mut config, &mut multi_signature, 0, true, &mut sp,ts::ctx(&mut scenario));
+
+            assert!(b, 1);
+
+            ts::next_tx(&mut scenario, GAME);
+            let coin = ts::take_from_address<Coin<ARCA>>(&mut scenario, GAME);
+            //let x = coin::value(&coin);
+            debug::print(&coin::value<ARCA>(&coin));
+            assert!(coin::value<ARCA>(&coin) == 30*DECIMALS, 1);
+
+            ts::return_to_sender(&mut scenario, coin);
+            ts::return_shared(multi_signature);
+            ts::return_shared(config);
+            ts::return_shared(sp);
+        };
 
         ts::end(scenario);
 

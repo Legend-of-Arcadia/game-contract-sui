@@ -5,14 +5,16 @@ module contracts::marketplace_tests {
     use contracts::marketplace::{Self, Marketplace};
     use contracts::hero::Hero;
     use contracts::staking::{Self, StakingPool};
-    use contracts::game::{Self, GameCap};
+    use contracts::game::{Self, GameCap, GameConfig};
 
     use sui::clock;
     use sui::test_scenario as ts;
     use sui::coin::{Self, Coin};
     use sui::transfer;
+    use multisig::multisig::{Self, MultiSignature};
 
     use std::option;
+    use std::debug;
     //use std::string;
 
     const EToBurnNotCorrect: u64 = 0;
@@ -308,17 +310,34 @@ module contracts::marketplace_tests {
 
         ts::next_tx(&mut scenario, GAME);
         {
+            let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+            let config = ts::take_shared<GameConfig>(&mut scenario);
+            marketplace::withdraw_fee_profits_request<ARCA>(&mut config, &mut multi_signature, GAME,ts::ctx(&mut scenario));
+
+            ts::return_shared(multi_signature);
+            ts::return_shared(config);
+        };
+
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+            let config = ts::take_shared<GameConfig>(&mut scenario);
             let marketplace = ts::take_shared<Marketplace>(&mut scenario);
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
-            let arca = marketplace::take_fee_profits<ARCA>(&cap, &mut marketplace, ts::ctx(&mut scenario));
+            multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
+            let b = marketplace::withdraw_fee_profits_execute<ARCA>(&mut config, &mut multi_signature, 0, true, &mut marketplace,ts::ctx(&mut scenario));
 
-            // let amount = coin::value<ARCA>(&arca);
-            // debug::print(&amount);
-            transfer::public_transfer(arca, GAME);
+            assert!(b, 1);
 
+            ts::next_tx(&mut scenario, GAME);
+            let coin = ts::take_from_address<Coin<ARCA>>(&mut scenario, GAME);
+            //let x = coin::value(&coin);
+            debug::print(&coin::value<ARCA>(&coin));
+            assert!(coin::value<ARCA>(&coin) == 30*DECIMALS * 3/100, 1);
+
+            ts::return_to_sender(&mut scenario, coin);
+            ts::return_shared(multi_signature);
+            ts::return_shared(config);
             ts::return_shared(marketplace);
-            ts::return_to_sender<GameCap>(&scenario, cap);
-
         };
 
         ts::end(scenario);

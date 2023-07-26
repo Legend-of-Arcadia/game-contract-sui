@@ -14,10 +14,12 @@ module contracts::marketplace{
 
     use std::option::{Self, Option};
     use std::type_name::{Self, TypeName};
+    use std::string;
 
     use loa::arca::ARCA;
-    use contracts::game::GameCap;
+    use contracts::game::{Self, GameCap, GameConfig};
     use contracts::staking::{Self, StakingPool};
+    use multisig::multisig::{Self, MultiSignature};
 
     // errors
     const EAmountNotExact: u64 = 0;
@@ -29,6 +31,10 @@ module contracts::marketplace{
     const ENoItemSeller: u64 = 6;
     const EVipLvExsit: u64 = 7;
     const EVipLvNoExsit: u64 = 8;
+    const ECoinTypeMismatch: u64 = 9;
+    const ENeedVote: u64 = 10;
+
+    const WithdrawFeeProfits: u64 = 0;
 
     // constants
 
@@ -75,6 +81,11 @@ module contracts::marketplace{
         seller: address
     }
 
+    struct WithdrawFeeProfitsQequest has key, store {
+        id: UID,
+        coin_type: TypeName,
+        to: address
+    }
     // events
     struct NewSecodaryListing has copy, drop {
         coin_type: TypeName,
@@ -565,12 +576,70 @@ module contracts::marketplace{
 
     }
 
-    public fun take_fee_profits<COIN>(_: &GameCap, marketplace: &mut Marketplace, ctx: &mut TxContext): Coin<COIN>{
+    // public fun take_fee_profits<COIN>(_: &GameCap, marketplace: &mut Marketplace, ctx: &mut TxContext): Coin<COIN>{
+    //     let stand = &mut marketplace.main;
+    //     let coin_type = type_name::get<COIN>();
+    //     let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut stand.id, coin_type);
+    //     let balance_all = balance::withdraw_all<COIN>(coin_balance);
+    //     coin::from_balance<COIN>(balance_all, ctx)
+    // }
+    public fun withdraw_fee_profits<COIN>(marketplace: &mut Marketplace, to: address,ctx: &mut TxContext){
         let stand = &mut marketplace.main;
         let coin_type = type_name::get<COIN>();
         let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut stand.id, coin_type);
         let balance_all = balance::withdraw_all<COIN>(coin_balance);
-        coin::from_balance<COIN>(balance_all, ctx)
+        transfer::public_transfer(coin::from_balance<COIN>(balance_all, ctx), to);
+    }
+
+    public fun withdraw_fee_profits_request<COIN>(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
+        // Only multi sig guardian
+        game::only_multi_sig_scope(multi_signature, game_config);
+        // Only participant
+        game::only_participant(multi_signature, ctx);
+
+        let coin_type = type_name::get<COIN>();
+        let request = WithdrawFeeProfitsQequest{
+            id: object::new(ctx),
+            coin_type,
+            to
+        };
+
+        let desc = sui::address::to_string(object::id_address(&request));
+
+        multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawFeeProfits, request, ctx);
+    }
+
+    public fun withdraw_fee_profits_execute<COIN>(
+        game_config:&mut GameConfig,
+        multi_signature : &mut MultiSignature,
+        proposal_id: u256,
+        is_approve: bool,
+        marketplace: &mut Marketplace,
+        ctx: &mut TxContext): bool {
+
+        game::only_multi_sig_scope(multi_signature, game_config);
+        // Only participant
+        game::only_participant(multi_signature, ctx);
+
+        if (is_approve) {
+            let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
+            if (approved) {
+                let request = multisig::borrow_proposal_request<WithdrawFeeProfitsQequest>(multi_signature, &proposal_id, ctx);
+
+                assert!(request.coin_type == type_name::get<COIN>(), ECoinTypeMismatch);
+                withdraw_fee_profits<COIN>(marketplace, request.to, ctx);
+                multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
+                return true
+            };
+        }else {
+            let (rejected, _ ) = multisig::is_proposal_rejected(multi_signature, proposal_id);
+            if (rejected) {
+                multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
+                return true
+            }
+        };
+
+        abort ENeedVote
     }
 
     public fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &mut TxContext): Item {

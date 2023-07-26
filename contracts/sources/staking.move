@@ -18,6 +18,8 @@ module contracts::staking {
     use loa::arca::ARCA;
     use contracts::merkle_proof;
     use sui::hash;
+    use contracts::game::{Self, GameConfig};
+    use multisig::multisig::{Self, MultiSignature};
 
     friend contracts::marketplace;
 
@@ -44,6 +46,9 @@ module contracts::staking {
     const EDistributionRewardsNotAvailable: u64 = 8;
     const EVersionMismatch: u64 = 9;
     const EProofInvalid: u64 = 10;
+    const ENeedVote: u64 = 11;
+
+    const WithdrawReward: u64 = 0;
 
     struct VeARCA has key {
         id: UID,
@@ -76,6 +81,12 @@ module contracts::staking {
         week_reward_name: String,
         user: address,
         amount: u64,
+    }
+
+    struct WithdrawRewardQequest has key, store {
+        id: UID,
+        to: address,
+        amount: u64
     }
 
     fun init(ctx: &mut TxContext){
@@ -259,12 +270,69 @@ module contracts::staking {
         object::delete(id);
     }
 
-    public fun receive_rewards(_: &GameCap, sp: &mut StakingPool, amount: u64, ctx: &mut TxContext): Coin<ARCA> {
+    // public fun receive_rewards(_: &GameCap, sp: &mut StakingPool, amount: u64, ctx: &mut TxContext): Coin<ARCA> {
+    //     assert!(VERSION == 1, EVersionMismatch);
+    //
+    //     let coin = coin::take<ARCA>(&mut sp.rewards, amount, ctx);
+    //
+    //     coin
+    // }
+
+    fun withdraw_rewards(sp: &mut StakingPool, to:address, amount: u64, ctx: &mut TxContext){
         assert!(VERSION == 1, EVersionMismatch);
 
         let coin = coin::take<ARCA>(&mut sp.rewards, amount, ctx);
 
-        coin
+        transfer::public_transfer(coin, to);
+    }
+
+    public fun withdraw_activity_profits_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, amount: u64, ctx: &mut TxContext) {
+        // Only multi sig guardian
+        game::only_multi_sig_scope(multi_signature, game_config);
+        // Only participant
+        game::only_participant(multi_signature, ctx);
+
+        let request = WithdrawRewardQequest{
+            id: object::new(ctx),
+            to,
+            amount
+        };
+
+        let desc = sui::address::to_string(object::id_address(&request));
+
+        multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawReward, request, ctx);
+    }
+
+    public fun withdraw_activity_profits_execute(
+        game_config:&mut GameConfig,
+        multi_signature : &mut MultiSignature,
+        proposal_id: u256,
+        is_approve: bool,
+        sp: &mut StakingPool,
+        ctx: &mut TxContext): bool {
+
+        game::only_multi_sig_scope(multi_signature, game_config);
+        // Only participant
+        game::only_participant(multi_signature, ctx);
+
+        if (is_approve) {
+            let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
+            if (approved) {
+                let request = multisig::borrow_proposal_request<WithdrawRewardQequest>(multi_signature, &proposal_id, ctx);
+
+                withdraw_rewards(sp, request.to, request.amount, ctx);
+                multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
+                return true
+            };
+        }else {
+            let (rejected, _ ) = multisig::is_proposal_rejected(multi_signature, proposal_id);
+            if (rejected) {
+                multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
+                return true
+            }
+        };
+
+        abort ENeedVote
     }
 
     // ========================= Helper functions =========================
