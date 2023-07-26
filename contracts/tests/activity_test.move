@@ -21,7 +21,7 @@ module contracts::activity_test {
         ts::next_tx(&mut scenario, GAME);
         let cap = ts::take_from_sender<GameCap>(&mut scenario);
         activity::create_config(&cap, 1688522400000, 1691200800000, 1000,
-            GAME, 19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
+            19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
             string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), ts::ctx(&mut scenario)
         );
 

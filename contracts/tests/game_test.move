@@ -9,10 +9,12 @@ module contracts::test_game {
   use contracts::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, EGenderismatch, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket, ArcaCounter, SeenMessages,UpgradeTicket};
   use contracts::hero::{Self, Hero};
   use loa::arca::ARCA;
+  use multisig::multisig::{Self, MultiSignature};
   //use sui::object;
   use contracts::gacha::GachaBall;
   use std::string;
   use sui::clock;
+  use std::debug;
 
   // errors
   const EWrongGrowths: u64 = 0;
@@ -1000,6 +1002,45 @@ module contracts::test_game {
       ts::return_shared(seen_messages);
       ts::return_shared(clock);
       ts::return_to_sender<GameCap>(&scenario, game_cap);
+    };
+
+    ts::end(scenario);
+  }
+
+  #[test]
+  fun test_multi_sig() {
+    let mugen_pk: vector<u8> = vector[
+      2, 103,  79,  79, 204,  13, 202, 247,
+      197,  59,  99,  89, 191,  68, 208, 197,
+      53,  13, 102, 206, 105, 188,  11, 224,
+      201, 218, 204, 245,  28, 251, 215,  86,
+      126
+    ];
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      game::set_mugen_pk_request(&mut config, &mut multi_signature, mugen_pk, ts::ctx(&mut scenario));
+
+      ts::return_shared(multi_signature);
+      ts::return_shared(config);
+    };
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let seen_messages = ts::take_shared<SeenMessages>(&mut scenario);
+      multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
+      let b = game::set_mugen_pk_execute(&mut config, &mut multi_signature, 0, true, &mut seen_messages,ts::ctx(&mut scenario));
+
+      debug::print(&b);
+
+      ts::return_shared(multi_signature);
+      ts::return_shared(config);
+      ts::return_shared(seen_messages);
     };
 
     ts::end(scenario);

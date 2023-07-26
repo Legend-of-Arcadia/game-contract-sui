@@ -6,7 +6,8 @@ module contracts::activity {
     use std::option;
     use std::vector;
 
-    use sui::balance::{Self};
+    use sui::balance::{Self, Balance};
+    use sui::dynamic_field as df;
     use sui::coin::{Self, Coin};
     use sui::event;
     use sui::object::{Self, ID, UID};
@@ -31,7 +32,6 @@ module contracts::activity {
         end_time: u64,
         max_supply: u64,
         total_supply: u64,
-        finance_address: address,
         coin_prices: VecMap<TypeName, u64>,
         token_type: u64,
         name: String,
@@ -78,7 +78,6 @@ module contracts::activity {
         start_time: u64,
         end_time: u64,
         max_supply: u64,
-        finance_address: address,
         token_type: u64,
         name: String,
         type: String,
@@ -93,7 +92,6 @@ module contracts::activity {
             end_time,
             max_supply,
             total_supply: 0,
-            finance_address,
             coin_prices: vec_map::empty<TypeName, u64>(),
             token_type,
             name,
@@ -119,8 +117,8 @@ module contracts::activity {
         });
 
         let ActivityConfig{id, start_time:_, end_time: _,
-            max_supply: _, total_supply:_, finance_address:_,
-            coin_prices:_, token_type:_, name:_, type:_, collection:_, description: _} = config;
+            max_supply: _, total_supply:_, coin_prices:_,
+            token_type:_, name:_, type:_, collection:_, description: _} = config;
 
         object::delete(id);
     }
@@ -219,12 +217,25 @@ module contracts::activity {
     fun pay<COIN>(config: &mut ActivityConfig, total: u64, paid: Coin<COIN>, ctx: &mut TxContext) {
         let paid_value: u64 = balance::value(coin::balance(&paid));
         assert_payment_amount(total, paid_value);
-        if (total == paid_value) {
-            transfer::public_transfer(paid, config.finance_address);
-        } else {
-            transfer::public_transfer(coin::split(&mut paid, total, ctx), config.finance_address);
-            transfer::public_transfer(paid, tx_context::sender(ctx));
+
+        let coin_type = type_name::get<COIN>();
+        if (total < paid_value) {
+            transfer::public_transfer(coin::split(&mut paid, paid_value - total, ctx), tx_context::sender(ctx));
         };
+
+        if (df::exists_with_type<TypeName, Balance<COIN>>(&mut config.id, coin_type)) {
+            let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut config.id, coin_type);
+            balance::join<COIN>(coin_balance, coin::into_balance<COIN>(paid));
+        } else {
+            df::add<TypeName, Balance<COIN>>(&mut config.id, coin_type, coin::into_balance<COIN>(paid));
+        };
+    }
+
+    public fun take_fee_profits<COIN>(_: &GameCap, config: &mut ActivityConfig, ctx: &mut TxContext): Coin<COIN>{
+        let coin_type = type_name::get<COIN>();
+        let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut config.id, coin_type);
+        let balance_all = balance::withdraw_all<COIN>(coin_balance);
+        coin::from_balance<COIN>(balance_all, ctx)
     }
 
     // asserts

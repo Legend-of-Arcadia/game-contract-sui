@@ -18,6 +18,7 @@ module contracts::game{
   use sui::address;
 
   use loa::arca::ARCA;
+  use multisig::multisig::{Self, MultiSignature};
   use contracts::hero::{Self, Hero};
   use contracts::gacha::{Self, GachaBall};
   use contracts::item::{Self, Item};
@@ -42,12 +43,16 @@ module contracts::game{
   const EInvalidSignature: u64 = 14;
   const EInvalidSalt: u64 = 15;
   const ETimeExpired: u64 = 16;
+  const ENotParticipant: u64 = 17;
+  const ENotInMultiSigScope: u64 = 18;
+
 
   // config struct
   struct GameConfig has key, store {
     id: UID,
     game_address: address,
     mint_address: address,
+    for_multi_sign: ID,
   }
 
   //airdrop
@@ -92,6 +97,10 @@ module contracts::game{
     gacha_balls: vector<GachaBall>
   }
 
+  struct SetMugenPkQequest has key, store {
+    id: UID,
+    mugen_pk: vector<u8>,
+  }
   // events
   struct GachaBallOpened has copy, drop {
     id: ID,
@@ -169,10 +178,12 @@ module contracts::game{
       profits: balance::zero<ARCA>()
     };
 
+    let multi_sig = multisig::create_multisig(ctx);
     let config = GameConfig {
       id: object::new(ctx),
       game_address: tx_context::sender(ctx),
       mint_address: tx_context::sender(ctx),
+      for_multi_sign: object::id(&multi_sig)
     };
 
     let objBurn = ObjBurn {
@@ -190,6 +201,7 @@ module contracts::game{
       arca_balance: balance::zero<ARCA>()
     };
 
+    transfer::public_share_object(multi_sig);
     transfer::public_share_object(config);
     transfer::public_share_object(upgrader);
     transfer::public_share_object(objBurn);
@@ -373,6 +385,54 @@ module contracts::game{
   public fun set_mugen_pk(_: &GameCap, mugen_pk: vector<u8>, seen_messages: &mut SeenMessages) {
     seen_messages.mugen_pk = mugen_pk;
   }
+
+  public fun set_mugen_pk_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, mugen_pk: vector<u8>, ctx: &mut TxContext) {
+    // Only multi sig guardian
+    only_multi_sig_scope(multi_signature, game_config);
+    // Only participant
+    only_participant(multi_signature, ctx);
+
+    let request = SetMugenPkQequest{
+      id: object::new(ctx),
+      mugen_pk
+    };
+
+    let desc = sui::address::to_string(object::id_address(&request));
+
+    multisig::create_proposal(multi_signature, *string::bytes(&desc), 1, request, ctx);
+  }
+
+  public fun set_mugen_pk_execute(
+    game_config:&mut GameConfig,
+    multi_signature : &mut MultiSignature,
+    proposal_id: u256,
+    is_approve: bool,
+    seen_messages: &mut SeenMessages,
+    tx: &mut TxContext): bool {
+
+    only_multi_sig_scope(multi_signature, game_config);
+    // Only participant
+    only_participant(multi_signature, tx);
+
+    if (is_approve) {
+      let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
+      if (approved) {
+        let request = multisig::borrow_proposal_request<SetMugenPkQequest>(multi_signature, &proposal_id, tx);
+
+        seen_messages.mugen_pk = request.mugen_pk;
+        multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, tx);
+        return true
+      };
+    }else {
+      let (rejected, _ ) = multisig::is_proposal_rejected(multi_signature, proposal_id);
+      if (rejected) {
+        multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, tx);
+        return true
+      }
+    };
+
+    abort 1
+  }
   /// === Upgrader functions ===
   // place an upgraded hero
 
@@ -551,11 +611,9 @@ module contracts::game{
     while (i < l) {
       let burnable = vector::pop_back<Hero>(&mut to_burn);
       assert!(main_rarity == *hero::rarity(& burnable), ERarityMismatch);
-      // hero::burn(burnable);
       let burn_hero_address = object::id_address(&burnable);
       vector::push_back(&mut burn_addresses, burn_hero_address);
       vector::push_back(&mut ticket.burn_heroes, burnable);
-      //put_burn_hero(burnable, burn_hero_address, obj_burn);
       i = i + 1;
     };
     vector::destroy_empty<Hero>(to_burn);
@@ -712,6 +770,15 @@ module contracts::game{
     coin::from_balance(coin_balance, ctx)
   }
 
+  // === check permission functions ===
+
+  fun only_participant (multi_signature: &MultiSignature, tx: &mut TxContext) {
+    assert!(multisig::is_participant(multi_signature, tx_context::sender(tx)), ENotParticipant);
+  }
+
+  fun only_multi_sig_scope (multi_signature: &MultiSignature, game_congif: &GameConfig) {
+    assert!(object::id(multi_signature) == game_congif.for_multi_sign, ENotInMultiSigScope);
+  }
   // === Test-only ===
 
   #[test_only]
