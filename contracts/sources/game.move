@@ -39,12 +39,17 @@ module contracts::game{
   const EBodyPartCannotBeExchanged: u64 = 10;
   const ESameAppearancePart: u64 = 11;
   const ENoGameAdmin:u64 = 12;
-  const EGenderismatch:u64 = 13;
+  const EGenderMismatch:u64 = 13;
   const EInvalidSignature: u64 = 14;
   const EInvalidSalt: u64 = 15;
   const ETimeExpired: u64 = 16;
   const ENotParticipant: u64 = 17;
   const ENotInMultiSigScope: u64 = 18;
+  const ENeedVote: u64 = 19;
+
+  //multisig type
+  const WithdrawArca: u64 = 0;
+  const WithdrawUpgradeProfits: u64 = 1;
 
 
   // config struct
@@ -97,9 +102,15 @@ module contracts::game{
     gacha_balls: vector<GachaBall>
   }
 
-  struct SetMugenPkQequest has key, store {
+  struct WithdrawArcaQequest has key, store {
     id: UID,
-    mugen_pk: vector<u8>,
+    amount: u64,
+    to: address
+  }
+
+  struct WithdrawUpgradeProfitsQequest has key, store {
+    id: UID,
+    to: address
   }
   // events
   struct GachaBallOpened has copy, drop {
@@ -225,10 +236,10 @@ module contracts::game{
     upgrader.upgrade_address = new_address;
   }
   /// claim profits
-  public fun claim_upgrade_profits(_: &GameCap, upgrader: &mut Upgrader , ctx: &mut TxContext): Coin<ARCA> {
-    let total: Balance<ARCA> = balance::withdraw_all<ARCA>(&mut upgrader.profits);
-    coin::from_balance(total, ctx)
-  }
+  // public fun claim_upgrade_profits(_: &GameCap, upgrader: &mut Upgrader , ctx: &mut TxContext): Coin<ARCA> {
+  //   let total: Balance<ARCA> = balance::withdraw_all<ARCA>(&mut upgrader.profits);
+  //   coin::from_balance(total, ctx)
+  // }
   // TODO: Each address can get more than one rewards
   /// whitelist add addresses and corresponding rewards
   // address.length == rewards.length
@@ -376,9 +387,20 @@ module contracts::game{
     balance::join(&mut arca_counter.arca_balance, coin::into_balance<ARCA>(payment));
   }
 
-  public fun withdraw_acra(_: &GameCap, amoount: u64, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) : Coin<ARCA> {
-    let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amoount);
-    coin::from_balance(coin_balance, ctx)
+  // public fun withdraw_acra(_: &GameCap, amount: u64, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) : Coin<ARCA> {
+  //   let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amoount);
+  //   coin::from_balance(coin_balance, ctx)
+  // }
+  fun withdraw_acra(amount: u64, to:address, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
+    let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amount);
+
+    transfer::public_transfer(coin::from_balance(coin_balance, ctx), to);
+  }
+
+  /// withdraw upgrade profits
+  fun withdraw_upgrade_profits(upgrader: &mut Upgrader , to: address, ctx: &mut TxContext) {
+    let total: Balance<ARCA> = balance::withdraw_all<ARCA>(&mut upgrader.profits);
+    transfer::public_transfer(coin::from_balance(total, ctx), to);
   }
 
   /// configure mugen_pk field of SeenMessages
@@ -386,52 +408,101 @@ module contracts::game{
     seen_messages.mugen_pk = mugen_pk;
   }
 
-  public fun set_mugen_pk_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, mugen_pk: vector<u8>, ctx: &mut TxContext) {
+  public fun withdraw_arca_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, amount: u64, to: address, ctx: &mut TxContext) {
     // Only multi sig guardian
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
     only_participant(multi_signature, ctx);
 
-    let request = SetMugenPkQequest{
+    let request = WithdrawArcaQequest{
       id: object::new(ctx),
-      mugen_pk
+      amount,
+      to
     };
 
     let desc = sui::address::to_string(object::id_address(&request));
 
-    multisig::create_proposal(multi_signature, *string::bytes(&desc), 1, request, ctx);
+    multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawArca, request, ctx);
   }
 
-  public fun set_mugen_pk_execute(
+  public fun withdraw_arca_execute(
     game_config:&mut GameConfig,
     multi_signature : &mut MultiSignature,
     proposal_id: u256,
     is_approve: bool,
-    seen_messages: &mut SeenMessages,
-    tx: &mut TxContext): bool {
+    arca_counter: &mut ArcaCounter,
+    ctx: &mut TxContext): bool {
 
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
-    only_participant(multi_signature, tx);
+    only_participant(multi_signature, ctx);
 
     if (is_approve) {
       let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
       if (approved) {
-        let request = multisig::borrow_proposal_request<SetMugenPkQequest>(multi_signature, &proposal_id, tx);
+        let request = multisig::borrow_proposal_request<WithdrawArcaQequest>(multi_signature, &proposal_id, ctx);
 
-        seen_messages.mugen_pk = request.mugen_pk;
-        multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, tx);
+        withdraw_acra(request.amount, request.to, arca_counter, ctx);
+        multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
         return true
       };
     }else {
       let (rejected, _ ) = multisig::is_proposal_rejected(multi_signature, proposal_id);
       if (rejected) {
-        multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, tx);
+        multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
         return true
       }
     };
 
-    abort 1
+    abort ENeedVote
+  }
+
+  public fun withdraw_upgrade_profits_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
+    // Only multi sig guardian
+    only_multi_sig_scope(multi_signature, game_config);
+    // Only participant
+    only_participant(multi_signature, ctx);
+
+    let request = WithdrawUpgradeProfitsQequest{
+      id: object::new(ctx),
+      to
+    };
+
+    let desc = sui::address::to_string(object::id_address(&request));
+
+    multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawUpgradeProfits, request, ctx);
+  }
+
+  public fun withdraw_upgrade_profits_execute(
+    game_config:&mut GameConfig,
+    multi_signature : &mut MultiSignature,
+    proposal_id: u256,
+    is_approve: bool,
+    upgrader: &mut Upgrader,
+    ctx: &mut TxContext): bool {
+
+    only_multi_sig_scope(multi_signature, game_config);
+    // Only participant
+    only_participant(multi_signature, ctx);
+
+    if (is_approve) {
+      let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
+      if (approved) {
+        let request = multisig::borrow_proposal_request<WithdrawUpgradeProfitsQequest>(multi_signature, &proposal_id, ctx);
+
+        withdraw_upgrade_profits(upgrader, request.to, ctx);
+        multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
+        return true
+      };
+    }else {
+      let (rejected, _ ) = multisig::is_proposal_rejected(multi_signature, proposal_id);
+      if (rejected) {
+        multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
+        return true
+      }
+    };
+
+    abort ENeedVote
   }
   /// === Upgrader functions ===
   // place an upgraded hero
@@ -564,7 +635,7 @@ module contracts::game{
 
     let main_hero_gender= vector::borrow(hero::base_values(&main_hero), 2);
     let burn_hero_gender= vector::borrow(hero::base_values(&to_burn), 2);
-    assert!(*main_hero_gender == *burn_hero_gender, EGenderismatch);
+    assert!(*main_hero_gender == *burn_hero_gender, EGenderMismatch);
     let main_address = object::id_address(&main_hero);
 
     let ticket =  UpgradeTicket{
@@ -772,11 +843,11 @@ module contracts::game{
 
   // === check permission functions ===
 
-  fun only_participant (multi_signature: &MultiSignature, tx: &mut TxContext) {
+  public fun only_participant (multi_signature: &MultiSignature, tx: &mut TxContext) {
     assert!(multisig::is_participant(multi_signature, tx_context::sender(tx)), ENotParticipant);
   }
 
-  fun only_multi_sig_scope (multi_signature: &MultiSignature, game_congif: &GameConfig) {
+  public fun only_multi_sig_scope (multi_signature: &MultiSignature, game_congif: &GameConfig) {
     assert!(object::id(multi_signature) == game_congif.for_multi_sign, ENotInMultiSigScope);
   }
   // === Test-only ===

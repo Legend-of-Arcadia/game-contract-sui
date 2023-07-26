@@ -1,7 +1,7 @@
 module contracts::activity {
     use std::type_name::{Self, TypeName};
     use sui::vec_map::{Self, VecMap};
-    use std::string::{String};
+    use std::string::{Self, String};
     use sui::clock::{Self, Clock};
     use std::option;
     use std::vector;
@@ -15,7 +15,8 @@ module contracts::activity {
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
     use contracts::gacha::{Self};
-    use contracts::game::GameCap;
+    use contracts::game::{Self, GameCap, GameConfig};
+    use multisig::multisig::{Self, MultiSignature};
 
 
     const EPaymentAmountInvalid: u64 = 0;
@@ -25,6 +26,14 @@ module contracts::activity {
     const ECurrentTimeGEEndTime: u64 = 4;
     const EPriceEQZero: u64 = 5;
     const ETimeSet: u64 = 6;
+    const ECoinTypeMismatch: u64 = 7;
+    const ENeedVote: u64 = 8;
+
+    const WithdrawActivityProfits: u64 = 0;
+
+    struct ActivityProfits has key, store {
+        id: UID,
+    }
 
     struct ActivityConfig has key, store {
         id: UID,
@@ -38,6 +47,12 @@ module contracts::activity {
         type: String,
         collection: String,
         description: String,
+    }
+
+    struct WithdrawActivityProfitsQequest has key, store {
+        id: UID,
+        coin_type: TypeName,
+        to: address
     }
 
     // event
@@ -71,6 +86,14 @@ module contracts::activity {
     struct RemovePriceEvent has copy, drop {
         config_object_id: ID,
         coin_type: TypeName,
+    }
+
+    fun init(ctx: &mut TxContext){
+        let activity_profits = ActivityProfits{
+            id: object::new(ctx),
+        };
+
+        transfer::public_share_object(activity_profits);
     }
 
     public entry fun create_config(
@@ -163,6 +186,7 @@ module contracts::activity {
         paid: Coin<COIN>,
         amount: u64,
         clock: &Clock,
+        profits: &mut ActivityProfits,
         ctx: &mut TxContext,
     ) {
         let current_time: u64 = clock::timestamp_ms(clock);
@@ -182,7 +206,7 @@ module contracts::activity {
 
         let total: u64 = price * amount;
         // payment
-        pay(config, total, paid, ctx);
+        pay(profits, total, paid, ctx);
         // mint nft
         let i = 0;
         let token_types: vector<address> = vector::empty<address>();
@@ -214,7 +238,7 @@ module contracts::activity {
         });
     }
 
-    fun pay<COIN>(config: &mut ActivityConfig, total: u64, paid: Coin<COIN>, ctx: &mut TxContext) {
+    fun pay<COIN>(profits: &mut ActivityProfits, total: u64, paid: Coin<COIN>, ctx: &mut TxContext) {
         let paid_value: u64 = balance::value(coin::balance(&paid));
         assert_payment_amount(total, paid_value);
 
@@ -223,19 +247,76 @@ module contracts::activity {
             transfer::public_transfer(coin::split(&mut paid, paid_value - total, ctx), tx_context::sender(ctx));
         };
 
-        if (df::exists_with_type<TypeName, Balance<COIN>>(&mut config.id, coin_type)) {
-            let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut config.id, coin_type);
+        if (df::exists_with_type<TypeName, Balance<COIN>>(&mut profits.id, coin_type)) {
+            let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut profits.id, coin_type);
             balance::join<COIN>(coin_balance, coin::into_balance<COIN>(paid));
         } else {
-            df::add<TypeName, Balance<COIN>>(&mut config.id, coin_type, coin::into_balance<COIN>(paid));
+            df::add<TypeName, Balance<COIN>>(&mut profits.id, coin_type, coin::into_balance<COIN>(paid));
         };
     }
 
-    public fun take_fee_profits<COIN>(_: &GameCap, config: &mut ActivityConfig, ctx: &mut TxContext): Coin<COIN>{
+    // public fun take_fee_profits<COIN>(_: &GameCap, config: &mut ActivityConfig, ctx: &mut TxContext): Coin<COIN>{
+    //     let coin_type = type_name::get<COIN>();
+    //     let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut config.id, coin_type);
+    //     let balance_all = balance::withdraw_all<COIN>(coin_balance);
+    //     coin::from_balance<COIN>(balance_all, ctx)
+    // }
+    fun withdraw_activity_profits<COIN>(profits: &mut ActivityProfits, to:address, ctx: &mut TxContext){
         let coin_type = type_name::get<COIN>();
-        let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut config.id, coin_type);
+        let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut profits.id, coin_type);
         let balance_all = balance::withdraw_all<COIN>(coin_balance);
-        coin::from_balance<COIN>(balance_all, ctx)
+        transfer::public_transfer(coin::from_balance<COIN>(balance_all, ctx), to);
+    }
+
+    public fun withdraw_activity_profits_request<COIN>(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
+        // Only multi sig guardian
+        game::only_multi_sig_scope(multi_signature, game_config);
+        // Only participant
+        game::only_participant(multi_signature, ctx);
+
+        let coin_type = type_name::get<COIN>();
+        let request = WithdrawActivityProfitsQequest{
+            id: object::new(ctx),
+            coin_type,
+            to
+        };
+
+        let desc = sui::address::to_string(object::id_address(&request));
+
+        multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawActivityProfits, request, ctx);
+    }
+
+    public fun withdraw_activity_profits_execute<COIN>(
+        game_config:&mut GameConfig,
+        multi_signature : &mut MultiSignature,
+        proposal_id: u256,
+        is_approve: bool,
+        profits: &mut ActivityProfits,
+        ctx: &mut TxContext): bool {
+
+        game::only_multi_sig_scope(multi_signature, game_config);
+        // Only participant
+        game::only_participant(multi_signature, ctx);
+
+        if (is_approve) {
+            let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
+            if (approved) {
+                let request = multisig::borrow_proposal_request<WithdrawActivityProfitsQequest>(multi_signature, &proposal_id, ctx);
+
+                assert!(request.coin_type == type_name::get<COIN>(), ECoinTypeMismatch);
+                withdraw_activity_profits<COIN>(profits, request.to, ctx);
+                multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
+                return true
+            };
+        }else {
+            let (rejected, _ ) = multisig::is_proposal_rejected(multi_signature, proposal_id);
+            if (rejected) {
+                multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
+                return true
+            }
+        };
+
+        abort ENeedVote
     }
 
     // asserts
@@ -264,12 +345,17 @@ module contracts::activity {
     }
 
     fun assert_payment_amount(total: u64, paid_value: u64) {
-        assert!(total <= paid_value, EPaymentAmountInvalid)
+        assert!(total <= paid_value, EPaymentAmountInvalid);
     }
 
     fun assert_time_set(start_time: u64, end_time: u64) {
         if (start_time > 0 && end_time > 0) {
             assert!(end_time >= start_time, ETimeSet);
         };
+    }
+
+    #[test_only]
+    public fun init_for_test(ctx: &mut TxContext) {
+        init(ctx);
     }
 }

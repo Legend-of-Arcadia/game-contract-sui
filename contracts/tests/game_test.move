@@ -6,7 +6,7 @@ module contracts::test_game {
   use sui::test_scenario as ts;
   use sui::transfer;
 
-  use contracts::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, EGenderismatch, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket, ArcaCounter, SeenMessages,UpgradeTicket};
+  use contracts::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, EGenderMismatch, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket, ArcaCounter, SeenMessages,UpgradeTicket};
   use contracts::hero::{Self, Hero};
   use loa::arca::ARCA;
   use multisig::multisig::{Self, MultiSignature};
@@ -14,7 +14,7 @@ module contracts::test_game {
   use contracts::gacha::GachaBall;
   use std::string;
   use sui::clock;
-  use std::debug;
+  //use std::debug;
 
   // errors
   const EWrongGrowths: u64 = 0;
@@ -404,7 +404,7 @@ module contracts::test_game {
   }
 
   #[test]
-  #[expected_failure(abort_code = EGenderismatch)]
+  #[expected_failure(abort_code = EGenderMismatch)]
   public fun makeover_test_fail_gender() {
     let appearance = vector[21, 22, 28, 24, 25, 26, 27, 28, 29, 30, 31];
     let base = vector[1,2,5,4,5,6];
@@ -569,18 +569,18 @@ module contracts::test_game {
     };
 
     // withdraw upgrader profits
-    ts::next_tx(&mut scenario, GAME);
-    {
-      let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
-      let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let coins = game::claim_upgrade_profits(&cap, &mut upgrader, ts::ctx(&mut scenario));
-      assert!(coin::value<ARCA>(&coins) == 25_000_000_000, EWrongGameBalanceAfterUpgrade);
-      transfer::public_transfer(coins, GAME);
-      ts::return_to_sender<GameCap>(&scenario, cap);
-      ts::return_shared(upgrader);
-      ts::return_shared(obj_burn);
-    };
+    // ts::next_tx(&mut scenario, GAME);
+    // {
+    //   let upgrader = ts::take_shared<Upgrader>(&mut scenario);
+    //   let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
+    //   let cap = ts::take_from_sender<GameCap>(&mut scenario);
+    //   let coins = game::claim_upgrade_profits(&cap, &mut upgrader, ts::ctx(&mut scenario));
+    //   assert!(coin::value<ARCA>(&coins) == 25_000_000_000, EWrongGameBalanceAfterUpgrade);
+    //   transfer::public_transfer(coins, GAME);
+    //   ts::return_to_sender<GameCap>(&scenario, cap);
+    //   ts::return_shared(upgrader);
+    //   ts::return_shared(obj_burn);
+    // };
 
     ts::end(scenario);
   }
@@ -1007,23 +1007,67 @@ module contracts::test_game {
     ts::end(scenario);
   }
 
+  // #[test]
+  // fun test_multi_sig() {
+  //   let mugen_pk: vector<u8> = vector[
+  //     2, 103,  79,  79, 204,  13, 202, 247,
+  //     197,  59,  99,  89, 191,  68, 208, 197,
+  //     53,  13, 102, 206, 105, 188,  11, 224,
+  //     201, 218, 204, 245,  28, 251, 215,  86,
+  //     126
+  //   ];
+  //   let scenario = ts::begin(GAME);
+  //   game::init_for_test(ts::ctx(&mut scenario));
+  //
+  //   ts::next_tx(&mut scenario, GAME);
+  //   {
+  //     let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+  //     let config = ts::take_shared<GameConfig>(&mut scenario);
+  //     game::set_mugen_pk_request(&mut config, &mut multi_signature, mugen_pk, ts::ctx(&mut scenario));
+  //
+  //     ts::return_shared(multi_signature);
+  //     ts::return_shared(config);
+  //   };
+  //   ts::next_tx(&mut scenario, GAME);
+  //   {
+  //     let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+  //     let config = ts::take_shared<GameConfig>(&mut scenario);
+  //     let seen_messages = ts::take_shared<SeenMessages>(&mut scenario);
+  //     multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
+  //     let b = game::set_mugen_pk_execute(&mut config, &mut multi_signature, 0, true, &mut seen_messages,ts::ctx(&mut scenario));
+  //
+  //     debug::print(&b);
+  //
+  //     ts::return_shared(multi_signature);
+  //     ts::return_shared(config);
+  //     ts::return_shared(seen_messages);
+  //   };
+  //
+  //   ts::end(scenario);
+  // }
+
   #[test]
-  fun test_multi_sig() {
-    let mugen_pk: vector<u8> = vector[
-      2, 103,  79,  79, 204,  13, 202, 247,
-      197,  59,  99,  89, 191,  68, 208, 197,
-      53,  13, 102, 206, 105, 188,  11, 224,
-      201, 218, 204, 245,  28, 251, 215,  86,
-      126
-    ];
+  fun test_deposit_and_withdraw_by_multisig() {
+    let amount = 30*DECIMALS;
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
+    let coin = coin::mint_for_testing<ARCA>(30*DECIMALS, ts::ctx(&mut scenario));
 
+    let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+    clock::share_for_testing(clock);
+
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let arca_counter = ts::take_shared<ArcaCounter>(&mut scenario);
+      game::deposit(coin, &mut arca_counter, ts::ctx(&mut scenario));
+
+      ts::return_shared<ArcaCounter>(arca_counter);
+    };
     ts::next_tx(&mut scenario, GAME);
     {
       let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
       let config = ts::take_shared<GameConfig>(&mut scenario);
-      game::set_mugen_pk_request(&mut config, &mut multi_signature, mugen_pk, ts::ctx(&mut scenario));
+      game::withdraw_arca_request(&mut config, &mut multi_signature, amount, GAME,ts::ctx(&mut scenario));
 
       ts::return_shared(multi_signature);
       ts::return_shared(config);
@@ -1032,17 +1076,16 @@ module contracts::test_game {
     {
       let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
       let config = ts::take_shared<GameConfig>(&mut scenario);
-      let seen_messages = ts::take_shared<SeenMessages>(&mut scenario);
+      let arca_counter = ts::take_shared<ArcaCounter>(&mut scenario);
       multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
-      let b = game::set_mugen_pk_execute(&mut config, &mut multi_signature, 0, true, &mut seen_messages,ts::ctx(&mut scenario));
+      let b = game::withdraw_arca_execute(&mut config, &mut multi_signature, 0, true, &mut arca_counter,ts::ctx(&mut scenario));
 
-      debug::print(&b);
+      assert!(b, 1);
 
       ts::return_shared(multi_signature);
       ts::return_shared(config);
-      ts::return_shared(seen_messages);
+      ts::return_shared(arca_counter);
     };
-
     ts::end(scenario);
   }
 }
