@@ -609,7 +609,7 @@ module contracts::game{
     let open_evt = GachaBallOpened { id: gacha_ball_id, user,ticket_id: object::uid_to_inner(&ticket.id), token_type };
     event::emit(open_evt);
 
-    transfer::transfer(ticket, game_config.game_address);
+    transfer::transfer(ticket, game_config.mint_address);
   }
 
   // appearance_index is the index of the part inside the appearance vector
