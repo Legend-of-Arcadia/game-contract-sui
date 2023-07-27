@@ -1,5 +1,5 @@
 module contracts::staking {
-    //use std::option;
+    //use std::debug;
     use sui::bcs;
     use std::string::{Self, String};
     use std::vector;
@@ -212,7 +212,7 @@ module contracts::staking {
         assert!(VERSION == 1, EVersionMismatch);
         
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
-        assert!(current_timestamp > veARCA.end_date, ELockPeriodNotElapsed);
+        assert!(current_timestamp >= veARCA.end_date, ELockPeriodNotElapsed);
 
         let coin_balance = balance::split<ARCA>(&mut sp.liquidity, veARCA.staked_amount);
 
@@ -350,7 +350,7 @@ module contracts::staking {
         let initial_128 = (initial as u128);
         let end_date_128 = (end_date as u128);
         let locking_period_sec_128 = (locking_period_sec as u128);
-        let current_timestamp = (clock::timestamp_ms(clock) as u128);
+        let current_timestamp = (clock::timestamp_ms(clock) / 1000 as u128);
 
         let veARCA_amount = initial_128 * (end_date_128 - current_timestamp) / locking_period_sec_128;
 

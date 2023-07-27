@@ -12,16 +12,152 @@ module contracts::staking_tests {
     use std::vector;
 
     use std::string;
-    use contracts::staking::{Self, WeekReward, StakingPool};
+    use contracts::staking::{Self, WeekReward, StakingPool, VeARCA};
     use contracts::game::{GameCap, GameConfig};
     use std::debug;
+    use sui::transfer;
     //use sui::balance;
 
+    const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
+    const MONTH_TO_UNIX_SECONDS: u64 = 2_629_744; // rounded up
+    const YEAR_TO_UNIX_SECONDS: u64 = 31_556_926;
     const GAME: address = @0x111;
     const USER1_ADDRESS: address = @0x222;
     const DECIMALS: u64 = 1_000_000_000;
+
+
     #[test]
-    fun test_merkle() {
+    fun test_staking() {
+        let scenario = ts::begin(GAME);
+
+
+        let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        clock::share_for_testing(clock);
+
+        game::init_for_test(ts::ctx(&mut scenario));
+
+        let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            staking::init_for_testing(&cap, ts::ctx(&mut scenario));
+
+
+            ts::return_to_sender<GameCap>(&scenario, cap);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
+
+            ts::return_shared(sp);
+            ts::return_shared(clock);
+        };
+        ts::end(scenario);
+    }
+
+    #[test]
+    fun test_append() {
+        let scenario = ts::begin(GAME);
+
+
+        let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        clock::share_for_testing(clock);
+
+        game::init_for_test(ts::ctx(&mut scenario));
+
+        let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            staking::init_for_testing(&cap, ts::ctx(&mut scenario));
+
+
+            ts::return_to_sender<GameCap>(&scenario, cap);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
+
+            ts::return_shared(sp);
+            ts::return_shared(clock);
+        };
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let x= staking::get_amount_VeARCA(&ve_arca, &clock);
+            assert!(x == 300 * DECIMALS * 100, 1);
+            let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
+
+            clock::increment_for_testing(&mut clock, YEAR_TO_UNIX_SECONDS * 1000/2);
+            staking::append(&mut sp, &mut ve_arca, coin, &clock,ts::ctx(&mut scenario));
+
+
+            ts::return_shared(sp);
+            ts::return_shared(clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+        };
+
+        ts::end(scenario);
+    }
+
+    #[test]
+    fun test_unstake() {
+        let scenario = ts::begin(GAME);
+
+
+        let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        clock::share_for_testing(clock);
+
+        game::init_for_test(ts::ctx(&mut scenario));
+
+        let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            staking::init_for_testing(&cap, ts::ctx(&mut scenario));
+
+
+            ts::return_to_sender<GameCap>(&scenario, cap);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
+
+            ts::return_shared(sp);
+            ts::return_shared(clock);
+        };
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+
+            clock::increment_for_testing(&mut clock, YEAR_TO_UNIX_SECONDS * 1000);
+            let coin = staking::unstake(ve_arca, &mut sp, &clock, ts::ctx(&mut scenario));
+            assert!(coin::value<ARCA>(&coin) == 300 * DECIMALS, 1);
+
+            transfer::public_transfer(coin, USER1_ADDRESS);
+
+            ts::return_shared(sp);
+            ts::return_shared(clock);
+        };
+
+        ts::end(scenario);
+    }
+
+    #[test]
+    fun test_merkle_claim() {
         let scenario = ts::begin(GAME);
 
 
@@ -72,6 +208,40 @@ module contracts::staking_tests {
 
         };
 
+        ts::end(scenario);
+
+    }
+
+    #[test]
+    fun test_multisig_withdraw() {
+        let scenario = ts::begin(GAME);
+
+
+        let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        clock::share_for_testing(clock);
+
+        game::init_for_test(ts::ctx(&mut scenario));
+
+        let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            staking::init_for_testing(&cap, ts::ctx(&mut scenario));
+
+
+            ts::return_to_sender<GameCap>(&scenario, cap);
+        };
+
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+
+            staking::append_rewards(&cap, &mut sp, coin::into_balance(coin));
+            ts::return_to_sender<GameCap>(&scenario, cap);
+            ts::return_shared(sp);
+        };
+
 
         ts::next_tx(&mut scenario, GAME);
         {
@@ -108,7 +278,6 @@ module contracts::staking_tests {
         ts::end(scenario);
 
     }
-
     //
     // const EVeARCAAmountNotMuch: u64 = 0;
     // const ENotCorrectAmmountTransfered: u64 = 1;
