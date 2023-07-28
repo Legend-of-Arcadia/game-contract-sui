@@ -63,7 +63,7 @@ module contracts::marketplace{
         id: UID,
         primary_listings: Table<u64, Listing_P>,
         secondary_listings: Table<u64, Listing>,
-        income: Balance<COIN>, // from primary sells
+        //income: Balance<COIN>, // from primary sells
         primary_list_index: u64,
         secondary_list_index: u64
     }
@@ -117,7 +117,7 @@ module contracts::marketplace{
             id: object::new(ctx),
             primary_listings: table::new<u64, Listing_P>(ctx),
             secondary_listings: table::new<u64, Listing>(ctx),
-            income: balance::zero<ARCA>(),
+            //income: balance::zero<ARCA>(),
             primary_list_index: 0,
             secondary_list_index: 0
         };
@@ -177,17 +177,17 @@ module contracts::marketplace{
         marketplace.finance_address = new_finance_address;
     }
 
-    public fun take_profits_arca(
-        _: &GameCap,
-        marketplace: &mut Marketplace,
-        ctx: &mut TxContext
-        ): Coin<ARCA> 
-    {
-        assert!(VERSION == 1, EVersionMismatch);
-        let stand = &mut marketplace.main;
-        let balance_all = balance::withdraw_all<ARCA>(&mut stand.income);
-        coin::from_balance<ARCA>(balance_all, ctx)
-    }
+    // public fun take_profits_arca(
+    //     _: &GameCap,
+    //     marketplace: &mut Marketplace,
+    //     ctx: &mut TxContext
+    //     ): Coin<ARCA>
+    // {
+    //     assert!(VERSION == 1, EVersionMismatch);
+    //     let stand = &mut marketplace.main;
+    //     let balance_all = balance::withdraw_all<ARCA>(&mut stand.income);
+    //     coin::from_balance<ARCA>(balance_all, ctx)
+    // }
 
     public fun list_primary_arca<Item: key+store>(
         _: &GameCap,
@@ -261,7 +261,8 @@ module contracts::marketplace{
         //     let last_listing = table::remove<u64, Listing_P>(&mut stand.primary_listings, size);
         //     table::add<u64, Listing_P>(&mut stand.primary_listings, listing_number, last_listing);
         // };
-        balance::join<ARCA>(&mut stand.income, coin::into_balance<ARCA>(payment));
+        //balance::join<ARCA>(&mut stand.income, coin::into_balance<ARCA>(payment));
+        put_coin<ARCA>(stand, payment);
         // event
         let evt = ItemBought {
             is_primary_listing: true,
@@ -525,7 +526,8 @@ module contracts::marketplace{
             referrer_value
         ) = fee_calculation(coin::value<ARCA>(payment), base_fee_per);
         let team = coin::split<ARCA>(payment, team_value, ctx);
-        balance::join<ARCA>(&mut stand.income, coin::into_balance<ARCA>(team));
+        put_coin<ARCA>(stand, team);
+        //balance::join<ARCA>(&mut stand.income, coin::into_balance<ARCA>(team));
         let rewards = coin::split<ARCA>(payment, rewards_value, ctx);
         staking::marketplace_add_rewards(sp, rewards);
         if (option::is_some<address>(&referrer))
@@ -565,15 +567,7 @@ module contracts::marketplace{
     {
         let base_value: u64 = (coin::value<COIN>(payment) / 10000) * base_fee_per;
         let fee = coin::split<COIN>(payment, base_value, ctx);
-        let coin_type = type_name::get<COIN>();
-
-        if (df::exists_with_type<TypeName, Balance<COIN>>(&mut stand.id, coin_type)) {
-            let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut stand.id, coin_type);
-            balance::join<COIN>(coin_balance, coin::into_balance<COIN>(fee));
-        } else {
-            df::add<TypeName, Balance<COIN>>(&mut stand.id, coin_type, coin::into_balance<COIN>(fee));
-        };
-
+        put_coin<COIN>(stand, fee);
     }
 
     // public fun take_fee_profits<COIN>(_: &GameCap, marketplace: &mut Marketplace, ctx: &mut TxContext): Coin<COIN>{
@@ -640,6 +634,17 @@ module contracts::marketplace{
         };
 
         abort ENeedVote
+    }
+
+    fun put_coin<COIN>(stand: &mut Stand<ARCA>, coin: Coin<COIN>,) {
+        let coin_type = type_name::get<COIN>();
+
+        if (df::exists_with_type<TypeName, Balance<COIN>>(&mut stand.id, coin_type)) {
+            let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut stand.id, coin_type);
+            balance::join<COIN>(coin_balance, coin::into_balance<COIN>(coin));
+        } else {
+            df::add<TypeName, Balance<COIN>>(&mut stand.id, coin_type, coin::into_balance<COIN>(coin));
+        };
     }
 
     public fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &mut TxContext): Item {
