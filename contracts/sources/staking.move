@@ -97,7 +97,7 @@ module contracts::staking {
             veARCA_holders: linked_table::new<address, vector<u64>>(ctx),
             vip_level_veARCA: vector::empty<u128>(),
         };
-        populate_vip_level_veARCA(&mut staking_pool, 100);
+        populate_vip_level_veARCA(&mut staking_pool, 1);
         // marketplace fee part that is to be burned
         df::add<String, Balance<ARCA>>(
             &mut staking_pool.id,
@@ -142,7 +142,7 @@ module contracts::staking {
             start_date,
             end_date,
             locking_period_sec,
-            decimals: 100
+            decimals: DECIMALS
         };
 
         veARCA
@@ -157,7 +157,7 @@ module contracts::staking {
         assert!(staking_period >= WEEK_TO_UNIX_SECONDS && staking_period<= YEAR_TO_UNIX_SECONDS, ENotCorrectStakingPeriod);
 
         let arca_amount = coin::value(&arca);
-        let staked_amount = arca_amount*100;
+        let staked_amount = arca_amount;
         let start_tmstmp = clock::timestamp_ms(clock) / 1000;
         let end_tmstmp = start_tmstmp + staking_period;
         let locking_period_sec = staking_period;
@@ -165,7 +165,7 @@ module contracts::staking {
 
         staked_amount = calc_initial_veARCA(staked_amount*(staking_period/DAY_TO_UNIX_SECONDS), 365);
 
-        assert!(staked_amount >= 300*DECIMALS, ENotEnoughveARCA);
+        assert!(staked_amount >= 3*DECIMALS, ENotEnoughveARCA);
 
         let balance = coin::into_balance(arca);
         balance::join(&mut sp.liquidity, balance);
@@ -186,7 +186,7 @@ module contracts::staking {
 
         assert!(VERSION == 1, EVersionMismatch);
 
-        let appended_amount = coin::value(&arca)*100;
+        let appended_amount = coin::value(&arca);
         veARCA.staked_amount = veARCA.staked_amount + coin::value(&arca);
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
         let time_left = (veARCA.end_date - current_timestamp)/DAY_TO_UNIX_SECONDS;
@@ -381,9 +381,12 @@ module contracts::staking {
         };
 
         l = l - 1;
-        while(l > 0) {
+        while(l >= 0) {
             if(veARCA_amount_128 >= *vector::borrow(vip_level_veARCA, l) && veARCA_amount_128 < *vector::borrow(vip_level_veARCA, l+1)){
-                vip_level = l;
+                vip_level = l + 1;
+                break
+            };
+            if (l == 0){
                 break
             };
             l = l-1;
