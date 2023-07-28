@@ -6,7 +6,7 @@ module contracts::activity_test {
     GameCap,
     GameConfig
     };
-    use contracts::activity::{Self,ActivityConfig, ActivityProfits, ENeedVote};
+    use contracts::activity::{Self,ActivityConfig, ActivityProfits, ENeedVote, ECoinTypeNoExist};
     use std::string::{Self};
     use loa::arca::ARCA;
     use multisig::multisig::{Self, MultiSignature};
@@ -85,6 +85,77 @@ module contracts::activity_test {
 
         ts::end(scenario);
     }
+
+    #[test]
+    #[expected_failure(abort_code = ECoinTypeNoExist)]
+    fun test_remove_price(){
+        let scenario = ts::begin(GAME);
+        let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        clock::share_for_testing(clock);
+        game::init_for_test(ts::ctx(&mut scenario));
+        activity::init_for_test(ts::ctx(&mut scenario));
+
+        ts::next_tx(&mut scenario, GAME);
+        let cap = ts::take_from_sender<GameCap>(&mut scenario);
+        activity::create_config(&cap, 1688522400000, 1691200800000, 1000,
+            19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
+            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), ts::ctx(&mut scenario)
+        );
+
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let activity_config = ts::take_shared<ActivityConfig>(&mut scenario);
+            activity::set_price<ARCA>(&cap, &mut activity_config, 1000);
+            ts::next_tx(&mut scenario, GAME);
+            activity::remove_price<ARCA>(&cap, &mut activity_config);
+
+            ts::return_to_sender<GameCap>(&scenario, cap);
+            ts::return_shared(activity_config);
+        };
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let fee: Coin<ARCA> = coin::mint_for_testing<ARCA>(5000, ts::ctx(&mut scenario));
+            let activity_config = ts::take_shared<ActivityConfig>(&mut scenario);
+            let profits = ts::take_shared<ActivityProfits>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            clock::increment_for_testing(&mut clock, 1688522400001);
+            activity::buy<ARCA>(&mut activity_config, fee, 5, &clock, &mut profits, ts::ctx(&mut scenario));
+
+            ts::return_shared(activity_config);
+            ts::return_shared(profits);
+            ts::return_shared(clock);
+        };
+        ts::end(scenario);
+    }
+
+
+    // #[test]
+    // fun test_remove_config(){
+    //     let scenario = ts::begin(GAME);
+    //     let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+    //     clock::share_for_testing(clock);
+    //     game::init_for_test(ts::ctx(&mut scenario));
+    //     activity::init_for_test(ts::ctx(&mut scenario));
+    //
+    //     ts::next_tx(&mut scenario, GAME);
+    //     let cap = ts::take_from_sender<GameCap>(&mut scenario);
+    //     activity::create_config(&cap, 1688522400000, 1691200800000, 1000,
+    //         19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
+    //         string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), ts::ctx(&mut scenario)
+    //     );
+    //
+    //     ts::next_tx(&mut scenario, GAME);
+    //     {
+    //         let activity_config = ts::take_shared<ActivityConfig>(&mut scenario);
+    //         //activity::set_price<ARCA>(&cap, &mut activity_config, 1000);
+    //         ts::next_tx(&mut scenario, GAME);
+    //         activity::remove_config(&cap, activity_config);
+    //
+    //         ts::return_to_sender<GameCap>(&scenario, cap);
+    //         //ts::return_shared(activity_config);
+    //     };
+    //     ts::end(scenario);
+    // }
 
     #[test]
     fun test_withraw_profits_by_multisig(){
