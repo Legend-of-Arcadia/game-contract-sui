@@ -288,7 +288,7 @@ module contracts::staking_tests {
         {
             let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
             let config = ts::take_shared<GameConfig>(&mut scenario);
-            staking::withdraw_activity_profits_request(&mut config, &mut multi_signature, GAME, 30*DECIMALS,ts::ctx(&mut scenario));
+            staking::withdraw_rewards_request(&mut config, &mut multi_signature, GAME, 30*DECIMALS,ts::ctx(&mut scenario));
 
             ts::return_shared(multi_signature);
             ts::return_shared(config);
@@ -300,7 +300,7 @@ module contracts::staking_tests {
             let config = ts::take_shared<GameConfig>(&mut scenario);
             let sp = ts::take_shared<StakingPool>(&mut scenario);
             multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
-            let b = staking::withdraw_activity_profits_execute(&mut config, &mut multi_signature, 0, true, &mut sp,ts::ctx(&mut scenario));
+            let b = staking::withdraw_rewards_execute(&mut config, &mut multi_signature, 0, true, &mut sp,ts::ctx(&mut scenario));
 
             assert!(b, 1);
 

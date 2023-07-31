@@ -10,6 +10,7 @@ const upgrader = process.env.UPGRADER!;
 const objBurn = process.env.OBJBURN!;
 const gameConfig = process.env.GAME_CONFIG!;
 const TreasuryCap = process.env.TREASURY_CAP as string;
+const ActivityConfig = process.env.ACTIVITYPROFITS!;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
@@ -36,7 +37,7 @@ let playerAddress = playerKeyPair.getPublicKey().toSuiAddress();
 
 async function buyBox() {
 
-    let configId = "0x3e15a9f680f6137aa4f20b38e07f62def7a72f67a19a28f035e0325531f31bca"
+    let configId = "0x30a7bcc4e06c948fd46c76a91abeeeebb01aa3998a7a361f84894894b1c5ec47"
     let txb = new TransactionBlock();
     let amount = 5;
     const coinType = "0x2::sui::SUI";
@@ -51,6 +52,7 @@ async function buyBox() {
             paid,
             txb.pure(amount),
             txb.object(clock),
+            txb.object(ActivityConfig),
         ]
     });
 
@@ -142,7 +144,7 @@ function getArcaCoinId(result: any) {
 async function main() {
 
     //let result = await setConfig();
-    let result = await buyBoxByArca();
+    let result = await buyBox();
     console.log(result);
 
 }

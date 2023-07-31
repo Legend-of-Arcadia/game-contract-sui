@@ -38,7 +38,6 @@ async function setConfig() {
     let start_time = 1688522400000 // 2023-07-05 10:00:00
     let end_time = 1691200800000 // 2023-08-05 10:00:00
     let max_supply = 1000
-    let finance_address = "0xbe225c0731573a1a41afb36dd363754d24585cfc790929252656ea4e77435d6e"
     let token_type = 19999
     let name = "blue gacha"
     let type = "legend"
@@ -53,7 +52,6 @@ async function setConfig() {
             txb.pure(start_time),
             txb.pure(end_time),
             txb.pure(max_supply),
-            txb.pure(finance_address),
             txb.pure(token_type),
             txb.pure(name),
             txb.pure(type),
@@ -78,7 +76,7 @@ async function setConfig() {
 // player puts their hero to makeover
 async function setPrice() {
 
-    let configId = "0x3e15a9f680f6137aa4f20b38e07f62def7a72f67a19a28f035e0325531f31bca"
+    let configId = "0x30a7bcc4e06c948fd46c76a91abeeeebb01aa3998a7a361f84894894b1c5ec47"
     let txb = new TransactionBlock();
     let price = 1000;
     const coinType = "0x2::sui::SUI";
@@ -137,10 +135,36 @@ async function setArcaPrice() {
 
 }
 
+async function removeConfig() {
+
+    let configId = "0x30a7bcc4e06c948fd46c76a91abeeeebb01aa3998a7a361f84894894b1c5ec47"
+    let txb = new TransactionBlock();
+
+    txb.moveCall({
+        target: `${packageId}::activity::remove_config`,
+        arguments: [
+            txb.object(gameCap),
+            txb.object(configId),
+        ]
+    });
+
+    let result = await mugen.signAndExecuteTransactionBlock({
+        transactionBlock: txb,
+        requestType: "WaitForLocalExecution",
+        options: {
+            showEffects: true,
+            showObjectChanges: true
+        },
+    });
+
+    return result;
+
+}
+
 async function main() {
 
     //let result = await setConfig();
-    let result = await setArcaPrice();
+    let result = await removeConfig();
     console.log(result);
 
 }

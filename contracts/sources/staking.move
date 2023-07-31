@@ -286,7 +286,7 @@ module contracts::staking {
         transfer::public_transfer(coin, to);
     }
 
-    public fun withdraw_activity_profits_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, amount: u64, ctx: &mut TxContext) {
+    public fun withdraw_rewards_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, amount: u64, ctx: &mut TxContext) {
         // Only multi sig guardian
         game::only_multi_sig_scope(multi_signature, game_config);
         // Only participant
@@ -303,7 +303,7 @@ module contracts::staking {
         multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawReward, request, ctx);
     }
 
-    public fun withdraw_activity_profits_execute(
+    public fun withdraw_rewards_execute(
         game_config:&mut GameConfig,
         multi_signature : &mut MultiSignature,
         proposal_id: u256,
