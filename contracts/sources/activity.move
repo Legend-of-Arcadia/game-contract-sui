@@ -134,18 +134,6 @@ module contracts::activity {
         transfer::public_share_object(config);
     }
 
-    public entry fun remove_config(_: &GameCap, config: ActivityConfig) {
-        event::emit(RemoveConfigEvent {
-            config_object_id: object::id(&config),
-        });
-
-        let ActivityConfig{id, start_time:_, end_time: _,
-            max_supply: _, total_supply:_, coin_prices:_,
-            token_type:_, name:_, type:_, collection:_, description: _} = config;
-
-        object::delete(id);
-    }
-
     public entry fun set_price<COIN>(
         _: &GameCap,
         config: &mut ActivityConfig,
