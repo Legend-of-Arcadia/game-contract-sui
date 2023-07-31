@@ -34,13 +34,13 @@ async function addGameCap() {
 
     //let capId = "0x4a7fcc8ad88afc291bf52b8bf794ade682c03c50dd3ea2b7879347e0e6adf7e7"
 
-    let gameCap = txb.moveCall({
+    txb.moveCall({
         target: `${packageId}::game::create_game_cap_by_admin`,
         arguments: [
             txb.object(gameConfigId),
         ]
     });
-    txb.transferObjects([gameCap], txb.pure(keyPair.getPublicKey().toSuiAddress()));
+    //txb.transferObjects([gameCap], txb.pure(keyPair.getPublicKey().toSuiAddress()));
     let result = await mugen.signAndExecuteTransactionBlock({
         transactionBlock: txb,
         requestType: "WaitForLocalExecution",
