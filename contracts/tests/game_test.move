@@ -407,7 +407,7 @@ module contracts::test_game {
   #[expected_failure(abort_code = EGenderMismatch)]
   public fun makeover_test_fail_gender() {
     let appearance = vector[21, 22, 28, 24, 25, 26, 27, 28, 29, 30, 31];
-    let base = vector[1,2,5,4,5,6];
+    let base = vector[2,2,3,4,5,6];
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
 
