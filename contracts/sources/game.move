@@ -626,8 +626,8 @@ module contracts::game{
     let burn_hero_part= vector::borrow(hero::appearance_values(&to_burn), appearance_index);
     assert!(*main_hero_part != *burn_hero_part, ESameAppearancePart);
 
-    let main_hero_gender= vector::borrow(hero::base_values(&main_hero), 2);
-    let burn_hero_gender= vector::borrow(hero::base_values(&to_burn), 2);
+    let main_hero_gender= vector::borrow(hero::base_values(&main_hero), 0);
+    let burn_hero_gender= vector::borrow(hero::base_values(&to_burn), 0);
     assert!(*main_hero_gender == *burn_hero_gender, EGenderMismatch);
     let main_address = object::id_address(&main_hero);
 
