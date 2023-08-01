@@ -46,6 +46,7 @@ module contracts::game{
   const ENotParticipant: u64 = 17;
   const ENotInMultiSigScope: u64 = 18;
   const ENeedVote: u64 = 19;
+  const EInvalidAmount: u64 = 20;
 
   //multisig type
   const WithdrawArca: u64 = 0;
@@ -788,7 +789,7 @@ module contracts::game{
 
   public fun deposit(payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
     let amount = coin::value(&payment);
-    assert!(amount > 0, 1);
+    assert!(amount > 0, EInvalidAmount);
     balance::join(&mut arca_counter.arca_balance, coin::into_balance<ARCA>(payment));
 
     event::emit(UserDeposit{depositer: tx_context::sender(ctx), amount});
