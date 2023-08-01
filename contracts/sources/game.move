@@ -235,11 +235,7 @@ module contracts::game{
   public fun set_upgrade_address(_: &GameCap, new_address: address, upgrader: &mut Upgrader) {
     upgrader.upgrade_address = new_address;
   }
-  /// claim profits
-  // public fun claim_upgrade_profits(_: &GameCap, upgrader: &mut Upgrader , ctx: &mut TxContext): Coin<ARCA> {
-  //   let total: Balance<ARCA> = balance::withdraw_all<ARCA>(&mut upgrader.profits);
-  //   coin::from_balance(total, ctx)
-  // }
+
   // TODO: Each address can get more than one rewards
   /// whitelist add addresses and corresponding rewards
   // address.length == rewards.length
@@ -387,10 +383,6 @@ module contracts::game{
     balance::join(&mut arca_counter.arca_balance, coin::into_balance<ARCA>(payment));
   }
 
-  // public fun withdraw_acra(_: &GameCap, amount: u64, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) : Coin<ARCA> {
-  //   let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amoount);
-  //   coin::from_balance(coin_balance, ctx)
-  // }
   fun withdraw_acra(amount: u64, to:address, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
     let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amount);
 
