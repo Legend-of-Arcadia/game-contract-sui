@@ -189,6 +189,7 @@ module contracts::staking {
         let appended_amount = coin::value(&arca);
         veARCA.staked_amount = veARCA.staked_amount + coin::value(&arca);
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
+        assert!(veARCA.end_date > current_timestamp, ENoActiveStakes);
         let time_left = (veARCA.end_date - current_timestamp)/DAY_TO_UNIX_SECONDS;
 
         assert!(time_left >= 1, ENotAppendActionAvaialble);
@@ -270,13 +271,6 @@ module contracts::staking {
         object::delete(id);
     }
 
-    // public fun receive_rewards(_: &GameCap, sp: &mut StakingPool, amount: u64, ctx: &mut TxContext): Coin<ARCA> {
-    //     assert!(VERSION == 1, EVersionMismatch);
-    //
-    //     let coin = coin::take<ARCA>(&mut sp.rewards, amount, ctx);
-    //
-    //     coin
-    // }
 
     fun withdraw_rewards(sp: &mut StakingPool, to:address, amount: u64, ctx: &mut TxContext){
         assert!(VERSION == 1, EVersionMismatch);

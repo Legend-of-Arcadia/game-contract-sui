@@ -243,12 +243,6 @@ module contracts::activity {
         };
     }
 
-    // public fun take_fee_profits<COIN>(_: &GameCap, config: &mut ActivityConfig, ctx: &mut TxContext): Coin<COIN>{
-    //     let coin_type = type_name::get<COIN>();
-    //     let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut config.id, coin_type);
-    //     let balance_all = balance::withdraw_all<COIN>(coin_balance);
-    //     coin::from_balance<COIN>(balance_all, ctx)
-    // }
     fun withdraw_activity_profits<COIN>(profits: &mut ActivityProfits, to:address, ctx: &mut TxContext){
         let coin_type = type_name::get<COIN>();
         let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut profits.id, coin_type);
