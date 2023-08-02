@@ -818,65 +818,96 @@ module contracts::test_game {
     ts::end(scenario);
   }
 
-  // #[test]
-  // public fun voucher_exchage_test() {
-  //   let scenario = ts::begin(GAME);
-  //   game::init_for_test(ts::ctx(&mut scenario));
-  //
-  //   // mint three heroes and send it to the user
-  //   ts::next_tx(&mut scenario, GAME);
-  //   {
-  //     let cap = ts::take_from_sender<GameCap>(&mut scenario);
-  //     let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
-  //     let gacha_id = 10000;
-  //     let gacha_
-  //
-  //     game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id);
-  //
-  //     let voucher = game::mint_test_voucher(&cap, ts::ctx(&mut scenario));
-  //     transfer::public_transfer(voucher, USER);
-  //     ts::return_to_sender<GameCap>(&scenario, cap);
-  //   };
+  #[test]
+  public fun voucher_exchage_test() {
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    // mint three heroes and send it to the user
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+      let gacha_id = 50000;
+      let gacha_token_type = vector[28888, 27777];
+      let gacha_name = vector[string::utf8(b"Grandia"), string::utf8(b"Grandia")];
+      let gacha_type = vector[string::utf8(b"Grandia"), string::utf8(b"Grandia")];
+      let gacha_collction = vector[string::utf8(b"Grandia"), string::utf8(b"Grandia")];
+      let gacha_description = vector[string::utf8(b"Grandia"), string::utf8(b"Grandia")];
+      let start_time = 0;
+      let end_time = 0;
+
+      game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id, gacha_token_type, gacha_name, gacha_type, gacha_collction,
+      gacha_description, start_time, end_time);
+
+      let voucher = game::mint_test_voucher(&cap, ts::ctx(&mut scenario));
+      transfer::public_transfer(voucher, USER);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(gacha_config_tb);
+    };
 
     //user starts the upgrade
     ts::next_tx(&mut scenario, USER);
     {
 
-      let gacha_ball = ts::take_from_sender<GachaBall>(&mut scenario);
+      let voucher = ts::take_from_sender<GachaBall>(&mut scenario);
 
-      let game_config = ts::take_shared<GameConfig>(&mut scenario);
+      let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
 
-      game::open_gacha_ball(gacha_ball, &game_config, ts::ctx(&mut scenario));
-      ts::return_shared(game_config);
+      game::voucher_exchage(voucher, &gacha_config_tb, ts::ctx(&mut scenario));
+
+      ts::return_shared(gacha_config_tb);
     };
 
+    ts::end(scenario);
+  }
+
+
+  #[test]
+  public fun discount_exchage_test() {
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    // mint three heroes and send it to the user
     ts::next_tx(&mut scenario, GAME);
     {
-      let box_ticket = ts::take_from_sender<BoxTicket>(&mut scenario);
-      let name = string::utf8(b"Tang Jia");
-      let class = string::utf8(b"Fighter");
-      let faction = string::utf8(b"Flamexecuter");
-      let rarity = string::utf8(b"SR");
-      let base_attributes_values: vector<u16> = vector[1,2,3,4,5,6];
-      let skill_attributes_values: vector<u16> = vector[31, 32, 33, 34];
-      let appearance_attributes_values: vector<u16> = vector[21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31];
-      let growth_attributes_values: vector<u16> = vector [0, 0, 0, 0, 0, 0, 0, 0];
-      let external_id = string::utf8(b"1337");
-      let hero =game::mint_hero_by_ticket(
-        box_ticket,
-        name,
-        class,
-        faction,
-        rarity,
-        base_attributes_values,
-        skill_attributes_values,
-        appearance_attributes_values,
-        growth_attributes_values,
-        external_id,
-        ts::ctx(&mut scenario),
-      );
-      transfer::public_transfer(hero, USER);
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+      let gacha_id = 69999;
+      let gacha_token_type = vector[28888, 27777];
+      let gacha_name = vector[string::utf8(b"Grandia"), string::utf8(b"Grandia")];
+      let gacha_type = vector[string::utf8(b"Grandia"), string::utf8(b"Grandia")];
+      let gacha_collction = vector[string::utf8(b"Grandia"), string::utf8(b"Grandia")];
+      let gacha_description = vector[string::utf8(b"Grandia"), string::utf8(b"Grandia")];
+      let start_time = 0;
+      let end_time = 0;
+
+      game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id, gacha_token_type, gacha_name, gacha_type, gacha_collction,
+        gacha_description, start_time, end_time);
+
+      ts::next_tx(&mut scenario, GAME);
+      game::set_discount_price<ARCA>(&cap, &mut gacha_config_tb, gacha_id, 1000);
+
+      let discount = game::mint_test_discount(&cap, ts::ctx(&mut scenario));
+      transfer::public_transfer(discount, USER);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(gacha_config_tb);
     };
+
+    //user starts the upgrade
+    ts::next_tx(&mut scenario, USER);
+    {
+
+      let pay = coin::mint_for_testing<ARCA>(1000, ts::ctx(&mut scenario));
+      let discount = ts::take_from_sender<GachaBall>(&mut scenario);
+
+      let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+
+      game::discount_exchage(discount, &mut gacha_config_tb, pay, ts::ctx(&mut scenario));
+
+      ts::return_shared(gacha_config_tb);
+    };
+
     ts::end(scenario);
   }
 

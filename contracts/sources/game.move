@@ -870,7 +870,7 @@ module contracts::game{
   }
   public fun voucher_exchage(voucher: GachaBall, gacha_config: &GachaConfigTable, ctx: &mut TxContext) {
     let token_type = *gacha::tokenType(&voucher);
-    assert!(token_type / Base == Box, EInvalidType);
+    assert!(token_type / Base == Voucher, EInvalidType);
     let config = table::borrow(&gacha_config.config, token_type);
 
     let gacha_length = vector::length(&config.gacha_token_type);
@@ -898,7 +898,7 @@ module contracts::game{
 
   public fun discount_exchage<COIN>(discount: GachaBall, gacha_config_tb: &mut GachaConfigTable, payment: Coin<COIN>, ctx: &mut TxContext) {
     let token_type = *gacha::tokenType(&discount);
-    assert!(token_type / Base == Box, EInvalidType);
+    assert!(token_type / Base == Discount, EInvalidType);
     let config = table::borrow(&gacha_config_tb.config, token_type);
     let coin_type = type_name::get<COIN>();
     let (contain, price) = (false, 0);
@@ -1083,7 +1083,7 @@ module contracts::game{
   public fun mint_test_discount(cap: &GameCap, ctx: &mut TxContext): GachaBall {
     mint_gacha(
       cap,
-      60000,
+      69999,
       string::utf8(b"Halloween"),
       string::utf8(b"Grandia"),
       string::utf8(b"VIP"),
