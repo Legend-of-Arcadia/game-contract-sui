@@ -47,6 +47,7 @@ module contracts::staking {
     const EVersionMismatch: u64 = 9;
     const EProofInvalid: u64 = 10;
     const ENeedVote: u64 = 11;
+    const EClaimed: u64 = 12;
 
     const WithdrawReward: u64 = 0;
 
@@ -249,7 +250,7 @@ module contracts::staking {
         ctx: &mut TxContext
     ){
         let user = tx_context::sender(ctx);
-        assert!(!table::contains(&mut week_reward.claimed_address, user), 1);
+        assert!(!table::contains(&mut week_reward.claimed_address, user), EClaimed);
         if (vector::length(&week_reward.merkle_root) > 0) {
             let x = bcs::to_bytes<Leaf>(& Leaf{week_reward_name, user, amount});
             let leaf = hash::keccak256(&x);
