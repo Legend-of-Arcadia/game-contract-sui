@@ -183,6 +183,20 @@ module contracts::game{
     burned_heroes: vector<address>
   }
 
+  struct VoucherExchanged has copy, drop {
+    voucher_id: ID,
+    voucher_token_type: u64,
+    user: address,
+  }
+
+  struct DiscountExchanged has copy, drop {
+    discount_id: ID,
+    discount_token_type: u64,
+    coin_type: TypeName,
+    price: u64,
+    user: address,
+  }
+
   struct BoxTicketBurn has copy, drop {
     box_ticket_id: ID,
     gacha_ball_id: ID
@@ -893,6 +907,8 @@ module contracts::game{
       i = i + 1;
     };
 
+    event::emit(VoucherExchanged{voucher_id: object::id(&voucher), voucher_token_type: token_type, user: tx_context::sender(ctx)});
+
     gacha::burn(voucher);
   }
 
@@ -940,7 +956,13 @@ module contracts::game{
       i = i + 1;
     };
 
-
+    event::emit(DiscountExchanged{
+      discount_id: object::id(&discount),
+      discount_token_type: token_type,
+      coin_type,
+      price,
+      user: tx_context::sender(ctx)
+    });
     gacha::burn(discount);
   }
 
