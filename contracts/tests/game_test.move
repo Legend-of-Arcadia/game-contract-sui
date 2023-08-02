@@ -823,6 +823,11 @@ module contracts::test_game {
       ts::return_shared(clock);
       ts::return_shared(game_config);
     };
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let ticket = ts::take_from_sender<BoxTicket>(&mut scenario);
+      game::burn_box_ticket(ticket);
+    };
 
     ts::end(scenario);
   }
@@ -877,6 +882,12 @@ module contracts::test_game {
       ts::return_shared(gacha_config_tb);
       ts::return_shared(clock);
       ts::return_shared(game_config);
+    };
+
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let ticket = ts::take_from_sender<BoxTicket>(&mut scenario);
+      game::burn_box_ticket(ticket);
     };
 
     ts::end(scenario);
