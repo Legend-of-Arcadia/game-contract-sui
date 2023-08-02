@@ -52,10 +52,10 @@ module contracts::game{
   const EInvalidAmount: u64 = 20;
   const EWrongDiscountExchagePayment: u64 = 21;
   const ECoinTypeNoExist: u64 = 22;
-  const ECurrentTimeLTStartTime: u64 = 22;
-  const ECurrentTimeGEEndTime: u64 = 22;
-  const EInvalidType: u64 = 23;
-  const EPriceEQZero: u64 = 23;
+  const ECurrentTimeLTStartTime: u64 = 23;
+  const ECurrentTimeGEEndTime: u64 = 24;
+  const EInvalidType: u64 = 25;
+  const EPriceEQZero: u64 = 26;
 
 
   //multisig type
@@ -214,6 +214,17 @@ module contracts::game{
     amount: u64,
     fee: u64,
     salt: u64
+  }
+
+  struct SetDiscountPriceEvent has copy, drop {
+    token_type: u64,
+    coin_type: TypeName,
+    price: u64
+  }
+
+  struct RemoveDiscountPriceEvent has copy, drop {
+    token_type: u64,
+    coin_type: TypeName
   }
 
   struct GameCap has key {
@@ -829,7 +840,7 @@ module contracts::game{
   }
 
   public fun add_gacha_config(
-    _: &GameCap, gacha_config_tb: &mut GachaConfigTable, gacha_id:u64, gacha_token_type: vector<u64>,
+    _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_token_type: vector<u64>,
     gacha_name: vector<String>, gacha_type: vector<String>, gacha_collction: vector<String>,
     gacha_description: vector<String>, start_time: u64, end_time: u64) {
 
@@ -844,16 +855,17 @@ module contracts::game{
       end_time
     };
 
-    table::add(&mut gacha_config_tb.config, gacha_id, config);
+    table::add(&mut gacha_config_tb.config, token_type, config);
   }
+
   public entry fun set_discount_price<COIN>(
     _: &GameCap,
     gacha_config_tb: &mut GachaConfigTable,
-    gacha_id: u64,
+    token_type: u64,
     price: u64,
   ) {
     assert_price_gt_zero(price);
-    let config = table::borrow_mut(&mut gacha_config_tb.config, gacha_id);
+    let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
     let coin_type = type_name::get<COIN>();
     if (vec_map::contains(&config.coin_prices, &coin_type)) {
       let previous = vec_map::get_mut(&mut config.coin_prices, &coin_type);
@@ -862,27 +874,27 @@ module contracts::game{
       vec_map::insert(&mut config.coin_prices, coin_type, price);
     };
 
-    // event::emit(SetPriceEvent {
-    //   config_object_id: object::id(config),
-    //   coin_type,
-    //   price,
-    // });
+    event::emit(SetDiscountPriceEvent {
+      token_type,
+      coin_type,
+      price,
+    });
   }
 
   public entry fun remove_discount_price<COIN>(
     _: &GameCap,
     gacha_config_tb: &mut GachaConfigTable,
-    gacha_id: u64,
+    token_type: u64,
   ) {
-    let config = table::borrow_mut(&mut gacha_config_tb.config, gacha_id);
+    let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
     let coin_type = type_name::get<COIN>();
     if (vec_map::contains(&config.coin_prices, &coin_type)) {
       vec_map::remove(&mut config.coin_prices, &coin_type);
     };
-    // event::emit(RemovePriceEvent {
-    //   config_object_id: object::id(config),
-    //   coin_type,
-    // });
+    event::emit(RemoveDiscountPriceEvent {
+      token_type,
+      coin_type,
+    });
   }
   public fun voucher_exchange(voucher: GachaBall, gacha_config: &GachaConfigTable, clock: & Clock, ctx: &mut TxContext) {
     let token_type = *gacha::tokenType(&voucher);
@@ -1092,9 +1104,9 @@ module contracts::game{
       cap,
       50000,
       string::utf8(b"Halloween"),
-      string::utf8(b"Grandia"),
-      string::utf8(b"VIP"),
-      string::utf8(b"test gacha"),
+      string::utf8(b"Voucher"),
+      string::utf8(b"Voucher"),
+      string::utf8(b"test Voucher"),
       ctx
     )
   }
@@ -1105,9 +1117,9 @@ module contracts::game{
       cap,
       69999,
       string::utf8(b"Halloween"),
-      string::utf8(b"Grandia"),
-      string::utf8(b"VIP"),
-      string::utf8(b"test gacha"),
+      string::utf8(b"Discount"),
+      string::utf8(b"Discount"),
+      string::utf8(b"test Discount"),
       ctx
     )
   }
