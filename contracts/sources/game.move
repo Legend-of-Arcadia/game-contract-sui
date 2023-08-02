@@ -888,31 +888,7 @@ module contracts::game{
     let token_type = *gacha::tokenType(&voucher);
     assert!(token_type / Base == Voucher, EInvalidType);
     let config = table::borrow(&gacha_config.config, token_type);
-
-    let current_time = clock::timestamp_ms(clock) / 1000;
-
-    assert_current_time_ge_start_time(current_time, config.start_time);
-    assert_current_time_lt_end_time(current_time, config.end_time);
-
-    let gacha_length = vector::length(&config.gacha_token_type);
-    let i = 0;
-    while (i < gacha_length) {
-      let gacha_token_type = *vector::borrow(&config.gacha_token_type, i);
-      let gacha_name = *vector::borrow(&config.gacha_name, i);
-      let gacha_type = *vector::borrow(&config.gacha_type, i);
-      let gacha_collction = *vector::borrow(&config.gacha_collction, i);
-      let gacha_description = *vector::borrow(&config.gacha_description, i);
-      let gacha_ball = gacha::mint(
-        gacha_token_type,
-        gacha_name,
-        gacha_type,
-        gacha_collction,
-        gacha_description,
-        ctx,
-      );
-      public_transfer(gacha_ball, tx_context::sender(ctx));
-      i = i + 1;
-    };
+    mint_gachas_by_config(config, tx_context::sender(ctx), clock, ctx);
 
     event::emit(VoucherExchanged{voucher_id: object::id(&voucher), voucher_token_type: token_type, user: tx_context::sender(ctx)});
 
@@ -923,11 +899,6 @@ module contracts::game{
     let token_type = *gacha::tokenType(&discount);
     assert!(token_type / Base == Discount, EInvalidType);
     let config = table::borrow(&gacha_config_tb.config, token_type);
-
-    let current_time = clock::timestamp_ms(clock) / 1000;
-
-    assert_current_time_ge_start_time(current_time, config.start_time);
-    assert_current_time_lt_end_time(current_time, config.end_time);
 
     let coin_type = type_name::get<COIN>();
     let (contain, price) = (false, 0);
@@ -950,6 +921,24 @@ module contracts::game{
       df::add<TypeName, Balance<COIN>>(&mut gacha_config_tb.id, coin_type, coin::into_balance<COIN>(payment));
     };
 
+    mint_gachas_by_config(config, tx_context::sender(ctx), clock, ctx);
+
+    event::emit(DiscountExchanged{
+      discount_id: object::id(&discount),
+      discount_token_type: token_type,
+      coin_type,
+      price,
+      user: tx_context::sender(ctx)
+    });
+    gacha::burn(discount);
+  }
+
+  fun mint_gachas_by_config(config: &GachaConfig, to: address, clock: &Clock, ctx: &mut TxContext) {
+    let current_time = clock::timestamp_ms(clock) / 1000;
+
+    assert_current_time_ge_start_time(current_time, config.start_time);
+    assert_current_time_lt_end_time(current_time, config.end_time);
+
     let gacha_length = vector::length(&config.gacha_token_type);
     let i = 0;
     while (i < gacha_length) {
@@ -966,18 +955,9 @@ module contracts::game{
         gacha_description,
         ctx,
       );
-      public_transfer(gacha_ball, tx_context::sender(ctx));
+      public_transfer(gacha_ball, to);
       i = i + 1;
     };
-
-    event::emit(DiscountExchanged{
-      discount_id: object::id(&discount),
-      discount_token_type: token_type,
-      coin_type,
-      price,
-      user: tx_context::sender(ctx)
-    });
-    gacha::burn(discount);
   }
 
   public fun deposit(payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
