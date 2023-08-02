@@ -813,13 +813,15 @@ module contracts::test_game {
 
       let voucher = ts::take_from_sender<GachaBall>(&mut scenario);
       let clock = ts::take_shared<clock::Clock>(&mut scenario);
+      let game_config = ts::take_shared<GameConfig>(&mut scenario);
 
       let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
 
-      game::voucher_exchange(voucher, &gacha_config_tb, &clock,ts::ctx(&mut scenario));
+      game::voucher_exchange(voucher, &gacha_config_tb, &clock, &game_config,ts::ctx(&mut scenario));
 
       ts::return_shared(gacha_config_tb);
       ts::return_shared(clock);
+      ts::return_shared(game_config);
     };
 
     ts::end(scenario);
@@ -866,13 +868,15 @@ module contracts::test_game {
       let pay = coin::mint_for_testing<ARCA>(1000, ts::ctx(&mut scenario));
       let discount = ts::take_from_sender<GachaBall>(&mut scenario);
       let clock = ts::take_shared<clock::Clock>(&mut scenario);
+      let game_config = ts::take_shared<GameConfig>(&mut scenario);
 
       let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
 
-      game::discount_exchange(discount, &mut gacha_config_tb, pay, &clock,ts::ctx(&mut scenario));
+      game::discount_exchange(discount, &mut gacha_config_tb, pay, &clock, &game_config,ts::ctx(&mut scenario));
 
       ts::return_shared(gacha_config_tb);
       ts::return_shared(clock);
+      ts::return_shared(game_config);
     };
 
     ts::end(scenario);

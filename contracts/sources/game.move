@@ -189,6 +189,7 @@ module contracts::game{
     voucher_id: ID,
     voucher_token_type: u64,
     user: address,
+    ticket_id: ID,
   }
 
   struct DiscountExchanged has copy, drop {
@@ -197,6 +198,7 @@ module contracts::game{
     coin_type: TypeName,
     price: u64,
     user: address,
+    ticket_id: ID,
   }
 
   struct BoxTicketBurn has copy, drop {
@@ -896,18 +898,36 @@ module contracts::game{
       coin_type,
     });
   }
-  public fun voucher_exchange(voucher: GachaBall, gacha_config: &GachaConfigTable, clock: & Clock, ctx: &mut TxContext) {
+  public fun voucher_exchange(
+    voucher: GachaBall,
+    gacha_config: &GachaConfigTable,
+    clock: & Clock,
+    game_config: &GameConfig,
+    ctx: &mut TxContext)
+  {
     let token_type = *gacha::tokenType(&voucher);
     assert!(token_type / Base == Voucher, EInvalidType);
     let config = table::borrow(&gacha_config.config, token_type);
     mint_gachas_by_config(config, tx_context::sender(ctx), clock, ctx);
+    let voucher_id = object::id(&voucher);
 
-    event::emit(VoucherExchanged{voucher_id: object::id(&voucher), voucher_token_type: token_type, user: tx_context::sender(ctx)});
+    let ticket = BoxTicket{
+      id: object::new(ctx),
+      gacha_ball: voucher,
+    };
+    event::emit(VoucherExchanged{voucher_id, voucher_token_type: token_type, user: tx_context::sender(ctx), ticket_id: object::id(&ticket)});
 
-    gacha::burn(voucher);
+    transfer::transfer(ticket, game_config.mint_address)
   }
 
-  public fun discount_exchange<COIN>(discount: GachaBall, gacha_config_tb: &mut GachaConfigTable, payment: Coin<COIN>, clock: & Clock, ctx: &mut TxContext) {
+  public fun discount_exchange<COIN>(
+    discount: GachaBall,
+    gacha_config_tb: &mut GachaConfigTable,
+    payment: Coin<COIN>,
+    clock: & Clock,
+    game_config: &GameConfig,
+    ctx: &mut TxContext)
+  {
     let token_type = *gacha::tokenType(&discount);
     assert!(token_type / Base == Discount, EInvalidType);
     let config = table::borrow(&gacha_config_tb.config, token_type);
@@ -934,15 +954,23 @@ module contracts::game{
     };
 
     mint_gachas_by_config(config, tx_context::sender(ctx), clock, ctx);
+    let discount_id = object::id(&discount);
+
+    let ticket = BoxTicket{
+      id: object::new(ctx),
+      gacha_ball: discount,
+    };
 
     event::emit(DiscountExchanged{
-      discount_id: object::id(&discount),
+      discount_id,
       discount_token_type: token_type,
       coin_type,
       price,
-      user: tx_context::sender(ctx)
+      user: tx_context::sender(ctx),
+      ticket_id: object::id(&ticket)
     });
-    gacha::burn(discount);
+
+    transfer::transfer(ticket, game_config.mint_address)
   }
 
   fun mint_gachas_by_config(config: &GachaConfig, to: address, clock: &Clock, ctx: &mut TxContext) {
