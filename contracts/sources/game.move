@@ -55,6 +55,8 @@ module contracts::game{
   const ECurrentTimeLTStartTime: u64 = 22;
   const ECurrentTimeGEEndTime: u64 = 22;
   const EInvalidType: u64 = 23;
+  const EPriceEQZero: u64 = 23;
+
 
   //multisig type
   const WithdrawArca: u64 = 0;
@@ -836,7 +838,7 @@ module contracts::game{
     gacha_id: u64,
     price: u64,
   ) {
-    //assert_price_gt_zero(price);
+    assert_price_gt_zero(price);
     let config = table::borrow_mut(&mut gacha_config_tb.config, gacha_id);
     let coin_type = type_name::get<COIN>();
     if (vec_map::contains(&config.coin_prices, &coin_type)) {
@@ -919,6 +921,7 @@ module contracts::game{
       price = *option::borrow(&priceVal);
     };
     assert_coin_type_exist(contain);
+    assert_price_gt_zero(price);
     let coin_value: u64 = coin::value(&payment);
     assert!(coin_value >= price, EWrongDiscountExchagePayment);
     if (coin_value > price) {
@@ -1027,6 +1030,10 @@ module contracts::game{
     if (end_time > 0) {
       assert!(current_time < end_time, ECurrentTimeGEEndTime);
     };
+  }
+
+  fun assert_price_gt_zero(price: u64) {
+    assert!(price > 0, EPriceEQZero);
   }
   // === Test-only ===
 

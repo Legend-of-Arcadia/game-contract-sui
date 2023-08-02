@@ -14,7 +14,6 @@ module contracts::marketplace_tests {
     use multisig::multisig::{Self, MultiSignature};
 
     use std::option;
-    use std::debug;
     //use std::string;
 
     const EToBurnNotCorrect: u64 = 0;
@@ -331,7 +330,6 @@ module contracts::marketplace_tests {
             ts::next_tx(&mut scenario, GAME);
             let coin = ts::take_from_address<Coin<ARCA>>(&mut scenario, GAME);
             //let x = coin::value(&coin);
-            debug::print(&coin::value<ARCA>(&coin));
             assert!(coin::value<ARCA>(&coin) == 30*DECIMALS * 3/100, 1);
 
             ts::return_to_sender(&mut scenario, coin);
