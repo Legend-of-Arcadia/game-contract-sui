@@ -55,6 +55,8 @@ module contracts::game{
   const ECurrentTimeLTStartTime: u64 = 22;
   const ECurrentTimeGEEndTime: u64 = 22;
   const EInvalidType: u64 = 23;
+  const EPriceEQZero: u64 = 23;
+
 
   //multisig type
   const WithdrawArca: u64 = 0;
@@ -850,7 +852,7 @@ module contracts::game{
     gacha_id: u64,
     price: u64,
   ) {
-    //assert_price_gt_zero(price);
+    assert_price_gt_zero(price);
     let config = table::borrow_mut(&mut gacha_config_tb.config, gacha_id);
     let coin_type = type_name::get<COIN>();
     if (vec_map::contains(&config.coin_prices, &coin_type)) {
@@ -882,10 +884,15 @@ module contracts::game{
     //   coin_type,
     // });
   }
-  public fun voucher_exchage(voucher: GachaBall, gacha_config: &GachaConfigTable, ctx: &mut TxContext) {
+  public fun voucher_exchange(voucher: GachaBall, gacha_config: &GachaConfigTable, clock: & Clock, ctx: &mut TxContext) {
     let token_type = *gacha::tokenType(&voucher);
     assert!(token_type / Base == Voucher, EInvalidType);
     let config = table::borrow(&gacha_config.config, token_type);
+
+    let current_time = clock::timestamp_ms(clock) / 1000;
+
+    assert_current_time_ge_start_time(current_time, config.start_time);
+    assert_current_time_lt_end_time(current_time, config.end_time);
 
     let gacha_length = vector::length(&config.gacha_token_type);
     let i = 0;
@@ -912,10 +919,16 @@ module contracts::game{
     gacha::burn(voucher);
   }
 
-  public fun discount_exchage<COIN>(discount: GachaBall, gacha_config_tb: &mut GachaConfigTable, payment: Coin<COIN>, ctx: &mut TxContext) {
+  public fun discount_exchange<COIN>(discount: GachaBall, gacha_config_tb: &mut GachaConfigTable, payment: Coin<COIN>, clock: & Clock, ctx: &mut TxContext) {
     let token_type = *gacha::tokenType(&discount);
     assert!(token_type / Base == Discount, EInvalidType);
     let config = table::borrow(&gacha_config_tb.config, token_type);
+
+    let current_time = clock::timestamp_ms(clock) / 1000;
+
+    assert_current_time_ge_start_time(current_time, config.start_time);
+    assert_current_time_lt_end_time(current_time, config.end_time);
+
     let coin_type = type_name::get<COIN>();
     let (contain, price) = (false, 0);
     let priceVal = vec_map::try_get(&config.coin_prices, &coin_type);
@@ -924,6 +937,7 @@ module contracts::game{
       price = *option::borrow(&priceVal);
     };
     assert_coin_type_exist(contain);
+    assert_price_gt_zero(price);
     let coin_value: u64 = coin::value(&payment);
     assert!(coin_value >= price, EWrongDiscountExchagePayment);
     if (coin_value > price) {
@@ -1038,6 +1052,10 @@ module contracts::game{
     if (end_time > 0) {
       assert!(current_time < end_time, ECurrentTimeGEEndTime);
     };
+  }
+
+  fun assert_price_gt_zero(price: u64) {
+    assert!(price > 0, EPriceEQZero);
   }
   // === Test-only ===
 

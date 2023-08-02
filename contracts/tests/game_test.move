@@ -14,7 +14,6 @@ module contracts::test_game {
   use contracts::gacha::GachaBall;
   use std::string;
   use sui::clock;
-  //use std::debug;
 
   // errors
   const EWrongGrowths: u64 = 0;
@@ -568,20 +567,6 @@ module contracts::test_game {
       ts::return_to_sender<Hero>(&scenario, hero);
     };
 
-    // withdraw upgrader profits
-    // ts::next_tx(&mut scenario, GAME);
-    // {
-    //   let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-    //   let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
-    //   let cap = ts::take_from_sender<GameCap>(&mut scenario);
-    //   let coins = game::claim_upgrade_profits(&cap, &mut upgrader, ts::ctx(&mut scenario));
-    //   assert!(coin::value<ARCA>(&coins) == 25_000_000_000, EWrongGameBalanceAfterUpgrade);
-    //   transfer::public_transfer(coins, GAME);
-    //   ts::return_to_sender<GameCap>(&scenario, cap);
-    //   ts::return_shared(upgrader);
-    //   ts::return_shared(obj_burn);
-    // };
-
     ts::end(scenario);
   }
 
@@ -698,33 +683,6 @@ module contracts::test_game {
 
     ts::end(scenario);
   }
-  // exchange coupon
-  //#[test]
-  // public fun test_exchange_coupon() {
-  //   let scenario = ts::begin(GAME);
-  //   game::init_for_test(ts::ctx(&mut scenario));
-  //
-  //   // send coupon to user
-  //   ts::next_tx(&mut scenario, GAME);
-  //   {
-  //     let cap = ts::take_from_sender<GameCap>(&mut scenario);
-  //     // mint a hero
-  //     let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-  //     let coupon = game::mint_exchange_coupon<Hero>(&cap, hero, ts::ctx(&mut scenario));
-  //     transfer::public_transfer(coupon, USER);
-  //     ts::return_to_sender<GameCap>(&scenario, cap);
-  //   };
-  //
-  //   //claim coupon
-  //   ts::next_tx(&mut scenario, USER);
-  //   {
-  //     let coupon = ts::take_from_sender<ExchangeCoupon<Hero>>(&mut scenario);
-  //     let hero = game::claim_exchange_coupon<Hero>(coupon);
-  //     transfer::public_transfer(hero, USER);
-  //   };
-  //
-  //   ts::end(scenario);
-  // }
 
   #[test]
   public fun box_ticket_test() {
@@ -823,6 +781,9 @@ module contracts::test_game {
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
 
+    let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+    clock::share_for_testing(clock);
+
     // mint three heroes and send it to the user
     ts::next_tx(&mut scenario, GAME);
     {
@@ -851,12 +812,14 @@ module contracts::test_game {
     {
 
       let voucher = ts::take_from_sender<GachaBall>(&mut scenario);
+      let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
       let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
 
-      game::voucher_exchage(voucher, &gacha_config_tb, ts::ctx(&mut scenario));
+      game::voucher_exchange(voucher, &gacha_config_tb, &clock,ts::ctx(&mut scenario));
 
       ts::return_shared(gacha_config_tb);
+      ts::return_shared(clock);
     };
 
     ts::end(scenario);
@@ -867,6 +830,8 @@ module contracts::test_game {
   public fun discount_exchage_test() {
     let scenario = ts::begin(GAME);
     game::init_for_test(ts::ctx(&mut scenario));
+    let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+    clock::share_for_testing(clock);
 
     // mint three heroes and send it to the user
     ts::next_tx(&mut scenario, GAME);
@@ -900,12 +865,14 @@ module contracts::test_game {
 
       let pay = coin::mint_for_testing<ARCA>(1000, ts::ctx(&mut scenario));
       let discount = ts::take_from_sender<GachaBall>(&mut scenario);
+      let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
       let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
 
-      game::discount_exchage(discount, &mut gacha_config_tb, pay, ts::ctx(&mut scenario));
+      game::discount_exchange(discount, &mut gacha_config_tb, pay, &clock,ts::ctx(&mut scenario));
 
       ts::return_shared(gacha_config_tb);
+      ts::return_shared(clock);
     };
 
     ts::end(scenario);
@@ -1099,45 +1066,6 @@ module contracts::test_game {
 
     ts::end(scenario);
   }
-
-  // #[test]
-  // fun test_multi_sig() {
-  //   let mugen_pk: vector<u8> = vector[
-  //     2, 103,  79,  79, 204,  13, 202, 247,
-  //     197,  59,  99,  89, 191,  68, 208, 197,
-  //     53,  13, 102, 206, 105, 188,  11, 224,
-  //     201, 218, 204, 245,  28, 251, 215,  86,
-  //     126
-  //   ];
-  //   let scenario = ts::begin(GAME);
-  //   game::init_for_test(ts::ctx(&mut scenario));
-  //
-  //   ts::next_tx(&mut scenario, GAME);
-  //   {
-  //     let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
-  //     let config = ts::take_shared<GameConfig>(&mut scenario);
-  //     game::set_mugen_pk_request(&mut config, &mut multi_signature, mugen_pk, ts::ctx(&mut scenario));
-  //
-  //     ts::return_shared(multi_signature);
-  //     ts::return_shared(config);
-  //   };
-  //   ts::next_tx(&mut scenario, GAME);
-  //   {
-  //     let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
-  //     let config = ts::take_shared<GameConfig>(&mut scenario);
-  //     let seen_messages = ts::take_shared<SeenMessages>(&mut scenario);
-  //     multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
-  //     let b = game::set_mugen_pk_execute(&mut config, &mut multi_signature, 0, true, &mut seen_messages,ts::ctx(&mut scenario));
-  //
-  //     debug::print(&b);
-  //
-  //     ts::return_shared(multi_signature);
-  //     ts::return_shared(config);
-  //     ts::return_shared(seen_messages);
-  //   };
-  //
-  //   ts::end(scenario);
-  // }
 
   #[test]
   fun test_deposit_and_withdraw_by_multisig() {

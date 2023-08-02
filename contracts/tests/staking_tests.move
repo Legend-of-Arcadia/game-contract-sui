@@ -1,8 +1,6 @@
 #[test_only]
 module contracts::staking_tests {
-    //
     use loa::arca::{ARCA};
-    //use contracts::staking::{Self, StakingPool};
     use contracts::game;
     use multisig::multisig::{Self, MultiSignature};
 
@@ -14,7 +12,6 @@ module contracts::staking_tests {
     use std::string;
     use contracts::staking::{Self, WeekReward, StakingPool, VeARCA};
     use contracts::game::{GameCap, GameConfig};
-    use std::debug;
     use sui::transfer;
     //use sui::balance;
 
@@ -306,8 +303,6 @@ module contracts::staking_tests {
 
             ts::next_tx(&mut scenario, GAME);
             let coin = ts::take_from_address<Coin<ARCA>>(&mut scenario, GAME);
-            //let x = coin::value(&coin);
-            debug::print(&coin::value<ARCA>(&coin));
             assert!(coin::value<ARCA>(&coin) == 30*DECIMALS, 1);
 
             ts::return_to_sender(&mut scenario, coin);
