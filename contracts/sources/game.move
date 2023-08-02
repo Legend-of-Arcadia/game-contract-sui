@@ -868,10 +868,15 @@ module contracts::game{
     //   coin_type,
     // });
   }
-  public fun voucher_exchage(voucher: GachaBall, gacha_config: &GachaConfigTable, ctx: &mut TxContext) {
+  public fun voucher_exchange(voucher: GachaBall, gacha_config: &GachaConfigTable, clock: & Clock, ctx: &mut TxContext) {
     let token_type = *gacha::tokenType(&voucher);
     assert!(token_type / Base == Voucher, EInvalidType);
     let config = table::borrow(&gacha_config.config, token_type);
+
+    let current_time = clock::timestamp_ms(clock) / 1000;
+
+    assert_current_time_ge_start_time(current_time, config.start_time);
+    assert_current_time_lt_end_time(current_time, config.end_time);
 
     let gacha_length = vector::length(&config.gacha_token_type);
     let i = 0;
@@ -896,10 +901,16 @@ module contracts::game{
     gacha::burn(voucher);
   }
 
-  public fun discount_exchage<COIN>(discount: GachaBall, gacha_config_tb: &mut GachaConfigTable, payment: Coin<COIN>, ctx: &mut TxContext) {
+  public fun discount_exchange<COIN>(discount: GachaBall, gacha_config_tb: &mut GachaConfigTable, payment: Coin<COIN>, clock: & Clock, ctx: &mut TxContext) {
     let token_type = *gacha::tokenType(&discount);
     assert!(token_type / Base == Discount, EInvalidType);
     let config = table::borrow(&gacha_config_tb.config, token_type);
+
+    let current_time = clock::timestamp_ms(clock) / 1000;
+
+    assert_current_time_ge_start_time(current_time, config.start_time);
+    assert_current_time_lt_end_time(current_time, config.end_time);
+
     let coin_type = type_name::get<COIN>();
     let (contain, price) = (false, 0);
     let priceVal = vec_map::try_get(&config.coin_prices, &coin_type);
