@@ -54,10 +54,18 @@ module contracts::game{
   const ECoinTypeNoExist: u64 = 22;
   const ECurrentTimeLTStartTime: u64 = 22;
   const ECurrentTimeGEEndTime: u64 = 22;
+  const EInvalidType: u64 = 23;
 
   //multisig type
   const WithdrawArca: u64 = 0;
   const WithdrawUpgradeProfits: u64 = 1;
+
+  // gacha type
+  const Box: u64 = 1;
+  const Voucher: u64 = 5;
+  const Discount: u64 = 6;
+
+  const Base:u64 = 10000;
 
 
   // config struct
@@ -609,6 +617,7 @@ module contracts::game{
     let user = tx_context::sender(ctx);
     //let type = *gacha::type(&gacha_ball);
     let token_type = *gacha::tokenType(&gacha_ball);
+    assert!(token_type / Base == Box, EInvalidType);
 
     let ticket = BoxTicket{
       id: object::new(ctx),
@@ -860,8 +869,9 @@ module contracts::game{
     // });
   }
   public fun voucher_exchage(voucher: GachaBall, gacha_config: &GachaConfigTable, ctx: &mut TxContext) {
-    let voucher_id = gacha::tokenType(&voucher);
-    let config = table::borrow(&gacha_config.config, *voucher_id);
+    let token_type = *gacha::tokenType(&voucher);
+    assert!(token_type / Base == Box, EInvalidType);
+    let config = table::borrow(&gacha_config.config, token_type);
 
     let gacha_length = vector::length(&config.gacha_token_type);
     let i = 0;
@@ -887,8 +897,9 @@ module contracts::game{
   }
 
   public fun discount_exchage<COIN>(discount: GachaBall, gacha_config_tb: &mut GachaConfigTable, payment: Coin<COIN>, ctx: &mut TxContext) {
-    let voucher_id = gacha::tokenType(&discount);
-    let config = table::borrow(&gacha_config_tb.config, *voucher_id);
+    let token_type = *gacha::tokenType(&discount);
+    assert!(token_type / Base == Box, EInvalidType);
+    let config = table::borrow(&gacha_config_tb.config, token_type);
     let coin_type = type_name::get<COIN>();
     let (contain, price) = (false, 0);
     let priceVal = vec_map::try_get(&config.coin_prices, &coin_type);
@@ -1046,7 +1057,33 @@ module contracts::game{
   public fun mint_test_gacha(cap: &GameCap, ctx: &mut TxContext): GachaBall {
     mint_gacha(
       cap,
-      1000,
+      10000,
+      string::utf8(b"Halloween"),
+      string::utf8(b"Grandia"),
+      string::utf8(b"VIP"),
+      string::utf8(b"test gacha"),
+      ctx
+    )
+  }
+
+  #[test_only]
+  public fun mint_test_voucher(cap: &GameCap, ctx: &mut TxContext): GachaBall {
+    mint_gacha(
+      cap,
+      50000,
+      string::utf8(b"Halloween"),
+      string::utf8(b"Grandia"),
+      string::utf8(b"VIP"),
+      string::utf8(b"test gacha"),
+      ctx
+    )
+  }
+
+  #[test_only]
+  public fun mint_test_discount(cap: &GameCap, ctx: &mut TxContext): GachaBall {
+    mint_gacha(
+      cap,
+      60000,
       string::utf8(b"Halloween"),
       string::utf8(b"Grandia"),
       string::utf8(b"VIP"),
