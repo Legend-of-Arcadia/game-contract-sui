@@ -21,7 +21,10 @@ module contracts::game{
   use multisig::multisig::{Self, MultiSignature};
   use contracts::hero::{Self, Hero};
   use contracts::gacha::{Self, GachaBall};
-  use contracts::item::{Self, Item};
+  use sui::transfer::public_transfer;
+  use std::type_name::{Self, TypeName};
+  use sui::vec_map::{Self, VecMap};
+  use std::option;
 
   const VERSION: u64 = 1;
 
@@ -47,6 +50,10 @@ module contracts::game{
   const ENotInMultiSigScope: u64 = 18;
   const ENeedVote: u64 = 19;
   const EInvalidAmount: u64 = 20;
+  const EWrongDiscountExchagePayment: u64 = 21;
+  const ECoinTypeNoExist: u64 = 22;
+  const ECurrentTimeLTStartTime: u64 = 22;
+  const ECurrentTimeGEEndTime: u64 = 22;
 
   //multisig type
   const WithdrawArca: u64 = 0;
@@ -59,6 +66,24 @@ module contracts::game{
     game_address: address,
     mint_address: address,
     for_multi_sign: ID,
+  }
+
+  struct GachaConfigTable has key, store {
+    id: UID,
+    config: Table<u64, GachaConfig>,
+    profits: Balance<ARCA>
+  }
+
+  struct GachaConfig has store {
+    gacha_token_type: vector<u64>,
+    gacha_name: vector<String>,
+    gacha_type: vector<String>,
+    gacha_collction: vector<String>,
+    gacha_description: vector<String>,
+
+    coin_prices: VecMap<TypeName, u64>,
+    start_time: u64,
+    end_time: u64
   }
 
   //airdrop
@@ -213,12 +238,19 @@ module contracts::game{
       arca_balance: balance::zero<ARCA>()
     };
 
+    let gacha_config = GachaConfigTable{
+      id: object::new(ctx),
+      config: table::new<u64, GachaConfig>(ctx),
+      profits: balance::zero<ARCA>(),
+    };
+
     transfer::public_share_object(multi_sig);
     transfer::public_share_object(config);
     transfer::public_share_object(upgrader);
     transfer::public_share_object(objBurn);
     transfer::public_share_object(seen_messages);
     transfer::public_share_object(arca_counter);
+    transfer::public_share_object(gacha_config);
     transfer::transfer(game_cap, tx_context::sender(ctx));
   }
 
@@ -330,21 +362,6 @@ module contracts::game{
     gacha_ball
   }
 
-  // For casting items, use type to distinguish types of avatars, medals, etc., or add item id attributes
-  public fun mint_item(
-    _: &GameCap,
-    token_type: u64,
-    collection: String,
-    name: String,
-    type: String,
-    description: String,
-    ctx: &mut TxContext
-  ): Item {
-
-    let item = item::mint(token_type, collection, name, type, description, ctx);
-
-    item
-  }
 
   public fun burn_box_ticket(box_ticket: BoxTicket) {
     let BoxTicket {id, gacha_ball} = box_ticket;
@@ -786,6 +803,135 @@ module contracts::game{
     vector::destroy_empty<GachaBall>(gacha_balls);
   }
 
+  public fun add_gacha_config(
+    _: &GameCap, gacha_config_tb: &mut GachaConfigTable, gacha_id:u64, gacha_token_type: vector<u64>,
+    gacha_name: vector<String>, gacha_type: vector<String>, gacha_collction: vector<String>,
+    gacha_description: vector<String>, start_time: u64, end_time: u64) {
+
+    let config = GachaConfig {
+      gacha_token_type,
+      gacha_name,
+      gacha_type,
+      gacha_collction,
+      gacha_description,
+      coin_prices: vec_map::empty<TypeName, u64>(),
+      start_time,
+      end_time
+    };
+
+    table::add(&mut gacha_config_tb.config, gacha_id, config);
+  }
+  public entry fun set_discount_price<COIN>(
+    _: &GameCap,
+    gacha_config_tb: &mut GachaConfigTable,
+    gacha_id: u64,
+    price: u64,
+  ) {
+    //assert_price_gt_zero(price);
+    let config = table::borrow_mut(&mut gacha_config_tb.config, gacha_id);
+    let coin_type = type_name::get<COIN>();
+    if (vec_map::contains(&config.coin_prices, &coin_type)) {
+      let previous = vec_map::get_mut(&mut config.coin_prices, &coin_type);
+      *previous = price;
+    } else {
+      vec_map::insert(&mut config.coin_prices, coin_type, price);
+    };
+
+    // event::emit(SetPriceEvent {
+    //   config_object_id: object::id(config),
+    //   coin_type,
+    //   price,
+    // });
+  }
+
+  public entry fun remove_discount_price<COIN>(
+    _: &GameCap,
+    gacha_config_tb: &mut GachaConfigTable,
+    gacha_id: u64,
+  ) {
+    let config = table::borrow_mut(&mut gacha_config_tb.config, gacha_id);
+    let coin_type = type_name::get<COIN>();
+    if (vec_map::contains(&config.coin_prices, &coin_type)) {
+      vec_map::remove(&mut config.coin_prices, &coin_type);
+    };
+    // event::emit(RemovePriceEvent {
+    //   config_object_id: object::id(config),
+    //   coin_type,
+    // });
+  }
+  public fun voucher_exchage(voucher: GachaBall, gacha_config: &GachaConfigTable, ctx: &mut TxContext) {
+    let voucher_id = gacha::tokenType(&voucher);
+    let config = table::borrow(&gacha_config.config, *voucher_id);
+
+    let gacha_length = vector::length(&config.gacha_token_type);
+    let i = 0;
+    while (i < gacha_length) {
+      let gacha_token_type = *vector::borrow(&config.gacha_token_type, i);
+      let gacha_name = *vector::borrow(&config.gacha_name, i);
+      let gacha_type = *vector::borrow(&config.gacha_type, i);
+      let gacha_collction = *vector::borrow(&config.gacha_collction, i);
+      let gacha_description = *vector::borrow(&config.gacha_description, i);
+      let gacha_ball = gacha::mint(
+        gacha_token_type,
+        gacha_name,
+        gacha_type,
+        gacha_collction,
+        gacha_description,
+        ctx,
+      );
+      public_transfer(gacha_ball, tx_context::sender(ctx));
+      i = i + 1;
+    };
+
+    gacha::burn(voucher);
+  }
+
+  public fun discount_exchage<COIN>(discount: GachaBall, gacha_config_tb: &mut GachaConfigTable, payment: Coin<COIN>, ctx: &mut TxContext) {
+    let voucher_id = gacha::tokenType(&discount);
+    let config = table::borrow(&gacha_config_tb.config, *voucher_id);
+    let coin_type = type_name::get<COIN>();
+    let (contain, price) = (false, 0);
+    let priceVal = vec_map::try_get(&config.coin_prices, &coin_type);
+    if (option::is_some(&priceVal)) {
+      contain = true;
+      price = *option::borrow(&priceVal);
+    };
+    assert_coin_type_exist(contain);
+    let coin_value: u64 = coin::value(&payment);
+    assert!(coin_value >= price, EWrongDiscountExchagePayment);
+    if (coin_value > price) {
+      transfer::public_transfer(coin::split(&mut payment, coin_value - price, ctx), tx_context::sender(ctx));
+    };
+    if (df::exists_with_type<TypeName, Balance<COIN>>(&mut gacha_config_tb.id, coin_type)) {
+      let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut gacha_config_tb.id, coin_type);
+      balance::join<COIN>(coin_balance, coin::into_balance<COIN>(payment));
+    } else {
+      df::add<TypeName, Balance<COIN>>(&mut gacha_config_tb.id, coin_type, coin::into_balance<COIN>(payment));
+    };
+
+    let gacha_length = vector::length(&config.gacha_token_type);
+    let i = 0;
+    while (i < gacha_length) {
+      let gacha_token_type = *vector::borrow(&config.gacha_token_type, i);
+      let gacha_name = *vector::borrow(&config.gacha_name, i);
+      let gacha_type = *vector::borrow(&config.gacha_type, i);
+      let gacha_collction = *vector::borrow(&config.gacha_collction, i);
+      let gacha_description = *vector::borrow(&config.gacha_description, i);
+      let gacha_ball = gacha::mint(
+        gacha_token_type,
+        gacha_name,
+        gacha_type,
+        gacha_collction,
+        gacha_description,
+        ctx,
+      );
+      public_transfer(gacha_ball, tx_context::sender(ctx));
+      i = i + 1;
+    };
+
+
+    gacha::burn(discount);
+  }
 
   public fun deposit(payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
     let amount = coin::value(&payment);
@@ -842,6 +988,23 @@ module contracts::game{
 
   public fun only_multi_sig_scope (multi_signature: &MultiSignature, game_congif: &GameConfig) {
     assert!(object::id(multi_signature) == game_congif.for_multi_sign, ENotInMultiSigScope);
+  }
+
+  // === assert ===
+  fun assert_coin_type_exist(contain: bool) {
+    assert!(contain, ECoinTypeNoExist);
+  }
+
+  fun assert_current_time_ge_start_time(current_time: u64, start_time: u64) {
+    if (start_time > 0) {
+      assert!(current_time >= start_time, ECurrentTimeLTStartTime);
+    };
+  }
+
+  fun assert_current_time_lt_end_time(current_time: u64, end_time: u64) {
+    if (end_time > 0) {
+      assert!(current_time < end_time, ECurrentTimeGEEndTime);
+    };
   }
   // === Test-only ===
 
