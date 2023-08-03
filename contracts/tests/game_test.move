@@ -810,7 +810,6 @@ module contracts::test_game {
     //user starts the upgrade
     ts::next_tx(&mut scenario, USER);
     {
-
       let voucher = ts::take_from_sender<GachaBall>(&mut scenario);
       let clock = ts::take_shared<clock::Clock>(&mut scenario);
       let game_config = ts::take_shared<GameConfig>(&mut scenario);
@@ -827,6 +826,15 @@ module contracts::test_game {
     {
       let ticket = ts::take_from_sender<BoxTicket>(&mut scenario);
       game::burn_box_ticket(ticket);
+
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let gacha_id = 50000;
+      let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+
+      game::remove_gacha_config(&cap, &mut gacha_config_tb, gacha_id);
+
+      ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(gacha_config_tb);
     };
 
     ts::end(scenario);

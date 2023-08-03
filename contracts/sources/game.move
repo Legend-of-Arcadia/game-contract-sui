@@ -84,7 +84,7 @@ module contracts::game{
     profits: Balance<ARCA>
   }
 
-  struct GachaConfig has store {
+  struct GachaConfig has store, drop {
     gacha_token_type: vector<u64>,
     gacha_name: vector<String>,
     gacha_type: vector<String>,
@@ -858,6 +858,12 @@ module contracts::game{
     };
 
     table::add(&mut gacha_config_tb.config, token_type, config);
+  }
+
+  public fun remove_gacha_config(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
+    if (table::contains(&gacha_config_tb.config, token_type)) {
+      table::remove(&mut gacha_config_tb.config, token_type);
+    };
   }
 
   public entry fun set_discount_price<COIN>(
