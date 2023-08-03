@@ -55,11 +55,13 @@ module loa_game::game{
   const ECurrentTimeGEEndTime: u64 = 24;
   const EInvalidType: u64 = 25;
   const EPriceEQZero: u64 = 26;
+  const ECoinTypeMismatch: u64 = 27;
 
 
   //multisig type
   const WithdrawArca: u64 = 0;
   const WithdrawUpgradeProfits: u64 = 1;
+  const WithdrawDiscountProfits: u64 = 2;
 
   // gacha type
   const Box: u64 = 1;
@@ -147,6 +149,13 @@ module loa_game::game{
     id: UID,
     to: address
   }
+
+  struct WithdrawDiscountProfitsQequest has key, store {
+    id: UID,
+    coin_type: TypeName,
+    to: address
+  }
+
   // events
   struct GachaBallOpened has copy, drop {
     id: ID,
@@ -449,6 +458,14 @@ module loa_game::game{
     transfer::public_transfer(coin::from_balance(total, ctx), to);
   }
 
+  /// withdraw discount profits
+  fun withdraw_discount_profits<COIN>(config: &mut GachaConfigTable , to: address, ctx: &mut TxContext) {
+    let coin_type = type_name::get<COIN>();
+    let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut config.id, coin_type);
+    let balance_all = balance::withdraw_all<COIN>(coin_balance);
+    transfer::public_transfer(coin::from_balance<COIN>(balance_all, ctx), to);
+  }
+
   /// configure mugen_pk field of SeenMessages
   public fun set_mugen_pk(_: &GameCap, mugen_pk: vector<u8>, seen_messages: &mut SeenMessages) {
     seen_messages.mugen_pk = mugen_pk;
@@ -602,6 +619,57 @@ module loa_game::game{
         let request = multisig::borrow_proposal_request<WithdrawUpgradeProfitsQequest>(multi_signature, &proposal_id, ctx);
 
         withdraw_upgrade_profits(upgrader, request.to, ctx);
+        multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
+        return true
+      };
+    }else {
+      let (rejected, _ ) = multisig::is_proposal_rejected(multi_signature, proposal_id);
+      if (rejected) {
+        multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
+        return true
+      }
+    };
+
+    abort ENeedVote
+  }
+
+  public fun withdraw_discount_profits_request<COIN>(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
+    // Only multi sig guardian
+    only_multi_sig_scope(multi_signature, game_config);
+    // Only participant
+    only_participant(multi_signature, ctx);
+
+    let coin_type = type_name::get<COIN>();
+    let request = WithdrawDiscountProfitsQequest{
+      id: object::new(ctx),
+      coin_type,
+      to
+    };
+
+    let desc = sui::address::to_string(object::id_address(&request));
+
+    multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawDiscountProfits, request, ctx);
+  }
+
+  public fun withdraw_discount_profits_execute<COIN>(
+    game_config:&mut GameConfig,
+    multi_signature : &mut MultiSignature,
+    proposal_id: u256,
+    is_approve: bool,
+    gacha_config_tb: &mut GachaConfigTable,
+    ctx: &mut TxContext): bool {
+
+    only_multi_sig_scope(multi_signature, game_config);
+    // Only participant
+    only_participant(multi_signature, ctx);
+
+    if (is_approve) {
+      let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
+      if (approved) {
+        let request = multisig::borrow_proposal_request<WithdrawDiscountProfitsQequest>(multi_signature, &proposal_id, ctx);
+
+        assert!(request.coin_type == type_name::get<COIN>(), ECoinTypeMismatch);
+        withdraw_discount_profits<COIN>(gacha_config_tb, request.to, ctx);
         multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
         return true
       };

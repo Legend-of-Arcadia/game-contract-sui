@@ -898,6 +898,36 @@ module loa_game::test_game {
       game::burn_box_ticket(ticket);
     };
 
+    ts::next_tx(&mut scenario, GAME);
+
+    {
+      let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      game::withdraw_discount_profits_request<ARCA>(&mut config, &mut multi_signature, GAME,ts::ctx(&mut scenario));
+
+      ts::return_shared(multi_signature);
+      ts::return_shared(config);
+    };
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+      multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
+      let b = game::withdraw_discount_profits_execute<ARCA>(&mut config, &mut multi_signature, 0, true, &mut config_tb,ts::ctx(&mut scenario));
+
+      assert!(b, 1);
+      ts::next_tx(&mut scenario, GAME);
+      let coin = ts::take_from_sender<Coin<ARCA>>(&mut scenario);
+
+      assert!(coin::value(&coin) == 1000,1);
+
+      ts::return_shared(multi_signature);
+      ts::return_shared(config);
+      ts::return_shared(config_tb);
+      ts::return_to_sender<Coin<ARCA>>(&scenario, coin);
+    };
+
     ts::end(scenario);
   }
 
