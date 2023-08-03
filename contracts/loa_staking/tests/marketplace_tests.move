@@ -1,20 +1,21 @@
 #[test_only]
-module contracts::marketplace_tests {
+module loa_staking::marketplace_tests {
 
-    use loa::arca::{ARCA};
-    use contracts::marketplace::{Self, Marketplace};
-    use contracts::hero::Hero;
-    use contracts::staking::{Self, StakingPool};
-    use contracts::game::{Self, GameCap, GameConfig};
+    use std::option;
 
     use sui::clock;
     use sui::test_scenario as ts;
     use sui::coin::{Self, Coin};
     use sui::transfer;
+
+    use loa::arca::{ARCA};
+    use loa_staking::marketplace::{Self, Marketplace};
+    use loa_staking::staking::{Self, StakingPool};
+    use loa_game::hero::Hero;
+    use loa_game::game::{Self, GameCap, GameConfig};
+
     use multisig::multisig::{Self, MultiSignature};
 
-    use std::option;
-    //use std::string;
 
     const EToBurnNotCorrect: u64 = 0;
 

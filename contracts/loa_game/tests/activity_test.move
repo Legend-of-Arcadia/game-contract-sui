@@ -1,17 +1,20 @@
 #[test_only]
-module contracts::activity_test {
+module loa_game::activity_test {
+    use std::string::{Self};
+
     use sui::test_scenario as ts;
-    use contracts::game::{
+    use sui::clock;
+    use sui::coin::{Self, Coin};
+
+    use loa_game::game::{
     Self,
     GameCap,
     GameConfig
     };
-    use contracts::activity::{Self,ActivityConfig, ActivityProfits, ENeedVote, ECoinTypeNoExist};
-    use std::string::{Self};
+    use loa_game::activity::{Self,ActivityConfig, ActivityProfits, ENeedVote, ECoinTypeNoExist};
     use loa::arca::ARCA;
     use multisig::multisig::{Self, MultiSignature};
-    use sui::clock;
-    use sui::coin::{Self, Coin};
+
     //use std::vector;
     //use std::debug;
 

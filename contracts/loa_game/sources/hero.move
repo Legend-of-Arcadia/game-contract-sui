@@ -1,4 +1,4 @@
-module contracts::hero {
+module loa_game::hero {
 
     use sui::object::{Self, UID, ID};
     use sui::tx_context::{Self, TxContext};
@@ -10,10 +10,10 @@ module contracts::hero {
 
     use std::string::{Self, String};
 
-    friend contracts::game;
+    friend loa_game::game;
 
     #[test_only]
-    friend contracts::unit_tests;
+    friend loa_game::unit_tests;
 
     // === Error Codes ===
 
@@ -189,13 +189,13 @@ module contracts::hero {
 }
 
 #[test_only]
-module contracts::unit_tests {
+module loa_game::unit_tests {
     use std::string::{Self, String};
 
     use sui::test_scenario as ts;
     use sui::transfer;
 
-    use contracts::hero::{Self, Hero};
+    use loa_game::hero::{Self, Hero};
 
     // errors
     const EWrongName: u64 = 0;

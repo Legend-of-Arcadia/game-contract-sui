@@ -1,7 +1,9 @@
-module contracts::game{
+module loa_game::game{
 
   use std::string::{Self, String};
   use std::vector;
+  use std::option;
+  use std::type_name::{Self, TypeName};
 
   use sui::balance::{Self, Balance};
   use sui::coin::{Self, Coin};
@@ -10,21 +12,18 @@ module contracts::game{
   use sui::dynamic_field as df;
   use sui::dynamic_object_field as dof;
   use sui::table::{Self, Table};
-  use sui::transfer;
   use sui::tx_context::{Self, TxContext};
   use sui::bcs;
   use sui::ecdsa_k1;
   use sui::clock::{Self, Clock};
   use sui::address;
+  use sui::transfer::{Self, public_transfer};
+  use sui::vec_map::{Self, VecMap};
 
+  use loa_game::hero::{Self, Hero};
+  use loa_game::gacha::{Self, GachaBall};
   use loa::arca::ARCA;
   use multisig::multisig::{Self, MultiSignature};
-  use contracts::hero::{Self, Hero};
-  use contracts::gacha::{Self, GachaBall};
-  use sui::transfer::public_transfer;
-  use std::type_name::{Self, TypeName};
-  use sui::vec_map::{Self, VecMap};
-  use std::option;
 
   const VERSION: u64 = 1;
 

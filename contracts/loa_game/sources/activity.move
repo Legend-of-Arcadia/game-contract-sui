@@ -1,21 +1,21 @@
-module contracts::activity {
+module loa_game::activity {
     use std::type_name::{Self, TypeName};
-    use sui::vec_map::{Self, VecMap};
     use std::string::{Self, String};
-    use sui::clock::{Self, Clock};
     use std::option;
     use std::vector;
 
+    use sui::vec_map::{Self, VecMap};
+    use sui::clock::{Self, Clock};
     use sui::balance::{Self, Balance};
     use sui::dynamic_field as df;
     use sui::coin::{Self, Coin};
     use sui::event;
     use sui::object::{Self, ID, UID};
-    //use sui::table::{Self, Table};
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
-    use contracts::gacha::{Self};
-    use contracts::game::{Self, GameCap, GameConfig};
+
+    use loa_game::gacha::{Self};
+    use loa_game::game::{Self, GameCap, GameConfig};
     use multisig::multisig::{Self, MultiSignature};
 
 

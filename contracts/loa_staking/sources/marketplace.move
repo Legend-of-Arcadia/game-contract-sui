@@ -1,4 +1,4 @@
-module contracts::marketplace{
+module loa_staking::marketplace{
 
     use sui::balance::{Self, Balance};
     use sui::clock::{Clock};
@@ -8,7 +8,6 @@ module contracts::marketplace{
     use sui::event;
     use sui::table::{Self, Table};
     use sui::object::{Self, UID};
-    // use sui::sui::SUI;
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
 
@@ -17,8 +16,8 @@ module contracts::marketplace{
     use std::string;
 
     use loa::arca::ARCA;
-    use contracts::game::{Self, GameCap, GameConfig};
-    use contracts::staking::{Self, StakingPool};
+    use loa_game::game::{Self, GameCap, GameConfig};
+    use loa_staking::staking::{Self, StakingPool};
     use multisig::multisig::{Self, MultiSignature};
 
     // errors

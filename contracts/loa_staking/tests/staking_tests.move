@@ -1,19 +1,21 @@
 #[test_only]
-module contracts::staking_tests {
-    use loa::arca::{ARCA};
-    use contracts::game;
-    use multisig::multisig::{Self, MultiSignature};
+module loa_staking::staking_tests {
+
+    use std::vector;
+    use std::string;
 
     use sui::test_scenario as ts;
     use sui::coin::{Self, Coin};
     use sui::clock;
-    use std::vector;
 
-    use std::string;
-    use contracts::staking::{Self, WeekReward, StakingPool, VeARCA};
-    use contracts::game::{GameCap, GameConfig};
     use sui::transfer;
-    //use sui::balance;
+
+    use loa::arca::{ARCA};
+    use loa_game::game;
+    use loa_game::game::{GameCap, GameConfig};
+    use loa_staking::staking::{Self, WeekReward, StakingPool, VeARCA};
+    use multisig::multisig::{Self, MultiSignature};
+
 
     const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
     const MONTH_TO_UNIX_SECONDS: u64 = 2_629_744; // rounded up

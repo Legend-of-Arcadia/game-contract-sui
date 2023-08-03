@@ -1,4 +1,4 @@
-module contracts::gacha{
+module loa_game::gacha{
 
     use sui::display;
     use sui::object::{Self, ID, UID};
@@ -9,8 +9,8 @@ module contracts::gacha{
     
     use std::string::{Self, String};
 
-    friend contracts::game;
-    friend contracts::activity;
+    friend loa_game::game;
+    friend loa_game::activity;
 
     // one-time witness
     struct GACHA has drop {}

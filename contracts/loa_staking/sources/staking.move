@@ -1,9 +1,9 @@
-module contracts::staking {
-    //use std::debug;
-    use sui::bcs;
+module loa_staking::staking {
     use std::string::{Self, String};
     use std::vector;
 
+    use sui::bcs;
+    use sui::hash;
     use sui::balance::{Self, Balance};
     use sui::clock::{Self, Clock};
     use sui::coin::{Self, Coin};
@@ -13,15 +13,14 @@ module contracts::staking {
     use sui::table::{Self, Table};
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
-    use contracts::game::GameCap;
 
     use loa::arca::ARCA;
-    use contracts::merkle_proof;
-    use sui::hash;
-    use contracts::game::{Self, GameConfig};
+    use loa_staking::merkle_proof;
+    use loa_game::game::{Self, GameConfig};
+    use loa_game::game::GameCap;
     use multisig::multisig::{Self, MultiSignature};
 
-    friend contracts::marketplace;
+    friend loa_staking::marketplace;
 
     const VERSION: u64 = 1;
 

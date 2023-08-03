@@ -1,19 +1,19 @@
 #[test_only]
-module contracts::test_game {
+module loa_game::test_game {
   use std::vector;
+  use std::string;
 
   use sui::coin::{Self, Coin};
   use sui::test_scenario as ts;
   use sui::transfer;
+  use sui::clock;
 
-  use contracts::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, EGenderMismatch, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket, ArcaCounter, SeenMessages, UpgradeTicket, GachaConfigTable};
-  use contracts::hero::{Self, Hero};
+  use loa_game::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, EGenderMismatch, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket, ArcaCounter, SeenMessages, UpgradeTicket, GachaConfigTable};
+  use loa_game::hero::{Self, Hero};
+  use loa_game::gacha::GachaBall;
   use loa::arca::ARCA;
   use multisig::multisig::{Self, MultiSignature};
-  //use sui::object;
-  use contracts::gacha::GachaBall;
-  use std::string;
-  use sui::clock;
+
 
   // errors
   const EWrongGrowths: u64 = 0;

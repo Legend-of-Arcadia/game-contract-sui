@@ -1,12 +1,12 @@
 /// @title vectors
 /// @notice Vector utilities.
 /// @dev TODO: Fuzz testing?
-module contracts::vectors {
+module loa_staking::vectors {
     use std::vector;
 
     use sui::vec_map::{Self, VecMap};
 
-    use contracts::math;
+    use loa_staking::math;
 
     /// @dev When you supply vectors of different lengths to a function requiring equal-length vectors.
     /// TODO: Support variable length vectors?
