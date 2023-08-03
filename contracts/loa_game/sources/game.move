@@ -192,11 +192,6 @@ module loa_game::game{
     burned_heroes: vector<address>
   }
 
-  struct AbandonNftEvent has copy, drop {
-    user: address,
-    nft:  address
-  }
-
   struct VoucherExchanged has copy, drop {
     id: ID,
     token_type: u64,
@@ -796,19 +791,10 @@ module loa_game::game{
     transfer::transfer(ticket, game_config.mint_address);
   }
 
-  /// user can abandon garbage gacha ball
-  public fun abandon_gacha_ball(gacha_ball: GachaBall, obj_burn: &mut ObjBurn, ctx: &mut TxContext){
-    let nft = object::id_address(&gacha_ball);
-    event::emit(AbandonNftEvent {user: tx_context::sender(ctx), nft});
-    put_gacha(gacha_ball, nft, obj_burn);
+  public fun abandon_gacha_ball(_: &GameCap, gacha_ball: GachaBall){
+    gacha::burn(gacha_ball);
   }
 
-  /// user can abandon garbage hero
-  public fun abandon_hero(hero: Hero, obj_burn: &mut ObjBurn,ctx: &mut TxContext){
-    let nft = object::id_address(&hero);
-    event::emit(AbandonNftEvent {user: tx_context::sender(ctx), nft});
-    put_burn_hero(hero, nft, obj_burn);
-  }
 
   // appearance_index is the index of the part inside the appearance vector
   // eg: eye is 0, appearance[0]
