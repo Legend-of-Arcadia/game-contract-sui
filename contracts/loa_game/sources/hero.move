@@ -80,8 +80,6 @@ module loa_game::hero {
         skill_attributes_values: vector<u16>,
         appearance_attributes_values: vector<u16>,
         growth_attributes_values: vector<u16>,
-        // TODO: determine if this should be a string or a u64
-        // other_attributes_values: vector<u8>,
         external_id: String,
         ctx: &mut TxContext
         ): Hero {

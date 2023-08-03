@@ -30,7 +30,8 @@ module loa_game::gacha{
     }
 
     struct GachaBallBurned has copy, drop {
-        id: ID
+        id: ID,
+        token_type: u64
     }
 
     fun init(otw: GACHA, ctx: &mut TxContext){
@@ -91,8 +92,8 @@ module loa_game::gacha{
     }
 
     public(friend) fun burn(gacha_ball: GachaBall) {
-        let GachaBall {id, token_type: _, collection: _, name: _, type: _, description: _} = gacha_ball;
-        event::emit(GachaBallBurned {id: object::uid_to_inner(&id)});
+        let GachaBall {id, token_type, collection: _, name: _, type: _, description: _} = gacha_ball;
+        event::emit(GachaBallBurned {id: object::uid_to_inner(&id), token_type});
         object::delete(id);
     }
 

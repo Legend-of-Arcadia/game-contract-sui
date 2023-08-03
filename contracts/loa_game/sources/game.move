@@ -103,11 +103,11 @@ module loa_game::game{
     gacha_ball: GachaBall,
   }
 
-  struct UpgradeTicket has key {
+  struct HeroTicket has key {
     id: UID,
     main_hero: Hero,
     burn_heroes: vector<Hero>,
-    user_address: address
+    user: address
   }
 
   // upgrader and hot potato
@@ -159,7 +159,6 @@ module loa_game::game{
   // events
   struct GachaBallOpened has copy, drop {
     id: ID,
-    // address of user that opened the ball
     user: address,
     ticket_id: ID,
     token_type: u64
@@ -167,7 +166,7 @@ module loa_game::game{
 
   struct UpgradeRequest has copy, drop {
     hero_id: address,
-    user_address: address,
+    user: address,
     burned_heroes: vector<address>,
     ticket_id: ID,
   }
@@ -182,8 +181,8 @@ module loa_game::game{
 
   struct MakeoverRequest has copy, drop {
     hero_id: address,
-    user_address: address,
-    burned_hero_id: address,
+    user: address,
+    burned_hero: address,
     ticket_id: ID,
     hero_part: u64
   }
@@ -193,29 +192,33 @@ module loa_game::game{
     burned_heroes: vector<address>
   }
 
+  struct AbandonNftEvent has copy, drop {
+    user: address,
+    nft:  address
+  }
+
   struct VoucherExchanged has copy, drop {
-    voucher_id: ID,
-    voucher_token_type: u64,
+    id: ID,
+    token_type: u64,
     user: address,
     ticket_id: ID,
   }
 
   struct DiscountExchanged has copy, drop {
-    discount_id: ID,
-    discount_token_type: u64,
+    id: ID,
+    token_type: u64,
+    user: address,
+    ticket_id: ID,
     coin_type: TypeName,
     price: u64,
-    user: address,
+  }
+
+  struct TicketBurned has copy, drop {
     ticket_id: ID,
   }
 
-  struct BoxTicketBurn has copy, drop {
-    box_ticket_id: ID,
-    gacha_ball_id: ID
-  }
-
   struct UserDeposit has copy, drop {
-    depositer: address,
+    user: address,
     amount: u64
   }
 
@@ -407,11 +410,11 @@ module loa_game::game{
     gacha_ball
   }
 
-
   public fun burn_box_ticket(box_ticket: BoxTicket) {
     let BoxTicket {id, gacha_ball} = box_ticket;
-    event::emit(BoxTicketBurn {box_ticket_id: object::uid_to_inner(&id), gacha_ball_id: object::id(&gacha_ball)});
     gacha::burn(gacha_ball);
+
+    event::emit(TicketBurned {ticket_id: object::uid_to_inner(&id)});
     object::delete(id);
   }
 
@@ -424,6 +427,7 @@ module loa_game::game{
   // burn the game cap
   public fun burn_game_cap(game_cap: GameCap){
     let GameCap { id } = game_cap;
+    event::emit(TicketBurned {ticket_id: object::uid_to_inner(&id)});
     object::delete(id); 
   }
 
@@ -470,7 +474,6 @@ module loa_game::game{
   public fun set_mugen_pk(_: &GameCap, mugen_pk: vector<u8>, seen_messages: &mut SeenMessages) {
     seen_messages.mugen_pk = mugen_pk;
   }
-
 
   public fun add_gacha_config(
     _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_token_type: vector<u64>,
@@ -687,8 +690,8 @@ module loa_game::game{
   // place an upgraded hero
 
   // Admins return upgraded heroes
-  public fun return_upgraded_hero_by_ticket(upgrade_ticket: UpgradeTicket) {
-    let UpgradeTicket{id, main_hero, burn_heroes, user_address} = upgrade_ticket;
+  public fun return_upgraded_hero_by_ticket(ticket: HeroTicket) {
+    let HeroTicket {id, main_hero, burn_heroes, user} = ticket;
     let l = vector::length(&burn_heroes);
     let i = 0;
     if (l > 0) {
@@ -701,8 +704,9 @@ module loa_game::game{
 
     vector::destroy_empty<Hero>(burn_heroes);
     
-    transfer::public_transfer(main_hero, user_address);
+    transfer::public_transfer(main_hero, user);
 
+    event::emit(TicketBurned {ticket_id: object::uid_to_inner(&id)});
     object::delete(id);
   }
 
@@ -737,20 +741,20 @@ module loa_game::game{
     hero::edit_fields<u16>(hero, string::utf8(b"growth"), new_values);
   }
 
-  public fun upgrade_base_by_ticket(upgrade_ticket: &mut UpgradeTicket, new_values: vector<u16>) {
-    hero::edit_fields<u16>(&mut upgrade_ticket.main_hero, string::utf8(b"base"), new_values);
+  public fun upgrade_base_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+    hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"base"), new_values);
   }
 
-  public fun upgrade_skill_by_ticket(upgrade_ticket: &mut UpgradeTicket, new_values: vector<u16>) {
-    hero::edit_fields<u16>(&mut upgrade_ticket.main_hero, string::utf8(b"skill"), new_values);
+  public fun upgrade_skill_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+    hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"skill"), new_values);
   }
 
-  public fun upgrade_appearance_by_ticket(upgrade_ticket: &mut UpgradeTicket, new_values: vector<u16>) {
-    hero::edit_fields<u16>(&mut upgrade_ticket.main_hero, string::utf8(b"appearance"), new_values);
+  public fun upgrade_appearance_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+    hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"appearance"), new_values);
   }
 
-  public fun upgrade_growth_by_ticket(upgrade_ticket: &mut UpgradeTicket, new_values: vector<u16>) {
-    hero::edit_fields<u16>(&mut upgrade_ticket.main_hero, string::utf8(b"growth"), new_values);
+  public fun upgrade_growth_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+    hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"growth"), new_values);
   }
 
   /// === Open gacha functions ===
@@ -770,7 +774,7 @@ module loa_game::game{
 
   /// open a gacha ball
   // User opens blind box
-  public fun open_gacha_ball(gacha_ball: GachaBall, game_config: &GameConfig, ctx: &mut TxContext){
+  public entry fun open_gacha_ball(gacha_ball: GachaBall, game_config: &GameConfig, ctx: &mut TxContext){
 
     assert!(VERSION == 1, EIncorrectVersion); 
 
@@ -790,6 +794,20 @@ module loa_game::game{
     event::emit(open_evt);
 
     transfer::transfer(ticket, game_config.mint_address);
+  }
+
+  /// user can abandon garbage gacha ball
+  public fun abandon_gacha_ball(gacha_ball: GachaBall, obj_burn: &mut ObjBurn, ctx: &mut TxContext){
+    let nft = object::id_address(&gacha_ball);
+    event::emit(AbandonNftEvent {user: tx_context::sender(ctx), nft});
+    put_gacha(gacha_ball, nft, obj_burn);
+  }
+
+  /// user can abandon garbage hero
+  public fun abandon_hero(hero: Hero, obj_burn: &mut ObjBurn,ctx: &mut TxContext){
+    let nft = object::id_address(&hero);
+    event::emit(AbandonNftEvent {user: tx_context::sender(ctx), nft});
+    put_burn_hero(hero, nft, obj_burn);
   }
 
   // appearance_index is the index of the part inside the appearance vector
@@ -818,17 +836,17 @@ module loa_game::game{
     assert!(*main_hero_gender == *burn_hero_gender, EGenderMismatch);
     let main_address = object::id_address(&main_hero);
 
-    let ticket =  UpgradeTicket{
+    let ticket =  HeroTicket {
       id: object::new(ctx),
       main_hero,
       burn_heroes: vector::empty<Hero>(),
-      user_address: tx_context::sender(ctx)
+      user: tx_context::sender(ctx)
     };
 
     let evt = MakeoverRequest {
       hero_id: main_address,
-      user_address: tx_context::sender(ctx),
-      burned_hero_id: object::id_address(&to_burn),
+      user: tx_context::sender(ctx),
+      burned_hero: object::id_address(&to_burn),
       ticket_id: object::uid_to_inner(&ticket.id),
       hero_part: appearance_index
     };
@@ -853,11 +871,11 @@ module loa_game::game{
     let i: u64 = 0;
     let burn_addresses: vector<address> = vector::empty<address>();
     let main_address = object::id_address(&main_hero);
-    let ticket =  UpgradeTicket{
+    let ticket =  HeroTicket {
       id: object::new(ctx),
       main_hero,
       burn_heroes: vector::empty<Hero>(),
-      user_address: tx_context::sender(ctx)
+      user: tx_context::sender(ctx)
     };
     while (i < l) {
       let burnable = vector::pop_back<Hero>(&mut to_burn);
@@ -873,7 +891,7 @@ module loa_game::game{
     // events
     let evt = UpgradeRequest {
       hero_id: main_address,
-      user_address: tx_context::sender(ctx),
+      user: tx_context::sender(ctx),
       burned_heroes: burn_addresses,
       ticket_id: object::uid_to_inner(&ticket.id),
     };
@@ -903,11 +921,11 @@ module loa_game::game{
     let i: u64 = 0;
     let main_address = object::id_address(&main_hero);
     let burn_addresses: vector<address> = vector::empty<address>();
-    let ticket =  UpgradeTicket{
+    let ticket =  HeroTicket {
       id: object::new(ctx),
       main_hero,
       burn_heroes: vector::empty<Hero>(),
-      user_address: tx_context::sender(ctx)
+      user: tx_context::sender(ctx)
     };
     while (i < l) {
       let burnable = vector::pop_back<Hero>(&mut to_burn);
@@ -984,13 +1002,13 @@ module loa_game::game{
     assert!(token_type / Base == Voucher, EInvalidType);
     let config = table::borrow(&gacha_config.config, token_type);
     mint_gachas_by_config(config, tx_context::sender(ctx), clock, ctx);
-    let voucher_id = object::id(&voucher);
+    let id = object::id(&voucher);
 
     let ticket = BoxTicket{
       id: object::new(ctx),
       gacha_ball: voucher,
     };
-    event::emit(VoucherExchanged{voucher_id, voucher_token_type: token_type, user: tx_context::sender(ctx), ticket_id: object::id(&ticket)});
+    event::emit(VoucherExchanged{id, token_type, user: tx_context::sender(ctx), ticket_id: object::id(&ticket)});
 
     transfer::transfer(ticket, game_config.mint_address)
   }
@@ -1029,7 +1047,7 @@ module loa_game::game{
     };
 
     mint_gachas_by_config(config, tx_context::sender(ctx), clock, ctx);
-    let discount_id = object::id(&discount);
+    let id = object::id(&discount);
 
     let ticket = BoxTicket{
       id: object::new(ctx),
@@ -1037,12 +1055,12 @@ module loa_game::game{
     };
 
     event::emit(DiscountExchanged{
-      discount_id,
-      discount_token_type: token_type,
+      id,
+      token_type,
+      user: tx_context::sender(ctx),
+      ticket_id: object::id(&ticket),
       coin_type,
       price,
-      user: tx_context::sender(ctx),
-      ticket_id: object::id(&ticket)
     });
 
     transfer::transfer(ticket, game_config.mint_address)
@@ -1080,7 +1098,7 @@ module loa_game::game{
     assert!(amount > 0, EInvalidAmount);
     balance::join(&mut arca_counter.arca_balance, coin::into_balance<ARCA>(payment));
 
-    event::emit(UserDeposit{depositer: tx_context::sender(ctx), amount});
+    event::emit(UserDeposit{user: tx_context::sender(ctx), amount});
   }
 
   public fun withdraw(
