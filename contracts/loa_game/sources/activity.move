@@ -80,6 +80,11 @@ module loa_game::activity {
         name: String
     }
 
+    struct ResetSupplyEvent has copy, drop {
+        config: ID,
+        total_supply: u64,
+    }
+
     struct SetPriceEvent has copy, drop {
         config: ID,
         coin_type: TypeName,
@@ -165,6 +170,19 @@ module loa_game::activity {
             type,
             name,
         });
+    }
+
+    // add reset supply for future use
+    public entry fun reset_supply(
+        _: &GameCap,
+        config: &mut ActivityConfig,
+    ) {
+        event::emit(ResetSupplyEvent {
+            config: object::id(config),
+            total_supply: config.total_supply,
+        });
+
+        config.total_supply = 0;
     }
 
     public entry fun set_price<COIN>(
