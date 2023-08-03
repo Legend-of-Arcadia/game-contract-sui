@@ -183,6 +183,11 @@ module loa_game::game{
     burned_heroes: vector<address>
   }
 
+  struct AbandonNftEvent has copy, drop {
+    user: address,
+    nft:  address
+  }
+
   struct VoucherExchanged has copy, drop {
     id: ID,
     token_type: u64,
@@ -453,7 +458,6 @@ module loa_game::game{
     seen_messages.mugen_pk = mugen_pk;
   }
 
-
   public fun add_gacha_config(
     _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_token_type: vector<u64>,
     gacha_name: vector<String>, gacha_type: vector<String>, gacha_collction: vector<String>,
@@ -702,7 +706,7 @@ module loa_game::game{
 
   /// open a gacha ball
   // User opens blind box
-  public fun open_gacha_ball(gacha_ball: GachaBall, game_config: &GameConfig, ctx: &mut TxContext){
+  public entry fun open_gacha_ball(gacha_ball: GachaBall, game_config: &GameConfig, ctx: &mut TxContext){
 
     assert!(VERSION == 1, EIncorrectVersion); 
 
@@ -722,6 +726,20 @@ module loa_game::game{
     event::emit(open_evt);
 
     transfer::transfer(ticket, game_config.mint_address);
+  }
+
+  /// user can abandon garbage gacha ball
+  public fun abandon_gacha_ball(gacha_ball: GachaBall, obj_burn: &mut ObjBurn, ctx: &mut TxContext){
+    let nft = object::id_address(&gacha_ball);
+    event::emit(AbandonNftEvent {user: tx_context::sender(ctx), nft});
+    put_gacha(gacha_ball, nft, obj_burn);
+  }
+
+  /// user can abandon garbage hero
+  public fun abandon_hero(hero: Hero, obj_burn: &mut ObjBurn,ctx: &mut TxContext){
+    let nft = object::id_address(&hero);
+    event::emit(AbandonNftEvent {user: tx_context::sender(ctx), nft});
+    put_burn_hero(hero, nft, obj_burn);
   }
 
   // appearance_index is the index of the part inside the appearance vector
