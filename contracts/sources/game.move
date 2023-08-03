@@ -455,6 +455,71 @@ module contracts::game{
     seen_messages.mugen_pk = mugen_pk;
   }
 
+
+  public fun add_gacha_config(
+    _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_token_type: vector<u64>,
+    gacha_name: vector<String>, gacha_type: vector<String>, gacha_collction: vector<String>,
+    gacha_description: vector<String>, start_time: u64, end_time: u64) {
+
+    let config = GachaConfig {
+      gacha_token_type,
+      gacha_name,
+      gacha_type,
+      gacha_collction,
+      gacha_description,
+      coin_prices: vec_map::empty<TypeName, u64>(),
+      start_time,
+      end_time
+    };
+
+    table::add(&mut gacha_config_tb.config, token_type, config);
+  }
+
+  public fun remove_gacha_config(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
+    if (table::contains(&gacha_config_tb.config, token_type)) {
+      table::remove(&mut gacha_config_tb.config, token_type);
+    };
+  }
+
+  public entry fun set_discount_price<COIN>(
+    _: &GameCap,
+    gacha_config_tb: &mut GachaConfigTable,
+    token_type: u64,
+    price: u64,
+  ) {
+    assert_price_gt_zero(price);
+    let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
+    let coin_type = type_name::get<COIN>();
+    if (vec_map::contains(&config.coin_prices, &coin_type)) {
+      let previous = vec_map::get_mut(&mut config.coin_prices, &coin_type);
+      *previous = price;
+    } else {
+      vec_map::insert(&mut config.coin_prices, coin_type, price);
+    };
+
+    event::emit(SetDiscountPriceEvent {
+      token_type,
+      coin_type,
+      price,
+    });
+  }
+
+  public entry fun remove_discount_price<COIN>(
+    _: &GameCap,
+    gacha_config_tb: &mut GachaConfigTable,
+    token_type: u64,
+  ) {
+    let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
+    let coin_type = type_name::get<COIN>();
+    if (vec_map::contains(&config.coin_prices, &coin_type)) {
+      vec_map::remove(&mut config.coin_prices, &coin_type);
+    };
+    event::emit(RemoveDiscountPriceEvent {
+      token_type,
+      coin_type,
+    });
+  }
+
   public fun withdraw_arca_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, amount: u64, to: address, ctx: &mut TxContext) {
     // Only multi sig guardian
     only_multi_sig_scope(multi_signature, game_config);
@@ -841,69 +906,6 @@ module contracts::game{
     vector::destroy_empty<GachaBall>(gacha_balls);
   }
 
-  public fun add_gacha_config(
-    _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_token_type: vector<u64>,
-    gacha_name: vector<String>, gacha_type: vector<String>, gacha_collction: vector<String>,
-    gacha_description: vector<String>, start_time: u64, end_time: u64) {
-
-    let config = GachaConfig {
-      gacha_token_type,
-      gacha_name,
-      gacha_type,
-      gacha_collction,
-      gacha_description,
-      coin_prices: vec_map::empty<TypeName, u64>(),
-      start_time,
-      end_time
-    };
-
-    table::add(&mut gacha_config_tb.config, token_type, config);
-  }
-
-  public fun remove_gacha_config(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
-    if (table::contains(&gacha_config_tb.config, token_type)) {
-      table::remove(&mut gacha_config_tb.config, token_type);
-    };
-  }
-
-  public entry fun set_discount_price<COIN>(
-    _: &GameCap,
-    gacha_config_tb: &mut GachaConfigTable,
-    token_type: u64,
-    price: u64,
-  ) {
-    assert_price_gt_zero(price);
-    let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
-    let coin_type = type_name::get<COIN>();
-    if (vec_map::contains(&config.coin_prices, &coin_type)) {
-      let previous = vec_map::get_mut(&mut config.coin_prices, &coin_type);
-      *previous = price;
-    } else {
-      vec_map::insert(&mut config.coin_prices, coin_type, price);
-    };
-
-    event::emit(SetDiscountPriceEvent {
-      token_type,
-      coin_type,
-      price,
-    });
-  }
-
-  public entry fun remove_discount_price<COIN>(
-    _: &GameCap,
-    gacha_config_tb: &mut GachaConfigTable,
-    token_type: u64,
-  ) {
-    let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
-    let coin_type = type_name::get<COIN>();
-    if (vec_map::contains(&config.coin_prices, &coin_type)) {
-      vec_map::remove(&mut config.coin_prices, &coin_type);
-    };
-    event::emit(RemoveDiscountPriceEvent {
-      token_type,
-      coin_type,
-    });
-  }
   public fun voucher_exchange(
     voucher: GachaBall,
     gacha_config: &GachaConfigTable,
