@@ -105,7 +105,7 @@ module loa_game::game{
     id: UID,
     main_hero: Hero,
     burn_heroes: vector<Hero>,
-    user_address: address
+    user: address
   }
 
   // upgrader and hot potato
@@ -150,7 +150,6 @@ module loa_game::game{
   // events
   struct GachaBallOpened has copy, drop {
     id: ID,
-    // address of user that opened the ball
     user: address,
     ticket_id: ID,
     token_type: u64
@@ -158,7 +157,7 @@ module loa_game::game{
 
   struct UpgradeRequest has copy, drop {
     hero_id: address,
-    user_address: address,
+    user: address,
     burned_heroes: vector<address>,
     ticket_id: ID,
   }
@@ -173,8 +172,8 @@ module loa_game::game{
 
   struct MakeoverRequest has copy, drop {
     hero_id: address,
-    user_address: address,
-    burned_hero_id: address,
+    user: address,
+    burned_hero: address,
     ticket_id: ID,
     hero_part: u64
   }
@@ -185,19 +184,19 @@ module loa_game::game{
   }
 
   struct VoucherExchanged has copy, drop {
-    voucher_id: ID,
-    voucher_token_type: u64,
+    id: ID,
+    token_type: u64,
     user: address,
     ticket_id: ID,
   }
 
   struct DiscountExchanged has copy, drop {
-    discount_id: ID,
-    discount_token_type: u64,
-    coin_type: TypeName,
-    price: u64,
+    id: ID,
+    token_type: u64,
     user: address,
     ticket_id: ID,
+    coin_type: TypeName,
+    price: u64,
   }
 
   struct BoxTicketBurn has copy, drop {
@@ -206,7 +205,7 @@ module loa_game::game{
   }
 
   struct UserDeposit has copy, drop {
-    depositer: address,
+    user: address,
     amount: u64
   }
 
@@ -620,7 +619,7 @@ module loa_game::game{
 
   // Admins return upgraded heroes
   public fun return_upgraded_hero_by_ticket(upgrade_ticket: UpgradeTicket) {
-    let UpgradeTicket{id, main_hero, burn_heroes, user_address} = upgrade_ticket;
+    let UpgradeTicket{id, main_hero, burn_heroes, user} = upgrade_ticket;
     let l = vector::length(&burn_heroes);
     let i = 0;
     if (l > 0) {
@@ -633,7 +632,7 @@ module loa_game::game{
 
     vector::destroy_empty<Hero>(burn_heroes);
     
-    transfer::public_transfer(main_hero, user_address);
+    transfer::public_transfer(main_hero, user);
 
     object::delete(id);
   }
@@ -754,13 +753,13 @@ module loa_game::game{
       id: object::new(ctx),
       main_hero,
       burn_heroes: vector::empty<Hero>(),
-      user_address: tx_context::sender(ctx)
+      user: tx_context::sender(ctx)
     };
 
     let evt = MakeoverRequest {
       hero_id: main_address,
-      user_address: tx_context::sender(ctx),
-      burned_hero_id: object::id_address(&to_burn),
+      user: tx_context::sender(ctx),
+      burned_hero: object::id_address(&to_burn),
       ticket_id: object::uid_to_inner(&ticket.id),
       hero_part: appearance_index
     };
@@ -789,7 +788,7 @@ module loa_game::game{
       id: object::new(ctx),
       main_hero,
       burn_heroes: vector::empty<Hero>(),
-      user_address: tx_context::sender(ctx)
+      user: tx_context::sender(ctx)
     };
     while (i < l) {
       let burnable = vector::pop_back<Hero>(&mut to_burn);
@@ -805,7 +804,7 @@ module loa_game::game{
     // events
     let evt = UpgradeRequest {
       hero_id: main_address,
-      user_address: tx_context::sender(ctx),
+      user: tx_context::sender(ctx),
       burned_heroes: burn_addresses,
       ticket_id: object::uid_to_inner(&ticket.id),
     };
@@ -839,7 +838,7 @@ module loa_game::game{
       id: object::new(ctx),
       main_hero,
       burn_heroes: vector::empty<Hero>(),
-      user_address: tx_context::sender(ctx)
+      user: tx_context::sender(ctx)
     };
     while (i < l) {
       let burnable = vector::pop_back<Hero>(&mut to_burn);
@@ -916,13 +915,13 @@ module loa_game::game{
     assert!(token_type / Base == Voucher, EInvalidType);
     let config = table::borrow(&gacha_config.config, token_type);
     mint_gachas_by_config(config, tx_context::sender(ctx), clock, ctx);
-    let voucher_id = object::id(&voucher);
+    let id = object::id(&voucher);
 
     let ticket = BoxTicket{
       id: object::new(ctx),
       gacha_ball: voucher,
     };
-    event::emit(VoucherExchanged{voucher_id, voucher_token_type: token_type, user: tx_context::sender(ctx), ticket_id: object::id(&ticket)});
+    event::emit(VoucherExchanged{id, token_type, user: tx_context::sender(ctx), ticket_id: object::id(&ticket)});
 
     transfer::transfer(ticket, game_config.mint_address)
   }
@@ -961,7 +960,7 @@ module loa_game::game{
     };
 
     mint_gachas_by_config(config, tx_context::sender(ctx), clock, ctx);
-    let discount_id = object::id(&discount);
+    let id = object::id(&discount);
 
     let ticket = BoxTicket{
       id: object::new(ctx),
@@ -969,12 +968,12 @@ module loa_game::game{
     };
 
     event::emit(DiscountExchanged{
-      discount_id,
-      discount_token_type: token_type,
+      id,
+      token_type,
+      user: tx_context::sender(ctx),
+      ticket_id: object::id(&ticket),
       coin_type,
       price,
-      user: tx_context::sender(ctx),
-      ticket_id: object::id(&ticket)
     });
 
     transfer::transfer(ticket, game_config.mint_address)
@@ -1012,7 +1011,7 @@ module loa_game::game{
     assert!(amount > 0, EInvalidAmount);
     balance::join(&mut arca_counter.arca_balance, coin::into_balance<ARCA>(payment));
 
-    event::emit(UserDeposit{depositer: tx_context::sender(ctx), amount});
+    event::emit(UserDeposit{user: tx_context::sender(ctx), amount});
   }
 
   public fun withdraw(
