@@ -101,7 +101,7 @@ module loa_game::game{
     gacha_ball: GachaBall,
   }
 
-  struct UpgradeTicket has key {
+  struct HeroTicket has key {
     id: UID,
     main_hero: Hero,
     burn_heroes: vector<Hero>,
@@ -199,9 +199,8 @@ module loa_game::game{
     price: u64,
   }
 
-  struct BoxTicketBurn has copy, drop {
-    box_ticket_id: ID,
-    gacha_ball_id: ID
+  struct TicketBurned has copy, drop {
+    ticket_id: ID,
   }
 
   struct UserDeposit has copy, drop {
@@ -397,11 +396,11 @@ module loa_game::game{
     gacha_ball
   }
 
-
   public fun burn_box_ticket(box_ticket: BoxTicket) {
     let BoxTicket {id, gacha_ball} = box_ticket;
-    event::emit(BoxTicketBurn {box_ticket_id: object::uid_to_inner(&id), gacha_ball_id: object::id(&gacha_ball)});
     gacha::burn(gacha_ball);
+
+    event::emit(TicketBurned {ticket_id: object::uid_to_inner(&id)});
     object::delete(id);
   }
 
@@ -414,6 +413,7 @@ module loa_game::game{
   // burn the game cap
   public fun burn_game_cap(game_cap: GameCap){
     let GameCap { id } = game_cap;
+    event::emit(TicketBurned {ticket_id: object::uid_to_inner(&id)});
     object::delete(id); 
   }
 
@@ -618,8 +618,8 @@ module loa_game::game{
   // place an upgraded hero
 
   // Admins return upgraded heroes
-  public fun return_upgraded_hero_by_ticket(upgrade_ticket: UpgradeTicket) {
-    let UpgradeTicket{id, main_hero, burn_heroes, user} = upgrade_ticket;
+  public fun return_upgraded_hero_by_ticket(ticket: HeroTicket) {
+    let HeroTicket {id, main_hero, burn_heroes, user} = ticket;
     let l = vector::length(&burn_heroes);
     let i = 0;
     if (l > 0) {
@@ -634,6 +634,7 @@ module loa_game::game{
     
     transfer::public_transfer(main_hero, user);
 
+    event::emit(TicketBurned {ticket_id: object::uid_to_inner(&id)});
     object::delete(id);
   }
 
@@ -668,20 +669,20 @@ module loa_game::game{
     hero::edit_fields<u16>(hero, string::utf8(b"growth"), new_values);
   }
 
-  public fun upgrade_base_by_ticket(upgrade_ticket: &mut UpgradeTicket, new_values: vector<u16>) {
-    hero::edit_fields<u16>(&mut upgrade_ticket.main_hero, string::utf8(b"base"), new_values);
+  public fun upgrade_base_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+    hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"base"), new_values);
   }
 
-  public fun upgrade_skill_by_ticket(upgrade_ticket: &mut UpgradeTicket, new_values: vector<u16>) {
-    hero::edit_fields<u16>(&mut upgrade_ticket.main_hero, string::utf8(b"skill"), new_values);
+  public fun upgrade_skill_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+    hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"skill"), new_values);
   }
 
-  public fun upgrade_appearance_by_ticket(upgrade_ticket: &mut UpgradeTicket, new_values: vector<u16>) {
-    hero::edit_fields<u16>(&mut upgrade_ticket.main_hero, string::utf8(b"appearance"), new_values);
+  public fun upgrade_appearance_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+    hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"appearance"), new_values);
   }
 
-  public fun upgrade_growth_by_ticket(upgrade_ticket: &mut UpgradeTicket, new_values: vector<u16>) {
-    hero::edit_fields<u16>(&mut upgrade_ticket.main_hero, string::utf8(b"growth"), new_values);
+  public fun upgrade_growth_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+    hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"growth"), new_values);
   }
 
   /// === Open gacha functions ===
@@ -749,7 +750,7 @@ module loa_game::game{
     assert!(*main_hero_gender == *burn_hero_gender, EGenderMismatch);
     let main_address = object::id_address(&main_hero);
 
-    let ticket =  UpgradeTicket{
+    let ticket =  HeroTicket {
       id: object::new(ctx),
       main_hero,
       burn_heroes: vector::empty<Hero>(),
@@ -784,7 +785,7 @@ module loa_game::game{
     let i: u64 = 0;
     let burn_addresses: vector<address> = vector::empty<address>();
     let main_address = object::id_address(&main_hero);
-    let ticket =  UpgradeTicket{
+    let ticket =  HeroTicket {
       id: object::new(ctx),
       main_hero,
       burn_heroes: vector::empty<Hero>(),
@@ -834,7 +835,7 @@ module loa_game::game{
     let i: u64 = 0;
     let main_address = object::id_address(&main_hero);
     let burn_addresses: vector<address> = vector::empty<address>();
-    let ticket =  UpgradeTicket{
+    let ticket =  HeroTicket {
       id: object::new(ctx),
       main_hero,
       burn_heroes: vector::empty<Hero>(),

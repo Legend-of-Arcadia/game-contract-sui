@@ -8,7 +8,8 @@ module loa_game::test_game {
   use sui::transfer;
   use sui::clock;
 
-  use loa_game::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, EGenderMismatch, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket, ArcaCounter, SeenMessages, UpgradeTicket, GachaConfigTable};
+  use loa_game::game::{Self, EMustBurnAtLeastOneHero, ENotWhitelisted, EWrongPowerUpgradeFee, ESameAppearancePart, EGenderMismatch, GameCap, GameConfig, Upgrader, ObjBurn, BoxTicket, ArcaCounter, SeenMessages,
+    HeroTicket, GachaConfigTable};
   use loa_game::hero::{Self, Hero};
   use loa_game::gacha::GachaBall;
   use loa::arca::ARCA;
@@ -91,7 +92,7 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<HeroTicket>(&mut scenario);
 
       game::upgrade_growth_by_ticket(&mut upgrade_ticket, new_growths);
       game::return_upgraded_hero_by_ticket(upgrade_ticket);
@@ -156,7 +157,7 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<HeroTicket>(&mut scenario);
 
       game::upgrade_base_by_ticket(&mut upgrade_ticket, new_base);
       game::return_upgraded_hero_by_ticket(upgrade_ticket);
@@ -223,7 +224,7 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<HeroTicket>(&mut scenario);
 
       game::upgrade_base_by_ticket(&mut upgrade_ticket, new_skills);
       game::return_upgraded_hero_by_ticket(upgrade_ticket);
@@ -292,7 +293,7 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<HeroTicket>(&mut scenario);
 
       game::upgrade_base_by_ticket(&mut upgrade_ticket, new_others);
       game::return_upgraded_hero_by_ticket(upgrade_ticket);
@@ -381,7 +382,7 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<HeroTicket>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
       game::upgrade_appearance_by_ticket(&mut upgrade_ticket, appearance);
@@ -442,7 +443,7 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<HeroTicket>(&mut scenario);
       let obj_burn = ts::take_shared<ObjBurn>(&mut scenario);
 
       game::upgrade_appearance_by_ticket(&mut upgrade_ticket, appearance);
@@ -550,7 +551,7 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let upgrader = ts::take_shared<Upgrader>(&mut scenario);
-      let upgrade_ticket = ts::take_from_sender<UpgradeTicket>(&mut scenario);
+      let upgrade_ticket = ts::take_from_sender<HeroTicket>(&mut scenario);
 
       game::upgrade_growth_by_ticket(&mut upgrade_ticket, new_growths);
       game::return_upgraded_hero_by_ticket(upgrade_ticket);
