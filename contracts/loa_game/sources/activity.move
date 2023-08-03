@@ -2,7 +2,6 @@ module loa_game::activity {
     use std::type_name::{Self, TypeName};
     use std::string::{Self, String};
     use std::option;
-    use std::vector;
 
     use sui::vec_map::{Self, VecMap};
     use sui::clock::{Self, Clock};
@@ -57,12 +56,14 @@ module loa_game::activity {
 
     // event
     struct BuyEvent has copy, drop {
+        config: ID,             // activity config id
+        amount: u64,            // buy amount
         coin_type: TypeName,
-        type: String,
         price: u64,
-        amount: u64,
-        total: u64,
-        token_types: vector<address>,
+        token_type: u64,        // for statistics
+        //ids: vector<address>, // NO need to record since we have GachaBallMinted event and amount(gas cost opt)
+        total_supply: u64,      // for statistics
+        max_supply: u64,        // for statistics
     }
 
     struct CreateConfigEvent has copy, drop {
@@ -70,21 +71,23 @@ module loa_game::activity {
         token_type: u64,
         type: String,
         name: String,
-        collection: String,
     }
 
-    struct RemoveConfigEvent has copy, drop {
-        config_object_id: ID,
+    struct UpdateConfigEvent has copy, drop {
+        config: ID,
+        token_type: u64,
+        type: String,
+        name: String
     }
 
     struct SetPriceEvent has copy, drop {
-        config_object_id: ID,
+        config: ID,
         coin_type: TypeName,
         price: u64,
     }
 
     struct RemovePriceEvent has copy, drop {
-        config_object_id: ID,
+        config: ID,
         coin_type: TypeName,
     }
 
@@ -127,11 +130,41 @@ module loa_game::activity {
             config: object::id(&config),
             token_type,
             type,
-            name: config.name,
-            collection,
+            name,
         });
 
         transfer::public_share_object(config);
+    }
+
+    // add update config for future use
+    public entry fun update_config(
+        _: &GameCap,
+        config: &mut ActivityConfig,
+        start_time: u64,
+        end_time: u64,
+        max_supply: u64,
+        token_type: u64,
+        name: String,
+        type: String,
+        collection: String,
+        description: String,
+    ) {
+        assert_time_set(start_time, end_time);
+        config.start_time = start_time;
+        config.end_time = end_time;
+        config.max_supply = max_supply;
+        config.token_type = token_type;
+        config.name = name;
+        config.type = type;
+        config.collection = collection;
+        config.description = description;
+
+        event::emit(UpdateConfigEvent {
+            config: object::id(config),
+            token_type,
+            type,
+            name,
+        });
     }
 
     public entry fun set_price<COIN>(
@@ -149,7 +182,7 @@ module loa_game::activity {
         };
 
         event::emit(SetPriceEvent {
-            config_object_id: object::id(config),
+            config: object::id(config),
             coin_type,
             price,
         });
@@ -164,7 +197,7 @@ module loa_game::activity {
             vec_map::remove(&mut config.coin_prices, &coin_type);
         };
         event::emit(RemovePriceEvent {
-            config_object_id: object::id(config),
+            config: object::id(config),
             coin_type,
         });
     }
@@ -197,7 +230,6 @@ module loa_game::activity {
         pay(profits, total, paid, ctx);
         // mint nft
         let i = 0;
-        let token_types: vector<address> = vector::empty<address>();
         while (i < amount) {
             let gacha_ball = gacha::mint(
                 config.token_type,
@@ -208,8 +240,6 @@ module loa_game::activity {
                 ctx,
             );
 
-            let token_type = object::id_address(&gacha_ball);
-            vector::push_back(&mut token_types, token_type);
             transfer::public_transfer(gacha_ball, tx_context::sender(ctx));
             i = i + 1;
         };
@@ -217,12 +247,13 @@ module loa_game::activity {
         config.total_supply = config.total_supply + amount;
         // events
         event::emit(BuyEvent {
+            config: object::id(config),
             coin_type,
-            type: config.type,
             price,
             amount,
-            total,
-            token_types,
+            token_type: config.token_type,
+            total_supply: config.total_supply,
+            max_supply: config.max_supply,
         });
     }
 
