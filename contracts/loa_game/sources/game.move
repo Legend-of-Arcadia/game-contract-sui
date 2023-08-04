@@ -470,23 +470,39 @@ module loa_game::game{
     seen_messages.mugen_pk = mugen_pk;
   }
 
+  /// add or update config
   public fun add_gacha_config(
     _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_token_type: vector<u64>,
     gacha_name: vector<String>, gacha_type: vector<String>, gacha_collction: vector<String>,
     gacha_description: vector<String>, start_time: u64, end_time: u64) {
 
-    let config = GachaConfig {
-      gacha_token_type,
-      gacha_name,
-      gacha_type,
-      gacha_collction,
-      gacha_description,
-      coin_prices: vec_map::empty<TypeName, u64>(),
-      start_time,
-      end_time
+
+    if (table::contains(&mut gacha_config_tb.config, token_type)) {
+      let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
+      config.gacha_token_type = gacha_token_type;
+      config.gacha_name = gacha_name;
+      config.gacha_type = gacha_type;
+      config.gacha_collction = gacha_collction;
+      config.gacha_description = gacha_description;
+      config.start_time = start_time;
+      config.end_time = end_time;
+    } else {
+      let config = GachaConfig {
+        gacha_token_type,
+        gacha_name,
+        gacha_type,
+        gacha_collction,
+        gacha_description,
+        coin_prices: vec_map::empty<TypeName, u64>(),
+        start_time,
+        end_time
+      };
+
+      table::add(&mut gacha_config_tb.config, token_type, config);
     };
 
-    table::add(&mut gacha_config_tb.config, token_type, config);
+
+
   }
 
   public fun remove_gacha_config(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {

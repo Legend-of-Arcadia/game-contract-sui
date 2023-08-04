@@ -14,6 +14,7 @@ module loa_game::test_game {
   use loa_game::gacha::GachaBall;
   use loa::arca::ARCA;
   use multisig::multisig::{Self, MultiSignature};
+  use loa_game::gacha;
 
 
   // errors
@@ -808,7 +809,6 @@ module loa_game::test_game {
       ts::return_shared(gacha_config_tb);
     };
 
-    //user starts the upgrade
     ts::next_tx(&mut scenario, USER);
     {
       let voucher = ts::take_from_sender<GachaBall>(&mut scenario);
@@ -836,6 +836,53 @@ module loa_game::test_game {
 
       ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(gacha_config_tb);
+    };
+
+    // test update config
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+      let gacha_id = 50000;
+      let gacha_token_type = vector[29999];
+      let gacha_name = vector[string::utf8(b"Grandia")];
+      let gacha_type = vector[string::utf8(b"Grandia")];
+      let gacha_collction = vector[string::utf8(b"Grandia")];
+      let gacha_description = vector[string::utf8(b"Grandia")];
+      let start_time = 0;
+      let end_time = 0;
+
+      game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id, gacha_token_type, gacha_name, gacha_type, gacha_collction,
+        gacha_description, start_time, end_time);
+
+      let voucher = game::mint_test_voucher(&cap, ts::ctx(&mut scenario));
+      transfer::public_transfer(voucher, USER);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(gacha_config_tb);
+    };
+
+    ts::next_tx(&mut scenario, USER);
+    {
+      let voucher = ts::take_from_sender<GachaBall>(&mut scenario);
+      let clock = ts::take_shared<clock::Clock>(&mut scenario);
+      let game_config = ts::take_shared<GameConfig>(&mut scenario);
+
+      let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+
+      game::voucher_exchange(voucher, &gacha_config_tb, &clock, &game_config,ts::ctx(&mut scenario));
+
+      ts::return_shared(gacha_config_tb);
+      ts::return_shared(clock);
+      ts::return_shared(game_config);
+    };
+
+    ts::next_tx(&mut scenario, USER);
+
+    {
+      let gacha1 = ts::take_from_sender<GachaBall>(&mut scenario);
+
+      assert!(*gacha::tokenType(&gacha1) == 29999,1);
+      ts::return_to_sender<GachaBall>(&scenario, gacha1);
     };
 
     ts::end(scenario);
