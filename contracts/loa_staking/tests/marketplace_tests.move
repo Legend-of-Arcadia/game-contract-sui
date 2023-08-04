@@ -142,7 +142,7 @@ module loa_staking::marketplace_tests {
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
             let sp = ts::take_shared<StakingPool>(&mut scenario);
 
-            let hero = marketplace::buy_secondary_arca<Hero, Coin<ARCA>>(coin, 1, option::none<address>(), &mut marketplace, &mut sp, ts::ctx(&mut scenario));
+            let hero = marketplace::buy_secondary_arca<Hero>(coin, 1, option::none<address>(), &mut marketplace, &mut sp, ts::ctx(&mut scenario));
 
             transfer::public_transfer(hero, GAME);
             ts::return_shared(marketplace);

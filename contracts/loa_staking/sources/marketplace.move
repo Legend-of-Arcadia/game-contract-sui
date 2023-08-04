@@ -266,7 +266,7 @@ module loa_staking::marketplace{
         dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
-    public fun buy_secondary_arca<Item: key+store, COIN>(
+    public fun buy_secondary_arca<Item: key+store>(
         payment: Coin<ARCA>,
         listing_number: u64,
         referrer: Option<address>,
