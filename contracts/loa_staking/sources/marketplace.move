@@ -191,8 +191,8 @@ module loa_staking::marketplace{
             item_id,
             price
         };
-        stand.secondary_list_index = stand.secondary_list_index + 1;
-        let key = stand.secondary_list_index;
+        stand.primary_list_index = stand.primary_list_index + 1;
+        let key = stand.primary_list_index;
         table::add<u64, Listing_P>(&mut stand.primary_listings, key, listing);
         dof::add<address, Item>(&mut stand.id, item_id, item);
         // emit event
@@ -244,12 +244,7 @@ module loa_staking::marketplace{
         let listing = table::remove<u64, Listing_P>(&mut stand.primary_listings, listing_number);
         let Listing_P {item_id, price} = listing;
         assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
-        // let size: u64 = table::length<u64, Listing_P>(&stand.primary_listings);
-        // if (size > listing_number) {
-        //     let last_listing = table::remove<u64, Listing_P>(&mut stand.primary_listings, size);
-        //     table::add<u64, Listing_P>(&mut stand.primary_listings, listing_number, last_listing);
-        // };
-        //balance::join<ARCA>(&mut stand.income, coin::into_balance<ARCA>(payment));
+
         put_coin<ARCA>(stand, payment);
         // event
         let evt = ItemBought {
