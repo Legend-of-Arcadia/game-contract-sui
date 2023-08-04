@@ -28,10 +28,9 @@ module loa_staking::marketplace{
     const EVersionMismatch: u64 = 4;
     const EPaymentMismatch: u64 = 5;
     const ENoItemSeller: u64 = 6;
-    const EVipLvExsit: u64 = 7;
-    const EVipLvNoExsit: u64 = 8;
-    const ECoinTypeMismatch: u64 = 9;
-    const ENeedVote: u64 = 10;
+    const EVipLvNoExsit: u64 = 7;
+    const ECoinTypeMismatch: u64 = 8;
+    const ENeedVote: u64 = 9;
 
     const WithdrawFeeProfits: u64 = 0;
 
@@ -156,7 +155,6 @@ module loa_staking::marketplace{
     // add or update vip fee
     public fun update_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
         assert!(VERSION == 1, EVersionMismatch);
-        assert!(table::contains(&mut marketplace.vip_fees, vip_level), EVipLvNoExsit);
 
         if (table::contains(&mut marketplace.vip_fees, vip_level)) {
             *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level) = fee;
