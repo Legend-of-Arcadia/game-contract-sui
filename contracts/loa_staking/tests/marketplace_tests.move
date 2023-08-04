@@ -10,7 +10,7 @@ module loa_staking::marketplace_tests {
 
     use loa::arca::{ARCA};
     use loa_staking::marketplace::{Self, Marketplace};
-    use loa_staking::staking::{Self, StakingPool};
+    use loa_staking::staking::{Self, StakingPool, VeARCA};
     use loa_game::hero::Hero;
     use loa_game::game::{Self, GameCap, GameConfig};
 
@@ -23,6 +23,10 @@ module loa_staking::marketplace_tests {
     const USER1_ADDRESS: address = @0xABCD;
 
     const DECIMALS: u64 = 1_000_000_000;
+
+    const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
+    const MONTH_TO_UNIX_SECONDS: u64 = 2_629_744; // rounded up
+    const YEAR_TO_UNIX_SECONDS: u64 = 31_556_926;
 
     #[test]
     fun test_buy_primary_arca() {
@@ -417,17 +421,6 @@ module loa_staking::marketplace_tests {
         };
 
         ts::next_tx(&mut scenario, GAME);
-        // {
-        //     let sp = ts::take_shared<StakingPool>(&mut scenario);
-        //
-        //
-        //     let rewards_value = staking::get_rewards_value(&sp);
-        //
-        //     assert!(rewards_value == 360000000, EToBurnNotCorrect);
-        //
-        //     ts::return_shared(sp);
-        //
-        // };
 
         ts::end(scenario);
 
@@ -486,6 +479,118 @@ module loa_staking::marketplace_tests {
 
         };
 
+
+        ts::end(scenario);
+
+    }
+
+    #[test]
+    fun update_vip_fee_test() {
+        let scenario = ts::begin(GAME);
+
+        let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        clock::share_for_testing(clock);
+
+        game::init_for_test(ts::ctx(&mut scenario));
+        marketplace::init_for_testing(ts::ctx(&mut scenario));
+        //arca::init_for_testing(ts::ctx(&mut scenario));
+
+        let vip2Amount = 40*DECIMALS;
+        let viplv = 2;
+        let buy_amount = 30*DECIMALS;
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+
+            //let treasury = ts::take_from_sender<TreasuryCap<ARCA>>(&mut scenario);
+
+            staking::init_for_testing(&cap, ts::ctx(&mut scenario));
+
+            let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+            transfer::public_transfer(hero, GAME);
+
+            ts::return_to_sender<GameCap>(&scenario, cap);
+            //ts::return_to_sender<TreasuryCap<ARCA>>(&scenario, treasury);
+        };
+
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let marketplace = ts::take_shared<Marketplace>(&mut scenario);
+            let hero = ts::take_from_sender<Hero>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+
+            marketplace::update_vip_fees(&cap, &mut marketplace, viplv, 100);
+            marketplace::list_secondary<Hero, ARCA>(&mut marketplace, hero, buy_amount, ts::ctx(&mut scenario));
+
+            ts::return_shared(marketplace);
+            ts::return_to_sender<GameCap>(&scenario, cap);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let coin = coin::mint_for_testing<ARCA>(vip2Amount, ts::ctx(&mut scenario));
+
+            staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
+            ts::next_tx(&mut scenario, USER1_ADDRESS);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            //assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS * 100, 1);
+            let lv= staking::calc_vip_level(&sp, USER1_ADDRESS, &clock);
+            assert!(lv == viplv, 1);
+
+            ts::return_shared(sp);
+            ts::return_shared(clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let marketplace = ts::take_shared<Marketplace>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+
+            let coin = coin::mint_for_testing<ARCA>(buy_amount, ts::ctx(&mut scenario));
+
+            let hero = marketplace::buy_secondary_vip<Hero, ARCA>(coin, 1, &mut marketplace, &mut sp, &clock, ts::ctx(&mut scenario));
+
+            transfer::public_transfer(hero, GAME);
+            ts::return_shared(marketplace);
+            ts::return_shared(sp);
+            ts::return_shared(clock);
+
+        };
+
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+            let config = ts::take_shared<GameConfig>(&mut scenario);
+            marketplace::withdraw_fee_profits_request<ARCA>(&mut config, &mut multi_signature, GAME,ts::ctx(&mut scenario));
+
+            ts::return_shared(multi_signature);
+            ts::return_shared(config);
+        };
+
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+            let config = ts::take_shared<GameConfig>(&mut scenario);
+            let marketplace = ts::take_shared<Marketplace>(&mut scenario);
+            multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
+            let b = marketplace::withdraw_fee_profits_execute<ARCA>(&mut config, &mut multi_signature, 0, true, &mut marketplace,ts::ctx(&mut scenario));
+
+            assert!(b, 1);
+
+            ts::next_tx(&mut scenario, GAME);
+            let coin = ts::take_from_address<Coin<ARCA>>(&mut scenario, GAME);
+            //let x = coin::value(&coin);
+            assert!(coin::value<ARCA>(&coin) == buy_amount * 1/100, 1);
+
+            ts::return_to_sender(&mut scenario, coin);
+            ts::return_shared(multi_signature);
+            ts::return_shared(config);
+            ts::return_shared(marketplace);
+        };
 
         ts::end(scenario);
 

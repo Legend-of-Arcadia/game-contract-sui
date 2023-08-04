@@ -153,17 +153,18 @@ module loa_staking::marketplace{
         transfer::public_share_object<Marketplace>(marketplace);
     }
 
-    public fun edit_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
+    // add or update vip fee
+    public fun update_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
         assert!(VERSION == 1, EVersionMismatch);
         assert!(table::contains(&mut marketplace.vip_fees, vip_level), EVipLvNoExsit);
-        *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level) = fee;
+
+        if (table::contains(&mut marketplace.vip_fees, vip_level)) {
+            *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level) = fee;
+        } else {
+            table::add(&mut marketplace.vip_fees, vip_level, fee);
+        };
     }
 
-    public fun add_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
-        assert!(VERSION == 1, EVersionMismatch);
-        assert!(!table::contains(&mut marketplace.vip_fees, vip_level), EVipLvExsit);
-        table::add(&mut marketplace.vip_fees, vip_level, fee);
-    }
 
     public fun remove_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64) {
         assert!(VERSION == 1, EVersionMismatch);
