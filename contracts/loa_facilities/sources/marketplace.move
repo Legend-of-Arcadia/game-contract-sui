@@ -1,4 +1,4 @@
-module loa_staking::marketplace{
+module loa_facilities::marketplace{
 
     use sui::balance::{Self, Balance};
     use sui::clock::{Clock};
@@ -17,7 +17,7 @@ module loa_staking::marketplace{
 
     use loa::arca::ARCA;
     use loa_game::game::{Self, GameCap, GameConfig};
-    use loa_staking::staking::{Self, StakingPool};
+    use loa_facilities::staking::{Self, StakingPool};
     use multisig::multisig::{Self, MultiSignature};
 
     // errors

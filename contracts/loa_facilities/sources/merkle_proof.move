@@ -16,12 +16,12 @@
 /// const proof = tree.getProof(leaf)
 /// console.log(tree.verify(proof, leaf, root)) // true
 /// TODO: Unit tests for multi-proof verification.
-module loa_staking::merkle_proof {
+module loa_facilities::merkle_proof {
     // use std::hash;
     use std::vector;
     use sui::hash;
 
-    use loa_staking::vectors;
+    use loa_facilities::vectors;
     //use std::debug;
 
     /// @dev When an invalid multi-proof is supplied. Proof flags length must equal proof length + leaves length - 1.

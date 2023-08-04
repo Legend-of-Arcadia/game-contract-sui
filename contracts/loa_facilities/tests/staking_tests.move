@@ -1,5 +1,5 @@
 #[test_only]
-module loa_staking::staking_tests {
+module loa_facilities::staking_tests {
 
     use std::vector;
     use std::string;
@@ -13,7 +13,7 @@ module loa_staking::staking_tests {
     use loa::arca::{ARCA};
     use loa_game::game;
     use loa_game::game::{GameCap, GameConfig};
-    use loa_staking::staking::{Self, WeekReward, StakingPool, VeARCA};
+    use loa_facilities::staking::{Self, WeekReward, StakingPool, VeARCA};
     use multisig::multisig::{Self, MultiSignature};
 
 

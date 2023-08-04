@@ -1,7 +1,7 @@
 [package]
 name = "loa_game"
 version = "0.0.1"
-published-at = "0x46432149121491ba51c5fd6b4a65e53d0d8454ec51fc2d255865146cd01313f3"
+# published-at = "0x46432149121491ba51c5fd6b4a65e53d0d8454ec51fc2d255865146cd01313f3"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "mainnet" }

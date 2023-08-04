@@ -1,4 +1,4 @@
-module loa_staking::staking {
+module loa_facilities::staking {
     use std::string::{Self, String};
     use std::vector;
 
@@ -15,12 +15,12 @@ module loa_staking::staking {
     use sui::tx_context::{Self, TxContext};
 
     use loa::arca::ARCA;
-    use loa_staking::merkle_proof;
+    use loa_facilities::merkle_proof;
     use loa_game::game::{Self, GameConfig};
     use loa_game::game::GameCap;
     use multisig::multisig::{Self, MultiSignature};
 
-    friend loa_staking::marketplace;
+    friend loa_facilities::marketplace;
 
     const VERSION: u64 = 1;
 

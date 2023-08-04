@@ -1,7 +1,7 @@
 [package]
-name = "loa_staking"
+name = "loa_facilities"
 version = "0.0.1"
-published-at = "0x46432149121491ba51c5fd6b4a65e53d0d8454ec51fc2d255865146cd01313f3"
+# published-at = "0x46432149121491ba51c5fd6b4a65e53d0d8454ec51fc2d255865146cd01313f3"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "mainnet" }
@@ -9,5 +9,4 @@ loa = {git = "https://github.com/Legend-of-Arcadia/ARCA", subdir="token_contract
 loa_game = {local = "../loa_game"}
 
 [addresses]
-loa_staking = "0x100"
-# loa = "0x6cb26f10fc6175be29960d2be3150cba917a51f543fa32b9e0d010931e4a95c0"
+loa_facilities = "0x0"

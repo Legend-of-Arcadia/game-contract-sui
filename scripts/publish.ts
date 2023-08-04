@@ -37,7 +37,7 @@ async function publish() {
     transactionBlock: tx,
   });
   var fs = require('fs');
-  // unfortunately when I published, I forgot to ask for all the data needed in the response, so for now I have to go to the explorer manually 
+  // unfortunately when I published, I forgot to ask for all the data needed in the response, so for now I have to go to the explorer manually
   fs.writeFile(`./auto-results/publishResult.json`, JSON.stringify(result, null, 2), function(err: any) {
     if (err) {
         console.log(err);

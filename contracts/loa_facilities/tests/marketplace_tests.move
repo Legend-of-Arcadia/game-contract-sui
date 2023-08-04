@@ -1,5 +1,5 @@
 #[test_only]
-module loa_staking::marketplace_tests {
+module loa_facilities::marketplace_tests {
 
     use std::option;
 
@@ -9,8 +9,8 @@ module loa_staking::marketplace_tests {
     use sui::transfer;
 
     use loa::arca::{ARCA};
-    use loa_staking::marketplace::{Self, Marketplace};
-    use loa_staking::staking::{Self, StakingPool, VeARCA};
+    use loa_facilities::marketplace::{Self, Marketplace};
+    use loa_facilities::staking::{Self, StakingPool, VeARCA};
     use loa_game::hero::Hero;
     use loa_game::game::{Self, GameCap, GameConfig};
 
