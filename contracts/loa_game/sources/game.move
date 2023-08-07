@@ -1174,8 +1174,17 @@ module loa_game::game{
   }
 
   // === Accessors ===
-  public fun check_salt(sm: &SeenMessages, salt: u64):bool {
-    table::contains(&sm.salt_table, salt)
+  public fun check_salt(sm: &SeenMessages, expire_at: u64, clock: &Clock,salt: u64): vector<bool> {
+    let v_bool = vector::empty<bool>();
+    vector::push_back(&mut v_bool, table::contains(&sm.salt_table, salt));
+
+    if (expire_at >= clock::timestamp_ms(clock) / 1000) {
+      vector::push_back(&mut v_bool, true);
+    } else {
+      vector::push_back(&mut v_bool, false);
+    };
+
+    v_bool
   }
 
   public fun get_upgarde_profits(upgrade: &Upgrader):u64 {
