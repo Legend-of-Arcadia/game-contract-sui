@@ -85,7 +85,7 @@ module loa_facilities::marketplace{
         to: address
     }
     // events
-    struct NewSecodaryListing has copy, drop {
+    struct NewSecondaryListing has copy, drop {
         coin_type: TypeName,
         price: u64,
         seller: address,
@@ -219,7 +219,7 @@ module loa_facilities::marketplace{
         table::add<u64, Listing>(&mut stand.secondary_listings, key, listing);
         dof::add<address, Item>(&mut stand.id, item_id, item);
         // emit event
-        let evt = NewSecodaryListing {
+        let evt = NewSecondaryListing {
             coin_type,
             price,
             seller: tx_context::sender(ctx),
@@ -371,7 +371,7 @@ module loa_facilities::marketplace{
         table::add<u64, Listing>(&mut stand.secondary_listings, key, listing);
         dof::add<address, Item>(&mut stand.id, item_id, item);
         // emit event
-        let evt = NewSecodaryListing {
+        let evt = NewSecondaryListing {
             coin_type,
             price,
             seller: tx_context::sender(ctx),
