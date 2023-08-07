@@ -513,10 +513,6 @@ module loa_facilities::staking {
         balance::join(&mut sp.rewards, coin::into_balance<ARCA>(c));
     }
 
-    // === Accessors ===
-    public fun get_reward_amount(sp: &StakingPool):u64 {
-        balance::value(&sp.rewards)
-    }
     // ============================================================
 
     #[test_only]

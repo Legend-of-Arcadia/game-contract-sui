@@ -613,7 +613,7 @@ module loa_facilities::marketplace{
     }
 
     // === Accessors ===
-    public fun get_discount_profits<COIN>(marketplace: &Marketplace):u64 {
+    public fun get_fee_profits<COIN>(marketplace: &Marketplace):u64 {
         let coin_type = type_name::get<COIN>();
         balance::value(df::borrow<TypeName, Balance<COIN>>(&marketplace.main.id, coin_type))
     }

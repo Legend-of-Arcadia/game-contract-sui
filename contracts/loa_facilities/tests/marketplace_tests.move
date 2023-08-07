@@ -304,6 +304,9 @@ module loa_facilities::marketplace_tests {
             let sp = ts::take_shared<StakingPool>(&mut scenario);
 
             let hero = marketplace::buy_secondary<Hero, ARCA>(coin, 1,  &mut marketplace,  ts::ctx(&mut scenario));
+            ts::next_tx(&mut scenario, GAME);
+            assert!(marketplace::get_fee_profits<ARCA>(&marketplace) == 30*DECIMALS * 3/100, 1)
+            ;
 
             transfer::public_transfer(hero, GAME);
             ts::return_shared(marketplace);
