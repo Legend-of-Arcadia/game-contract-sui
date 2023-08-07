@@ -533,7 +533,7 @@ module loa_game::test_game {
       ts::next_tx(&mut scenario, USER);
       let coin = ts::take_from_sender<Coin<ARCA>>(&mut scenario);
       assert!(coin::value<ARCA>(&coin) == 10000000000, EWrongHeroPendingUpgrade);
-      assert!(game::get_upgarde_profits(&upgrader) == 25000000000, EWrongHeroPendingUpgrade);
+      assert!(game::get_upgrade_profits(&upgrader) == 25000000000, EWrongHeroPendingUpgrade);
       ts::return_to_sender<Coin<ARCA>>(&scenario, coin);
       ts::return_shared(upgrader);
       ts::return_shared(obj_burn);
