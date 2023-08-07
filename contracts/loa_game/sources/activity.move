@@ -385,6 +385,12 @@ module loa_game::activity {
         };
     }
 
+    // === Accessors ===
+    public fun get_discount_profits<COIN>(profits: &ActivityProfits):u64 {
+        let coin_type = type_name::get<COIN>();
+        balance::value(df::borrow<TypeName, Balance<COIN>>(&profits.id, coin_type))
+    }
+
     #[test_only]
     public fun init_for_test(ctx: &mut TxContext) {
         init(ctx);

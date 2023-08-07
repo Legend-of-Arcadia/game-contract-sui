@@ -1178,6 +1178,18 @@ module loa_game::game{
     table::contains(&sm.salt_table, salt)
   }
 
+  public fun get_upgarde_profits(upgrade: &Upgrader):u64 {
+    balance::value(&upgrade.profits)
+  }
+
+  public fun get_counter_amount(arca_counter: &ArcaCounter):u64 {
+    balance::value(&arca_counter.arca_balance)
+  }
+
+  public fun get_discount_profits<COIN>(config_tb: &GachaConfigTable):u64 {
+    let coin_type = type_name::get<COIN>();
+    balance::value(df::borrow<TypeName, Balance<COIN>>(&config_tb.id, coin_type))
+  }
   // === Test-only ===
 
   #[test_only]

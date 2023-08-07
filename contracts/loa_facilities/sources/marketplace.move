@@ -611,6 +611,13 @@ module loa_facilities::marketplace{
         // return item
         dof::remove<address, Item>(&mut stand.id, item_id)
     }
+
+    // === Accessors ===
+    public fun get_discount_profits<COIN>(marketplace: &Marketplace):u64 {
+        let coin_type = type_name::get<COIN>();
+        balance::value(df::borrow<TypeName, Balance<COIN>>(&marketplace.main.id, coin_type))
+    }
+
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext) {
         init(ctx);
