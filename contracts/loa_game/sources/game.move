@@ -1172,6 +1172,12 @@ module loa_game::game{
   fun assert_price_gt_zero(price: u64) {
     assert!(price > 0, EPriceEQZero);
   }
+
+  // === Accessors ===
+  public fun check_salt(sm: &SeenMessages, salt: u64):bool {
+    table::contains(&sm.salt_table, salt)
+  }
+
   // === Test-only ===
 
   #[test_only]
