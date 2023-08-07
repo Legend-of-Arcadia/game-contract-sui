@@ -386,7 +386,7 @@ module loa_game::activity {
     }
 
     // === Accessors ===
-    public fun get_discount_profits<COIN>(profits: &ActivityProfits):u64 {
+    public fun get_activity_profits<COIN>(profits: &ActivityProfits):u64 {
         let coin_type = type_name::get<COIN>();
         balance::value(df::borrow<TypeName, Balance<COIN>>(&profits.id, coin_type))
     }

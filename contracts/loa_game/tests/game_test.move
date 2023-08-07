@@ -934,6 +934,8 @@ module loa_game::test_game {
       let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
 
       game::discount_exchange(discount, &mut gacha_config_tb, pay, &clock, &game_config,ts::ctx(&mut scenario));
+      ts::next_tx(&mut scenario, USER);
+      assert!(game::get_discount_profits<ARCA>(&gacha_config_tb) == 1000, 1);
 
       ts::return_shared(gacha_config_tb);
       ts::return_shared(clock);

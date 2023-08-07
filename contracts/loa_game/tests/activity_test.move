@@ -188,6 +188,9 @@ module loa_game::activity_test {
             ts::next_tx(&mut scenario, GAME);
             let profits = ts::take_shared<ActivityProfits>(&mut scenario);
             activity::buy<ARCA>(&mut activity_config, fee, 5, &clock, &mut profits, ts::ctx(&mut scenario));
+            ts::next_tx(&mut scenario, GAME);
+            let amount = activity::get_activity_profits<ARCA>(&profits);
+            assert!(amount == 5000, 1);
 
             ts::return_shared(clock);
             ts::return_to_sender<GameCap>(&scenario, cap);
