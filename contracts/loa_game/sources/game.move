@@ -1240,7 +1240,7 @@ module loa_game::game{
     v_bool
   }
 
-  public fun get_upgarde_profits(upgrade: &Upgrader):u64 {
+  public fun get_upgrade_profits(upgrade: &Upgrader):u64 {
     balance::value(&upgrade.profits)
   }
 
