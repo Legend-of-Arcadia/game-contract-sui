@@ -318,8 +318,7 @@ module loa_facilities::marketplace{
         assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
         
         // get base_trading fee based on vip level
-        //let timestamp = clock::timestamp_ms(clock)/1000;
-        let vip_level = staking::calc_vip_level(sp, tx_context::sender(ctx), clock);
+        let vip_level = staking::calc_vip_level(sp, seller, clock);
         assert!(vip_level < 21, EIncorrectVipLevel);
         let base_fee = *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level);
         fee_distribution_arca(
@@ -435,8 +434,7 @@ module loa_facilities::marketplace{
         assert!(price == coin::value<COIN>(&payment), EPaymentNotExact);
 
         // get base_trading fee based on vip level
-        //let timestamp = clock::timestamp_ms(clock)/1000;
-        let vip_level = staking::calc_vip_level(sp, tx_context::sender(ctx), clock);
+        let vip_level = staking::calc_vip_level(sp, seller, clock);
         assert!(vip_level < 21, EIncorrectVipLevel);
         let base_fee = *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level);
         fee_distribution(

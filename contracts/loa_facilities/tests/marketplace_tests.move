@@ -529,7 +529,7 @@ module loa_facilities::marketplace_tests {
             ts::return_to_sender<GameCap>(&scenario, cap);
         };
 
-        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        ts::next_tx(&mut scenario, GAME);
         {
             let sp = ts::take_shared<StakingPool>(&mut scenario);
             let clock = ts::take_shared<clock::Clock>(&mut scenario);
@@ -539,7 +539,7 @@ module loa_facilities::marketplace_tests {
             ts::next_tx(&mut scenario, USER1_ADDRESS);
             let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
             //assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS * 100, 1);
-            let lv= staking::calc_vip_level(&sp, USER1_ADDRESS, &clock);
+            let lv= staking::calc_vip_level(&sp, GAME, &clock);
             assert!(lv == viplv, 1);
 
             ts::return_shared(sp);
