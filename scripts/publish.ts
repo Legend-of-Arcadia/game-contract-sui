@@ -21,7 +21,7 @@ let mugenAddress = keyPair.getPublicKey().toSuiAddress();
 const provider = new JsonRpcProvider(testnetConnection);
 const signer = new RawSigner(keyPair, provider);
 const { modules, dependencies } = JSON.parse(
-	execSync(`${cliPath} move build --dump-bytecode-as-base64 --path ${packagePath}`, {
+	execSync(`${cliPath} move build --dump-bytecode-as-base64 --with-unpublished-dependencies --path ${packagePath}`, {
 		encoding: 'utf-8',
 	}),
 );

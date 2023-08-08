@@ -42,24 +42,67 @@ function constructMessageToSign(
     return msgToSign;
 }
 
+function withdrawGachaMessageToSign(
+    userAddress: string,
+    token_type: number,
+    amount: number,
+    expire_at: number,
+    salt: number,
+    chain_id: number,
+    packageAddress: string
+){
+    let msgToSign: Array<Uint8Array> = [];
+    let bcs = new BCS(getSuiMoveConfig());
+
+    const addressBytes: Uint8Array = new Uint8Array(Buffer.from(userAddress.slice(2), 'hex'));
+
+    const token_typeBytes = bcs.ser(["u64", BCS.U64], token_type).toString("base64");
+    const amountBytes = bcs.ser(["u64", BCS.U64], amount).toString("base64");
+    const expire_atBytes = bcs.ser(["u64", BCS.U64], expire_at).toString("base64");
+    const saltBytes = bcs.ser(["u64", BCS.U64], salt).toString("base64");
+    const chain_idBytes = bcs.ser(["u64", BCS.U64], chain_id).toString("base64");
+
+    const packageAddressBytes: Uint8Array = new Uint8Array(Buffer.from(packageAddress.slice(2), 'hex'));
+
+    msgToSign.push(addressBytes);
+
+    msgToSign.push(Buffer.from(token_typeBytes, 'base64'));
+    msgToSign.push(Buffer.from(amountBytes, 'base64'));
+
+    msgToSign.push(Buffer.from(expire_atBytes, 'base64'));
+    msgToSign.push(Buffer.from(saltBytes, 'base64'));
+    msgToSign.push(Buffer.from(chain_idBytes, 'base64'));
+    msgToSign.push(packageAddressBytes);
+
+    return msgToSign;
+}
 
 // put user address here
-const userAddress = "0x0421a66d58e4acd151ec50a2c5aa6219ca3c13d18df816c6e93b0b7838e26f65";
+const userAddress = "0x0000000000000000000000000000000000000000000000000000000000000222";
 
 const amount = 1000;
 
-const expire_at = 1692519168;
+const expire_at = 0;
 const salt = 1;
 const fee = 0;
 const chain_id = 99;//1 mainnet 99 testnet
 const packageAddress = "0xc69c87d31fc58cb07373997c285fffb113f513fedc26355e0fa036449f4573f3"
 
-const msgToSign = constructMessageToSign(
+// const msgToSign = constructMessageToSign(
+//     userAddress,
+//     amount,
+//     expire_at,
+//     salt,
+//     fee,
+//     chain_id,
+//     packageAddress
+// );
+const msgToSign = withdrawGachaMessageToSign(
     userAddress,
-    amount,
+    99999,
+    10,
     expire_at,
     salt,
-    fee,
     chain_id,
     packageAddress
 );

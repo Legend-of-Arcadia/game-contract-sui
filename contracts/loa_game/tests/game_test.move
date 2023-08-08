@@ -1175,6 +1175,78 @@ module loa_game::test_game {
   }
 
   #[test]
+  fun test_withdraw_gacha_from_signature() {
+    let mugen_pk: vector<u8> = vector[
+      2,  30, 162, 170, 151,  49, 215, 87,
+      106, 246, 229,  96,  59,  99, 119, 37,
+      19, 194, 239,  11,  72, 231, 164,  4,
+      251, 227, 106, 176, 175,  64, 231, 38,
+      174
+    ];
+    let signed_message: vector<u8> =   vector[
+      251,  67, 150,  99, 236,  54, 115,  62,   8, 221, 177,
+      102,  78,   7,  16,  71, 230,  63, 214,  16, 177, 100,
+      174, 193, 201, 187,   9,   6, 116,  32, 204, 190, 126,
+      198, 127,  63,  46, 113,   3,  11,  88, 176,  68,  38,
+      159, 157, 109,  98,  93,  93, 106,  91,  15, 187,  62,
+      156,  54, 140, 167, 140,  36, 125, 190, 155
+    ];
+
+    let token_type = 99999;
+    let amount = 10;
+    let chain_id = 99;
+    let package:address = @0xc69c87d31fc58cb07373997c285fffb113f513fedc26355e0fa036449f4573f3;
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+
+    let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+    clock::share_for_testing(clock);
+
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let cap = ts::take_from_sender<GameCap>(&mut scenario);
+      let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+      let gacha_token_type = vector[28888];
+      let gacha_name = vector[string::utf8(b"Grandia")];
+      let gacha_type = vector[string::utf8(b"Grandia")];
+      let gacha_collction = vector[string::utf8(b"Grandia")];
+      let gacha_description = vector[string::utf8(b"Grandia")];
+      let start_time = 0;
+      let end_time = 0;
+
+      game::add_gacha_config(&cap, &mut gacha_config_tb, token_type, gacha_token_type, gacha_name, gacha_type, gacha_collction,
+        gacha_description, start_time, end_time);
+
+      let voucher = game::mint_test_voucher(&cap, ts::ctx(&mut scenario));
+      transfer::public_transfer(voucher, USER);
+      ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(gacha_config_tb);
+    };
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let seen_messages = ts::take_shared<SeenMessages>(&mut scenario);
+      let game_cap = ts::take_from_sender<GameCap>(&mut scenario);
+      game::set_mugen_pk(&game_cap, mugen_pk,&mut seen_messages);
+
+      ts::return_shared(seen_messages);
+      ts::return_to_sender<GameCap>(&scenario, game_cap);
+    };
+
+    ts::next_tx(&mut scenario, USER);
+    {
+      let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+      let seen_messages = ts::take_shared<SeenMessages>(&mut scenario);
+      let clock = ts::take_shared<clock::Clock>(&mut scenario);
+      game::withdraw_gacha(&gacha_config_tb, token_type, amount, 0, 1, chain_id, package, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
+      ts::return_shared(gacha_config_tb);
+      ts::return_shared(seen_messages);
+      ts::return_shared(clock);
+    };
+
+    ts::end(scenario);
+  }
+
+  #[test]
   fun test_deposit_and_withdraw_by_multisig() {
     let amount = 30*DECIMALS;
     let scenario = ts::begin(GAME);

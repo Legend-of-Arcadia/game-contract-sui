@@ -56,6 +56,7 @@ module loa_game::game{
   const EInvalidType: u64 = 25;
   const EPriceEQZero: u64 = 26;
   const ECoinTypeMismatch: u64 = 27;
+  const EVectorLen: u64 = 27;
 
 
   //multisig type
@@ -221,6 +222,13 @@ module loa_game::game{
     user: address,
     amount: u64,
     fee: u64,
+    salt: u64
+  }
+
+  struct UserWithdrawGacha has copy, drop {
+    user: address,
+    token_type: u64,
+    amount: u64,
     salt: u64
   }
 
@@ -1140,6 +1148,51 @@ module loa_game::game{
       fee
     });
     coin::from_balance(coin_balance, ctx)
+  }
+
+  public fun withdraw_gacha(
+    gacha_config: &GachaConfigTable,
+    token_type: u64,
+    amount: u64,
+    expire_at: u64,
+    salt: u64,
+    chain_id: u64,
+    package_address: address,
+    signed_message: vector<u8>,
+    seen_messages: &mut SeenMessages,
+    clock: & Clock,
+    ctx: &mut TxContext,
+  ) {
+    assert!(expire_at >= clock::timestamp_ms(clock) / 1000, ETimeExpired);
+    let user_address = tx_context::sender(ctx);
+    let msg: vector<u8> = address::to_bytes(user_address);
+    vector::append(&mut msg, bcs::to_bytes<u64>(&token_type));
+    vector::append(&mut msg, bcs::to_bytes<u64>(&amount));
+    vector::append(&mut msg, bcs::to_bytes<u64>(&expire_at));
+    vector::append(&mut msg, bcs::to_bytes<u64>(&salt));
+    vector::append(&mut msg, bcs::to_bytes<u64>(&chain_id));
+    vector::append(&mut msg, address::to_bytes(package_address));
+
+    // assert that signature verifies
+    // 1 is for SHA256 (hash function options in signature)
+    assert!(ecdsa_k1::secp256k1_verify(&signed_message, &seen_messages.mugen_pk, &msg, 1), EInvalidSignature);
+    assert!(!table::contains(&seen_messages.salt_table, salt), EInvalidSalt);
+    table::add(&mut seen_messages.salt_table, salt, true);
+    //let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amount - fee);
+
+    let config = table::borrow(&gacha_config.config, token_type);
+    assert!(vector::length(&config.gacha_token_type) == 1, EVectorLen);
+    let i = 0;
+    while (i < amount){
+      mint_gachas_by_config(config, tx_context::sender(ctx), clock, ctx);
+      i = i + 1;
+    };
+    event::emit(UserWithdrawGacha{
+      user: user_address,
+      token_type,
+      amount,
+      salt,
+    });
   }
 
   // === check permission functions ===
