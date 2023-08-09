@@ -78,11 +78,11 @@ function withdrawGachaMessageToSign(
 }
 
 // put user address here
-const userAddress = "0x0000000000000000000000000000000000000000000000000000000000000222";
+const userAddress = "0xbe225c0731573a1a41afb36dd363754d24585cfc790929252656ea4e77435d6e";
 
 const amount = 1000;
 
-const expire_at = 0;
+const expire_at = 169149259959;
 const salt = 1;
 const fee = 0;
 const chain_id = 99;//1 mainnet 99 testnet
@@ -99,7 +99,7 @@ const packageAddress = "0xc69c87d31fc58cb07373997c285fffb113f513fedc26355e0fa036
 // );
 const msgToSign = withdrawGachaMessageToSign(
     userAddress,
-    99999,
+    188881,
     10,
     expire_at,
     salt,
