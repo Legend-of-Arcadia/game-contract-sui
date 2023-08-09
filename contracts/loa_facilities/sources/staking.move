@@ -48,7 +48,7 @@ module loa_facilities::staking {
     const ENeedVote: u64 = 11;
     const EClaimed: u64 = 12;
 
-    const WithdrawReward: u64 = 0;
+    const WithdrawReward: u64 = 4;
 
     struct VeARCA has key {
         id: UID,

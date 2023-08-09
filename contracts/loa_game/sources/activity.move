@@ -28,7 +28,7 @@ module loa_game::activity {
     const ECoinTypeMismatch: u64 = 7;
     const ENeedVote: u64 = 8;
 
-    const WithdrawActivityProfits: u64 = 0;
+    const WithdrawActivityProfits: u64 = 3;
 
     struct ActivityProfits has key, store {
         id: UID,

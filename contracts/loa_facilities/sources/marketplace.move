@@ -32,7 +32,7 @@ module loa_facilities::marketplace{
     const ECoinTypeMismatch: u64 = 8;
     const ENeedVote: u64 = 9;
 
-    const WithdrawFeeProfits: u64 = 0;
+    const WithdrawFeeProfits: u64 = 5;
 
     // constants
 

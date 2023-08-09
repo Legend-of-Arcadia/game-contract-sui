@@ -93,6 +93,7 @@ module loa_game::game{
     gacha_collction: String,
     gacha_description: String,
   }
+
   struct GachaConfig has store, drop {
     gacha_token_types: vector<u64>,
     gacha_amounts: vector<u64>,
@@ -101,7 +102,6 @@ module loa_game::game{
     end_time: u64
   }
 
-  //airdrop
   struct BoxTicket has key {
     id: UID,
     gacha_ball: GachaBall,
