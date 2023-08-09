@@ -10,7 +10,7 @@ module loa_facilities::marketplace_tests {
 
     use loa::arca::{ARCA};
     use loa_facilities::marketplace::{Self, Marketplace};
-    use loa_facilities::staking::{Self, StakingPool, VeARCA};
+    use loa_facilities::staking::{Self, StakingPool};
     use loa_game::hero::Hero;
     use loa_game::game::{Self, GameCap, GameConfig};
 
@@ -537,14 +537,14 @@ module loa_facilities::marketplace_tests {
 
             staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
             ts::next_tx(&mut scenario, USER1_ADDRESS);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            //let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
             //assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS * 100, 1);
             let lv= staking::calc_vip_level(&sp, GAME, &clock);
             assert!(lv == viplv, 1);
 
             ts::return_shared(sp);
             ts::return_shared(clock);
-            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+            //ts::return_to_sender<VeARCA>(&scenario, ve_arca);
         };
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);

@@ -94,13 +94,8 @@ module loa_game::game{
     gacha_description: String,
   }
   struct GachaConfig has store, drop {
-    gacha_token_type: vector<u64>,
+    gacha_token_types: vector<u64>,
     gacha_amounts: vector<u64>,
-    // gacha_name: vector<String>,
-    // gacha_type: vector<String>,
-    // gacha_collction: vector<String>,
-    // gacha_description: vector<String>,
-
     coin_prices: VecMap<TypeName, u64>,
     start_time: u64,
     end_time: u64
@@ -489,27 +484,19 @@ module loa_game::game{
 
   /// add or update config
   public fun add_gacha_config(
-    _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_token_type: vector<u64>,
+    _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_token_types: vector<u64>,
     gacha_amounts: vector<u64>, start_time: u64, end_time: u64) {
 
 
     if (table::contains(&mut gacha_config_tb.config, token_type)) {
       let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
-      config.gacha_token_type = gacha_token_type;
-      // config.gacha_name = gacha_name;
-      // config.gacha_type = gacha_type;
-      // config.gacha_collction = gacha_collction;
-      // config.gacha_description = gacha_description;
+      config.gacha_token_types = gacha_token_types;
       config.start_time = start_time;
       config.end_time = end_time;
     } else {
       let config = GachaConfig {
-        gacha_token_type,
+        gacha_token_types,
         gacha_amounts,
-        // gacha_name,
-        // gacha_type,
-        // gacha_collction,
-        // gacha_description,
         coin_prices: vec_map::empty<TypeName, u64>(),
         start_time,
         end_time
@@ -517,8 +504,6 @@ module loa_game::game{
 
       table::add(&mut gacha_config_tb.config, token_type, config);
     };
-
-
 
   }
 
@@ -532,15 +517,32 @@ module loa_game::game{
     _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64,
     gacha_name: String, gacha_type: String, gacha_collction: String, gacha_description: String,
   ) {
-    let gacha_info = GachaInfo{
-      gacha_name,
-      gacha_type,
-      gacha_collction,
-      gacha_description,
-    };
 
-    table::add(&mut gacha_config_tb.gacha_info, token_type, gacha_info);
+    if (table::contains(&mut gacha_config_tb.gacha_info, token_type)) {
+      let gacha_info = table::borrow_mut(&mut gacha_config_tb.gacha_info, token_type);
+      gacha_info.gacha_name = gacha_name;
+      gacha_info.gacha_type = gacha_type;
+      gacha_info.gacha_collction = gacha_collction;
+      gacha_info.gacha_description = gacha_description;
+    } else {
+
+      let gacha_info = GachaInfo{
+        gacha_name,
+        gacha_type,
+        gacha_collction,
+        gacha_description,
+      };
+      table::add(&mut gacha_config_tb.gacha_info, token_type, gacha_info);
+    };
   }
+
+  public fun remove_gacha_info(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
+    if (table::contains(&gacha_config_tb.gacha_info, token_type)) {
+      table::remove(&mut gacha_config_tb.gacha_info, token_type);
+    };
+  }
+
+
   public entry fun set_discount_price<COIN>(
     _: &GameCap,
     gacha_config_tb: &mut GachaConfigTable,
@@ -1104,10 +1106,11 @@ module loa_game::game{
     assert_current_time_ge_start_time(current_time, config.start_time);
     assert_current_time_lt_end_time(current_time, config.end_time);
 
-    let gacha_length = vector::length(&config.gacha_token_type);
+    let gacha_length = vector::length(&config.gacha_token_types);
+    assert!(gacha_length > 0, EVectorLen);
     let i = 0;
     while (i < gacha_length) {
-      let gacha_token_type = *vector::borrow(&config.gacha_token_type, i);
+      let gacha_token_type = *vector::borrow(&config.gacha_token_types, i);
       let gacha_amount = *vector::borrow(&config.gacha_amounts, i);
       let x = 0;
       while (x < gacha_amount) {
@@ -1115,20 +1118,6 @@ module loa_game::game{
         public_transfer(gacha_ball, to);
         x = x + 1;
       };
-      // let gacha_info = table::borrow(&gacha_config_tb.gacha_info, gacha_token_type);
-      // // let gacha_name = *vector::borrow(&config.gacha_name, i);
-      // // let gacha_type = *vector::borrow(&config.gacha_type, i);
-      // // let gacha_collction = *vector::borrow(&config.gacha_collction, i);
-      // // let gacha_description = *vector::borrow(&config.gacha_description, i);
-      // let gacha_ball = gacha::mint(
-      //   gacha_token_type,
-      //   gacha_info.gacha_name,
-      //   gacha_info.gacha_type,
-      //   gacha_info.gacha_collction,
-      //   gacha_info.gacha_description,
-      //   ctx,
-      // );
-      // public_transfer(gacha_ball, to);
       i = i + 1;
     };
   }
@@ -1223,8 +1212,6 @@ module loa_game::game{
     table::add(&mut seen_messages.salt_table, salt, true);
     //let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amount - fee);
 
-    let config = table::borrow(&gacha_config.config, token_type);
-    assert!(vector::length(&config.gacha_token_type) == 1, EVectorLen);
     let i = 0;
     while (i < amount){
       let gacha_ball = mint_by_token_type(gacha_config, token_type, ctx);
