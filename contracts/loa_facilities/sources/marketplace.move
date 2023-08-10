@@ -41,17 +41,17 @@ module loa_facilities::marketplace{
     // Fees are constants for user assurance. These are percentages in basis points.
     // Constants can only be changed with a contract upgrade, which makes it more difficult
     // to change on a whim.
-    const BASE_TRADING_FEE: u64 = 300; // 3%
-    const TO_BURN_FEE: u64 = 3970; // This is 39.7% of the trading fee value
-    const TEAM_FEE: u64 = 2000; // 20% of the trading fee
-    const REWARDS_FEE: u64 = 4000; // 40% of the trading fee
-    const REFERRER_FEE: u64 = 30; // 0.3% of the trading fee
 
     struct Marketplace has key, store {
         id: UID,
         main: Stand<ARCA>,
         vip_fees: Table<u64, u64>,
         finance_address: address,
+        base_trading_fee: u64,
+        to_burn_fee: u64,
+        team_fee: u64,
+        rewards_fee: u64,
+        referrer_fee: u64
     }
 
     // here we need key because we will add items dof
@@ -147,7 +147,12 @@ module loa_facilities::marketplace{
             id: object::new(ctx),
             main: arca_stand,
             vip_fees,
-            finance_address: tx_context::sender(ctx)
+            finance_address: tx_context::sender(ctx),
+            base_trading_fee: 300,
+            to_burn_fee: 0,
+            team_fee: 0,
+            rewards_fee: 0,
+            referrer_fee: 0
         };
         transfer::public_share_object<Marketplace>(marketplace);
     }
@@ -173,6 +178,22 @@ module loa_facilities::marketplace{
     public fun edit_finance_address(_: &GameCap, marketplace: &mut Marketplace, new_finance_address: address) {
         assert!(VERSION == 1, EVersionMismatch);
         marketplace.finance_address = new_finance_address;
+    }
+
+    public fun update_trading_fee(
+        _: &GameCap,
+        marketplace: &mut Marketplace,
+        new_base_fee: u64,
+        new_to_burn_fee: u64,
+        new_team_fee: u64,
+        new_rewards_fee: u64,
+        new_referrer_fee: u64,) {
+        assert!(VERSION == 1, EVersionMismatch);
+        marketplace.base_trading_fee = new_base_fee;
+        marketplace.to_burn_fee = new_to_burn_fee;
+        marketplace.team_fee = new_team_fee;
+        marketplace.rewards_fee = new_rewards_fee;
+        marketplace.referrer_fee = new_referrer_fee;
     }
 
     public fun list_primary_arca<Item: key+store>(
@@ -278,7 +299,11 @@ module loa_facilities::marketplace{
         fee_distribution_arca(
             &mut payment, 
             referrer,
-            BASE_TRADING_FEE,
+            marketplace.base_trading_fee,
+            marketplace.to_burn_fee,
+            marketplace.team_fee,
+            marketplace.rewards_fee,
+            marketplace.referrer_fee,
             stand,
             sp,
             ctx
@@ -325,6 +350,10 @@ module loa_facilities::marketplace{
             &mut payment, 
             referrer,
             base_fee,
+            marketplace.to_burn_fee,
+            marketplace.team_fee,
+            marketplace.rewards_fee,
+            marketplace.referrer_fee,
             stand,
             sp,
             ctx
@@ -396,7 +425,7 @@ module loa_facilities::marketplace{
 
         fee_distribution(
             &mut payment,
-            BASE_TRADING_FEE,
+            marketplace.base_trading_fee,
             stand,
             ctx
         );
@@ -464,7 +493,11 @@ module loa_facilities::marketplace{
     fun fee_distribution_arca(
         payment: &mut Coin<ARCA>,
         referrer: Option<address>,
-        base_fee_per: u64,
+        base_trading_fee: u64,
+        to_burn_fee: u64,
+        team_fee: u64,
+        rewards_fee: u64,
+        referrer_fee: u64,
         stand: &mut Stand<ARCA>,
         sp: &mut StakingPool,
         ctx: &mut TxContext
@@ -475,7 +508,7 @@ module loa_facilities::marketplace{
             team_value,
             rewards_value,
             referrer_value
-        ) = fee_calculation(coin::value<ARCA>(payment), base_fee_per);
+        ) = fee_calculation(coin::value<ARCA>(payment), base_trading_fee, to_burn_fee, team_fee, rewards_fee, referrer_fee);
         let team = coin::split<ARCA>(payment, team_value, ctx);
         put_coin<ARCA>(stand, team);
         //balance::join<ARCA>(&mut stand.income, coin::into_balance<ARCA>(team));
@@ -495,15 +528,19 @@ module loa_facilities::marketplace{
 
     fun fee_calculation(
         payment: u64,
-        base_fee: u64,
+        base_trading_fee: u64,
+        to_burn_fee: u64,
+        team_fee: u64,
+        rewards_fee: u64,
+        referrer_fee: u64
     ): (u64, u64, u64, u64)
     {
         // first the divisions to not overflow
-        let base_value: u64 = (payment / 10000) * base_fee;
-        let to_burn_value: u64 = (base_value / 10000) * TO_BURN_FEE;
-        let team_value: u64 = (base_value / 10000) * TEAM_FEE;
-        let rewards_value: u64 = (base_value / 10000) * REWARDS_FEE;
-        let referrer_value: u64 = (base_value / 10000) * REFERRER_FEE;
+        let base_value: u64 = (payment / 10000) * base_trading_fee;
+        let to_burn_value: u64 = (base_value / 10000) * to_burn_fee;
+        let team_value: u64 = (base_value / 10000) * team_fee;
+        let rewards_value: u64 = (base_value / 10000) * rewards_fee;
+        let referrer_value: u64 = (base_value / 10000) * referrer_fee;
 
         (to_burn_value, team_value, rewards_value, referrer_value)
     }

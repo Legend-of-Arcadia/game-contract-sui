@@ -158,7 +158,7 @@ module loa_facilities::marketplace_tests {
 
             let rewards_value = staking::get_rewards_value(&sp);
 
-            assert!(rewards_value == 360000000, EToBurnNotCorrect);
+            assert!(rewards_value == 0, EToBurnNotCorrect);
 
             ts::return_shared(sp);
         
@@ -247,7 +247,7 @@ module loa_facilities::marketplace_tests {
 
             let rewards_value = staking::get_rewards_value(&sp);
 
-            assert!(rewards_value == 360000000, EToBurnNotCorrect);
+            assert!(rewards_value == 0, EToBurnNotCorrect);
 
             ts::return_shared(sp);
         
