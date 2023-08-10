@@ -150,7 +150,7 @@ module loa_facilities::marketplace{
             finance_address: tx_context::sender(ctx),
             base_trading_fee: 300,
             to_burn_fee: 0,
-            team_fee: 0,
+            team_fee: 10000,
             rewards_fee: 0,
             referrer_fee: 0
         };
