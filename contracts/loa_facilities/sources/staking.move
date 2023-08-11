@@ -208,6 +208,30 @@ module loa_facilities::staking {
         *linked_table::borrow_mut(&mut sp.veARCA_holders, tx_context::sender(ctx)) = lt_initial;
     }
 
+    public fun append_time(sp: &mut StakingPool, veARCA: &mut VeARCA, appended_time: u64, clock: &Clock, ctx: &mut TxContext) {
+
+        assert!(VERSION == 1, EVersionMismatch);
+
+        let current_timestamp = clock::timestamp_ms(clock) / 1000;
+        let staking_period = veARCA.end_date - current_timestamp + appended_time;
+        assert!(staking_period >= WEEK_TO_UNIX_SECONDS && staking_period<= YEAR_TO_UNIX_SECONDS, ENotCorrectStakingPeriod);
+        assert!(veARCA.end_date > current_timestamp, ENoActiveStakes);
+
+        let staked_amount = calc_initial_veARCA(veARCA.staked_amount*(staking_period/DAY_TO_UNIX_SECONDS), 365);
+        veARCA.start_date = current_timestamp;
+        veARCA.end_date = current_timestamp + staking_period;
+        veARCA.initial = staked_amount;
+        veARCA.locking_period_sec = staking_period;
+
+        let lt_initial = *linked_table::borrow(&mut sp.veARCA_holders, tx_context::sender(ctx));
+
+        *vector::borrow_mut<u64>(&mut lt_initial, 0) = veARCA.initial;
+        *vector::borrow_mut<u64>(&mut lt_initial, 1) = veARCA.end_date;
+        *vector::borrow_mut<u64>(&mut lt_initial, 2) = veARCA.locking_period_sec;
+
+        *linked_table::borrow_mut(&mut sp.veARCA_holders, tx_context::sender(ctx)) = lt_initial;
+    }
+
     public fun unstake(veARCA: VeARCA, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext): Coin<ARCA> {
          
         assert!(VERSION == 1, EVersionMismatch);
