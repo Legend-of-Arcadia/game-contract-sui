@@ -1107,7 +1107,6 @@ module loa_game::game{
     assert_current_time_lt_end_time(current_time, config.end_time);
 
     let gacha_length = vector::length(&config.gacha_token_types);
-    assert!(gacha_length > 0, EVectorLen);
     let i = 0;
     while (i < gacha_length) {
       let gacha_token_type = *vector::borrow(&config.gacha_token_types, i);
