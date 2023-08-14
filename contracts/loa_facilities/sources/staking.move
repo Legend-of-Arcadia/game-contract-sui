@@ -187,6 +187,7 @@ module loa_facilities::staking {
         assert!(VERSION == 1, EVersionMismatch);
 
         let appended_amount = coin::value(&arca);
+        assert!(appended_amount > 0, ENotEnoughveARCA);
         veARCA.staked_amount = veARCA.staked_amount + coin::value(&arca);
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
         assert!(veARCA.end_date > current_timestamp, ENoActiveStakes);
