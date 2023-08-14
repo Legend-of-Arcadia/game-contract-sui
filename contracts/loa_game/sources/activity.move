@@ -48,7 +48,7 @@ module loa_game::activity {
         description: String,
     }
 
-    struct WithdrawActivityProfitsQequest has key, store {
+    struct WithdrawActivityProfitsRequest has key, store {
         id: UID,
         coin_type: TypeName,
         to: address
@@ -306,7 +306,7 @@ module loa_game::activity {
         game::only_participant(multi_signature, ctx);
 
         let coin_type = type_name::get<COIN>();
-        let request = WithdrawActivityProfitsQequest{
+        let request = WithdrawActivityProfitsRequest{
             id: object::new(ctx),
             coin_type,
             to
@@ -332,7 +332,7 @@ module loa_game::activity {
         if (is_approve) {
             let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
             if (approved) {
-                let request = multisig::borrow_proposal_request<WithdrawActivityProfitsQequest>(multi_signature, &proposal_id, ctx);
+                let request = multisig::borrow_proposal_request<WithdrawActivityProfitsRequest>(multi_signature, &proposal_id, ctx);
 
                 assert!(request.coin_type == type_name::get<COIN>(), ECoinTypeMismatch);
                 withdraw_activity_profits<COIN>(profits, request.to, ctx);

@@ -79,7 +79,7 @@ module loa_facilities::marketplace{
         seller: address
     }
 
-    struct WithdrawFeeProfitsQequest has key, store {
+    struct WithdrawFeeProfitsRequest has key, store {
         id: UID,
         coin_type: TypeName,
         to: address
@@ -572,7 +572,7 @@ module loa_facilities::marketplace{
         game::only_participant(multi_signature, ctx);
 
         let coin_type = type_name::get<COIN>();
-        let request = WithdrawFeeProfitsQequest{
+        let request = WithdrawFeeProfitsRequest{
             id: object::new(ctx),
             coin_type,
             to
@@ -598,7 +598,7 @@ module loa_facilities::marketplace{
         if (is_approve) {
             let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
             if (approved) {
-                let request = multisig::borrow_proposal_request<WithdrawFeeProfitsQequest>(multi_signature, &proposal_id, ctx);
+                let request = multisig::borrow_proposal_request<WithdrawFeeProfitsRequest>(multi_signature, &proposal_id, ctx);
 
                 assert!(request.coin_type == type_name::get<COIN>(), ECoinTypeMismatch);
                 withdraw_fee_profits<COIN>(marketplace, request.to, ctx);

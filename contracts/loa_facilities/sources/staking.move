@@ -83,7 +83,7 @@ module loa_facilities::staking {
         amount: u64,
     }
 
-    struct WithdrawRewardQequest has key, store {
+    struct WithdrawRewardRequest has key, store {
         id: UID,
         to: address,
         amount: u64
@@ -311,7 +311,7 @@ module loa_facilities::staking {
         // Only participant
         game::only_participant(multi_signature, ctx);
 
-        let request = WithdrawRewardQequest{
+        let request = WithdrawRewardRequest{
             id: object::new(ctx),
             to,
             amount
@@ -337,7 +337,7 @@ module loa_facilities::staking {
         if (is_approve) {
             let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
             if (approved) {
-                let request = multisig::borrow_proposal_request<WithdrawRewardQequest>(multi_signature, &proposal_id, ctx);
+                let request = multisig::borrow_proposal_request<WithdrawRewardRequest>(multi_signature, &proposal_id, ctx);
 
                 withdraw_rewards(sp, request.to, request.amount, ctx);
                 multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);

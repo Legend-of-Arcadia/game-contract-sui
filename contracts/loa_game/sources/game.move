@@ -143,18 +143,18 @@ module loa_game::game{
     gacha_balls: vector<GachaBall>
   }
 
-  struct WithdrawArcaQequest has key, store {
+  struct WithdrawArcaRequest has key, store {
     id: UID,
     amount: u64,
     to: address
   }
 
-  struct WithdrawUpgradeProfitsQequest has key, store {
+  struct WithdrawUpgradeProfitsRequest has key, store {
     id: UID,
     to: address
   }
 
-  struct WithdrawDiscountProfitsQequest has key, store {
+  struct WithdrawDiscountProfitsRequest has key, store {
     id: UID,
     coin_type: TypeName,
     to: address
@@ -588,7 +588,7 @@ module loa_game::game{
     // Only participant
     only_participant(multi_signature, ctx);
 
-    let request = WithdrawArcaQequest{
+    let request = WithdrawArcaRequest{
       id: object::new(ctx),
       amount,
       to
@@ -614,7 +614,7 @@ module loa_game::game{
     if (is_approve) {
       let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
       if (approved) {
-        let request = multisig::borrow_proposal_request<WithdrawArcaQequest>(multi_signature, &proposal_id, ctx);
+        let request = multisig::borrow_proposal_request<WithdrawArcaRequest>(multi_signature, &proposal_id, ctx);
 
         withdraw_acra(request.amount, request.to, arca_counter, ctx);
         multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
@@ -637,7 +637,7 @@ module loa_game::game{
     // Only participant
     only_participant(multi_signature, ctx);
 
-    let request = WithdrawUpgradeProfitsQequest{
+    let request = WithdrawUpgradeProfitsRequest{
       id: object::new(ctx),
       to
     };
@@ -662,7 +662,7 @@ module loa_game::game{
     if (is_approve) {
       let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
       if (approved) {
-        let request = multisig::borrow_proposal_request<WithdrawUpgradeProfitsQequest>(multi_signature, &proposal_id, ctx);
+        let request = multisig::borrow_proposal_request<WithdrawUpgradeProfitsRequest>(multi_signature, &proposal_id, ctx);
 
         withdraw_upgrade_profits(upgrader, request.to, ctx);
         multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
@@ -686,7 +686,7 @@ module loa_game::game{
     only_participant(multi_signature, ctx);
 
     let coin_type = type_name::get<COIN>();
-    let request = WithdrawDiscountProfitsQequest{
+    let request = WithdrawDiscountProfitsRequest{
       id: object::new(ctx),
       coin_type,
       to
@@ -712,7 +712,7 @@ module loa_game::game{
     if (is_approve) {
       let (approved, _ ) = multisig::is_proposal_approved(multi_signature, proposal_id);
       if (approved) {
-        let request = multisig::borrow_proposal_request<WithdrawDiscountProfitsQequest>(multi_signature, &proposal_id, ctx);
+        let request = multisig::borrow_proposal_request<WithdrawDiscountProfitsRequest>(multi_signature, &proposal_id, ctx);
 
         assert!(request.coin_type == type_name::get<COIN>(), ECoinTypeMismatch);
         withdraw_discount_profits<COIN>(gacha_config_tb, request.to, ctx);
