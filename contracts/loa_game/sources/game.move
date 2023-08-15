@@ -1282,6 +1282,10 @@ module loa_game::game{
     let coin_type = type_name::get<COIN>();
     balance::value(df::borrow<TypeName, Balance<COIN>>(&config_tb.id, coin_type))
   }
+
+  public fun get_power_prices(upgrader: &Upgrader, key: String):u64 {
+    *table::borrow(&upgrader.power_prices, key)
+  }
   // === Test-only ===
 
   #[test_only]

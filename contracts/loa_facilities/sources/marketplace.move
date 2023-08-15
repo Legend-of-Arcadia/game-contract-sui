@@ -653,6 +653,10 @@ module loa_facilities::marketplace{
         balance::value(df::borrow<TypeName, Balance<COIN>>(&marketplace.main.id, coin_type))
     }
 
+    public fun get_vip_fee(marketplace: &Marketplace, key: u64):u64 {
+        *table::borrow(&marketplace.vip_fees, key)
+    }
+
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext) {
         init(ctx);
