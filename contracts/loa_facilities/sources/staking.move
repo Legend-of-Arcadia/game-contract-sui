@@ -165,7 +165,7 @@ module loa_facilities::staking {
 
         staked_amount = calc_initial_veARCA(staked_amount*(staking_period/DAY_TO_UNIX_SECONDS), 365);
 
-        assert!(staked_amount >= 3*DECIMALS, ENotEnoughveARCA);
+        assert!(staked_amount > 0, ENotEnoughveARCA);
 
         let balance = coin::into_balance(arca);
         balance::join(&mut sp.liquidity, balance);
