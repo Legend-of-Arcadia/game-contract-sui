@@ -873,10 +873,10 @@ module loa_game::game{
 
   /// === Open gacha functions ===
   // Place the destroyed blind box
-  fun put_gacha(gacha: GachaBall, gacha_ball_address: address, obj_burn: &mut ObjBurn) {
-    dof::add<address, GachaBall>(&mut obj_burn.id, gacha_ball_address, gacha);
-    // event
-  }
+  // fun put_gacha(gacha: GachaBall, gacha_ball_address: address, obj_burn: &mut ObjBurn) {
+  //   dof::add<address, GachaBall>(&mut obj_burn.id, gacha_ball_address, gacha);
+  //   // event
+  // }
 
   // The administrator destroys the blind box
   public fun get_gacha_and_burn(_: &GameCap, gacha_ball_address: address, obj_burn: &mut ObjBurn) {

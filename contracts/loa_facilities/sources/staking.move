@@ -516,15 +516,6 @@ module loa_facilities::staking {
         vip_level
     }
 
-
-    fun calc_reward(vip_level: u64, rewards_amount: u64, t: &Table<u64, u64>):  u64 {
-        let per = *table::borrow(t, vip_level);
-
-        let reward = (rewards_amount * per) / 10_000;
-
-        reward
-    }
-
     // ======================= Accessors ========================
 
     public fun get_staked_amount_VeARCA(veARCA: &VeARCA): u64 {
