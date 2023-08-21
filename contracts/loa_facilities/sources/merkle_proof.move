@@ -81,10 +81,11 @@ module loa_facilities::merkle_proof {
         // `hashes` array. At the end of the process, the last hash in the `hashes` array should contain the root of
         // the merkle tree.
         let leaves_len = vector::length(leaves);
+        let proof_len = vector::length(proof);
         let total_hashes = vector::length(proof_flags);
 
         // Check proof validity.
-        assert!(leaves_len + vector::length(proof) - 1 == total_hashes, EINVALID_MULTI_PROOF);
+        assert!(leaves_len + proof_len - 1 == total_hashes, EINVALID_MULTI_PROOF);
 
         // The xxxPos values are "pointers" to the next value to consume in each array. All accesses are done using
         // `xxx[xxxPos++]`, which return the current value and increment the pointer, thus mimicking a queue's "pop".
@@ -126,6 +127,8 @@ module loa_facilities::merkle_proof {
         };
 
         if (total_hashes > 0) {
+            // Check proof validity.
+            assert!(proof_pos == proof_len, EINVALID_MULTI_PROOF);
             *vector::borrow(&hashes, total_hashes - 1)
         } else if (leaves_len > 0) {
             *vector::borrow(leaves, 0)
