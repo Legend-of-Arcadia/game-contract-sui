@@ -1,4 +1,4 @@
-/contracts/build/
+/contracts/build/*/**
 Move.lock
 node_modules/
 .env
@@ -6,3 +6,8 @@ sui.log**
 contracts/sources/MoveStdlib
 /contracts/sources/Sui
 .idea
+/contracts/loa/
+/contracts/multisig/
+/contracts/loa_game/build/
+/contracts/loa_facilities/build/
+
