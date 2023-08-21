@@ -3,9 +3,9 @@
 /// @title math
 /// @dev Standard math utilities missing in the Move language (for `u64`).
 module loa_facilities::math {
-    const ROUNDING_DOWN: u8 = 0; // Toward negative infinity
+    //const ROUNDING_DOWN: u8 = 0; // Toward negative infinity
     const ROUNDING_UP: u8 = 0; // Toward infinity
-    const ROUNDING_ZERO: u8 = 0; // Toward zero
+    //const ROUNDING_ZERO: u8 = 0; // Toward zero
     const SCALAR: u64 = 1 << 16;
 
     /// @dev Returns the largest of two numbers.
