@@ -247,6 +247,46 @@ module loa_game::game{
     coin_type: TypeName
   }
 
+  struct SetGameAddressEvent has copy, drop {
+    new_address: address
+  }
+
+  struct SetMintAddressEvent has copy, drop {
+    new_address: address
+  }
+
+  struct SetUpgradeAddressEvent has copy, drop {
+    new_address: address
+  }
+
+  struct SetMugenPkEvent has copy, drop {
+    mugen_pk: vector<u8>
+  }
+
+  struct AddGachaConfigEvent has copy, drop {
+    token_type:u64,
+    gacha_token_types: vector<u64>,
+    gacha_amounts: vector<u64>,
+    start_time: u64,
+    end_time: u64
+  }
+
+  struct RemoveGachaGonfigEvent has copy, drop {
+    token_type: u64
+  }
+
+  struct AddGachaInfoEvent has copy, drop {
+    token_type:u64,
+    gacha_name: String,
+    gacha_type: String,
+    gacha_collction: String,
+    gacha_description: String
+  }
+
+  struct RemoveGachaInfoEvent has copy, drop {
+    token_type: u64
+  }
+
   struct GameCap has key {
     id: UID,
   }
@@ -315,14 +355,20 @@ module loa_game::game{
   /// set address that will claim gacha sell profits
   public fun set_game_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
     config.game_address = new_address;
+
+    event::emit(SetGameAddressEvent{new_address});
   }
 
   public fun set_mint_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
     config.mint_address = new_address;
+
+    event::emit(SetMintAddressEvent{new_address});
   }
 
   public fun set_upgrade_address(_: &GameCap, new_address: address, upgrader: &mut Upgrader) {
     upgrader.upgrade_address = new_address;
+
+    event::emit(SetUpgradeAddressEvent{new_address});
   }
 
   // TODO: Each address can get more than one rewards
@@ -481,6 +527,8 @@ module loa_game::game{
   /// configure mugen_pk field of SeenMessages
   public fun set_mugen_pk(_: &GameCap, mugen_pk: vector<u8>, seen_messages: &mut SeenMessages) {
     seen_messages.mugen_pk = mugen_pk;
+
+    event::emit(SetMugenPkEvent{mugen_pk});
   }
 
   /// add or update config
@@ -509,11 +557,20 @@ module loa_game::game{
       table::add(&mut gacha_config_tb.config, token_type, config);
     };
 
+    event::emit(AddGachaConfigEvent{
+      token_type,
+      gacha_token_types,
+      gacha_amounts,
+      start_time,
+      end_time
+    });
   }
 
   public fun remove_gacha_config(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
     if (table::contains(&gacha_config_tb.config, token_type)) {
       table::remove(&mut gacha_config_tb.config, token_type);
+
+      event::emit(RemoveGachaGonfigEvent{token_type});
     };
   }
 
@@ -538,11 +595,21 @@ module loa_game::game{
       };
       table::add(&mut gacha_config_tb.gacha_info, token_type, gacha_info);
     };
+
+    event::emit(AddGachaInfoEvent{
+      token_type,
+      gacha_name,
+      gacha_type,
+      gacha_collction,
+      gacha_description
+    });
   }
 
   public fun remove_gacha_info(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
     if (table::contains(&gacha_config_tb.gacha_info, token_type)) {
       table::remove(&mut gacha_config_tb.gacha_info, token_type);
+
+      event::emit(RemoveGachaInfoEvent{token_type});
     };
   }
 
