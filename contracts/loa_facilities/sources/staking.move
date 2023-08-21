@@ -45,6 +45,7 @@ module loa_facilities::staking {
     const EProofInvalid: u64 = 9;
     const ENeedVote: u64 = 10;
     const EClaimed: u64 = 11;
+    const EWeekRewardCreated: u64 = 11;
 
     const WithdrawReward: u64 = 4;
 
@@ -64,6 +65,7 @@ module loa_facilities::staking {
         rewards: Balance<ARCA>,
         veARCA_holders: LinkedTable<address, vector<u64>>,
         vip_level_veARCA: vector<u128>,
+        week_reward_table: Table<String, bool>
     }
 
     struct WeekReward has key, store {
@@ -132,6 +134,7 @@ module loa_facilities::staking {
             rewards: balance::zero<ARCA>(),
             veARCA_holders: linked_table::new<address, vector<u64>>(ctx),
             vip_level_veARCA: vector::empty<u128>(),
+            week_reward_table: table::new<String, bool>(ctx)
         };
         populate_vip_level_veARCA(&mut staking_pool, 1);
         // marketplace fee part that is to be burned
@@ -319,8 +322,9 @@ module loa_facilities::staking {
         arca
     }
 
-    public fun create_week_reward(_: &GameCap, name: String, merkle_root: vector<u8>, total_reward: u64, ctx: &mut TxContext){
+    public fun create_week_reward(_: &GameCap, name: String, merkle_root: vector<u8>, total_reward: u64, sp: &mut StakingPool, ctx: &mut TxContext){
         assert!(VERSION == 1, EVersionMismatch);
+        assert!(!table::contains(&sp.week_reward_table, name), EWeekRewardCreated);
         let week_reward = WeekReward{
             id: object::new(ctx),
             name,
@@ -339,6 +343,7 @@ module loa_facilities::staking {
 
         event::emit(evt);
 
+        table::add(&mut sp.week_reward_table, name, true);
         transfer::public_share_object(week_reward);
     }
 

@@ -276,7 +276,7 @@ module loa_facilities::staking_tests {
             let name = string::utf8(b"2023-7-19");
             let merkle_root = x"76355b7a319f1fa85e831800eea9d8e041801fab8c3daadc7ff0f416cc9d36ee";
             let total_reward = 1000*DECIMALS;
-            staking::create_week_reward(&cap, name, merkle_root, total_reward, ts::ctx(&mut scenario));
+            staking::create_week_reward(&cap, name, merkle_root, total_reward, &mut sp,ts::ctx(&mut scenario));
 
 
             staking::append_rewards(&cap, &mut sp, coin::into_balance(coin));
