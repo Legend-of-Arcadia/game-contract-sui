@@ -92,20 +92,23 @@ module loa_facilities::staking {
     //event
     struct ArcaStake has copy, drop {
         user: address,
-        amount: u64,
-        end_time: u64,
+        amount: u64,        // arca amount
+        start_time: u64,    // stake start time
+        end_time: u64,      // stake end time
         veARCA_id: ID,
     }
 
     struct AppendArca has copy, drop {
         user: address,
-        appended_amount: u64,
+        amount: u64,        // appended arca amount
+        current_time: u64, // current time
         veARCA_id: ID,
     }
 
     struct AppendTime has copy, drop {
         user: address,
-        end_time: u64,
+        start_time: u64,    // modified start time
+        end_time: u64,      // modified end time
         veARCA_id: ID,
     }
 
@@ -195,32 +198,33 @@ module loa_facilities::staking {
 
         assert!(staking_period >= WEEK_TO_UNIX_SECONDS && staking_period<= YEAR_TO_UNIX_SECONDS, ENotCorrectStakingPeriod);
 
-        let arca_amount = coin::value(&arca);
-        let staked_amount = arca_amount;
-        let start_tmstmp = clock::timestamp_ms(clock) / 1000;
-        let end_tmstmp = start_tmstmp + staking_period;
+        let amount = coin::value(&arca);
+        let staked_amount = amount;
+        let start_time = clock::timestamp_ms(clock) / 1000;
+        let end_time = start_time + staking_period;
         let locking_period_sec = staking_period;
         let v = vector::empty<u64>();
 
         staked_amount = calc_initial_veARCA(staked_amount*(staking_period/DAY_TO_UNIX_SECONDS), 365);
 
-        assert!(staked_amount > 0, ENotEnoughveARCA);
+        assert!(staked_amount >= 3*DECIMALS, ENotEnoughveARCA);
 
         let balance = coin::into_balance(arca);
         balance::join(&mut sp.liquidity, balance);
 
         vector::push_back<u64>(&mut v, staked_amount);
-        vector::push_back<u64>(&mut v, end_tmstmp);
+        vector::push_back<u64>(&mut v, end_time);
         vector::push_back<u64>(&mut v, locking_period_sec);
 
         linked_table::push_back(&mut sp.veARCA_holders, tx_context::sender(ctx), v);
 
-        let veARCA = mint_ve(arca_amount, staked_amount, start_tmstmp, end_tmstmp, locking_period_sec, ctx);
+        let veARCA = mint_ve(amount, staked_amount, start_time, end_time, locking_period_sec, ctx);
 
         let evt = ArcaStake {
             user: tx_context::sender(ctx),
-            amount: arca_amount,
-            end_time: end_tmstmp,
+            amount,
+            start_time,
+            end_time,
             veARCA_id: object::id(&veARCA),
         };
 
@@ -234,16 +238,16 @@ module loa_facilities::staking {
 
         assert!(VERSION == 1, EVersionMismatch);
 
-        let appended_amount = coin::value(&arca);
-        assert!(appended_amount > 0, ENotEnoughveARCA);
-        veARCA.staked_amount = veARCA.staked_amount + coin::value(&arca);
-        let current_timestamp = clock::timestamp_ms(clock) / 1000;
-        assert!(veARCA.end_date > current_timestamp, ENoActiveStakes);
-        let time_left = (veARCA.end_date - current_timestamp)/DAY_TO_UNIX_SECONDS;
+        let amount = coin::value(&arca);
+        assert!(amount > 0, ENotEnoughveARCA);
+        veARCA.staked_amount = veARCA.staked_amount + amount;
+        let current_time = clock::timestamp_ms(clock) / 1000;
+        assert!(veARCA.end_date > current_time, ENoActiveStakes);
+        let time_left = (veARCA.end_date - current_time)/DAY_TO_UNIX_SECONDS;
 
         assert!(time_left >= 1, ENotAppendActionAvaialble);
 
-        appended_amount = calc_initial_veARCA(appended_amount*time_left, 365);
+        let appended_amount = calc_initial_veARCA(amount *time_left, 365);
 
         let balance = coin::into_balance(arca);
         balance::join(&mut sp.liquidity, balance);
@@ -258,7 +262,8 @@ module loa_facilities::staking {
 
         let evt = AppendArca {
             user: tx_context::sender(ctx),
-            appended_amount,
+            amount,
+            current_time,
             veARCA_id: object::id(veARCA),
         };
 
@@ -294,6 +299,7 @@ module loa_facilities::staking {
 
         let evt = AppendTime {
             user: tx_context::sender(ctx),
+            start_time: veARCA.start_date,
             end_time: veARCA.end_date,
             veARCA_id: object::id(veARCA),
         };
