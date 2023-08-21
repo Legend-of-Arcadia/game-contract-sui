@@ -557,7 +557,7 @@ module loa_facilities::marketplace{
         put_coin<COIN>(stand, fee);
     }
 
-    public fun withdraw_fee_profits<COIN>(marketplace: &mut Marketplace, to: address,ctx: &mut TxContext){
+    fun withdraw_fee_profits<COIN>(marketplace: &mut Marketplace, to: address,ctx: &mut TxContext){
         let stand = &mut marketplace.main;
         let coin_type = type_name::get<COIN>();
         let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut stand.id, coin_type);
