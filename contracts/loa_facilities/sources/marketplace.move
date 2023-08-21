@@ -22,17 +22,16 @@ module loa_facilities::marketplace{
     use multisig::multisig::{Self, MultiSignature};
 
     // errors
-    const EAmountNotExact: u64 = 0;
-    const EPaymentNotExact: u64 = 1;
-    const ENoListingFound: u64 = 2;
-    const EIncorrectVipLevel: u64 = 3;
-    const EVersionMismatch: u64 = 4;
-    const EPaymentMismatch: u64 = 5;
-    const ENoItemSeller: u64 = 6;
-    const EVipLvNoExsit: u64 = 7;
-    const ECoinTypeMismatch: u64 = 8;
-    const ENeedVote: u64 = 9;
-    const EFeeSet: u64 = 10;
+    const EPaymentNotExact: u64 = 0;
+    const ENoListingFound: u64 = 1;
+    const EIncorrectVipLevel: u64 = 2;
+    const EVersionMismatch: u64 = 3;
+    const EPaymentMismatch: u64 = 4;
+    const ENoItemSeller: u64 = 5;
+    const EVipLvNoExsit: u64 = 6;
+    const ECoinTypeMismatch: u64 = 7;
+    const ENeedVote: u64 = 8;
+    const EFeeSet: u64 = 9;
 
     const WithdrawFeeProfits: u64 = 5;
 

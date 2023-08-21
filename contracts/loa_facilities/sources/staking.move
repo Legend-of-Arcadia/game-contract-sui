@@ -26,13 +26,11 @@ module loa_facilities::staking {
     const VERSION: u64 = 1;
 
     const DECIMALS: u64 = 1_000_000_000;
-    const TOTAL_SUPPLY_ARCA: u64 = 1_000_000_000;
-    const TOTAL_SUPPLY_ARCA_DEVISION: u64 = 1_000_000_000_000_000_000;
 
     //  https://www.advancedconverter.com/unit-conversions/time-conversion/weeks-to-milliseconds
     const DAY_TO_UNIX_SECONDS: u64 = 86_400;
     const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
-    const MONTH_TO_UNIX_SECONDS: u64 = 2_629_744; // rounded up
+    //const MONTH_TO_UNIX_SECONDS: u64 = 2_629_744; // rounded up
     const YEAR_TO_UNIX_SECONDS: u64 = 31_556_926;
 
     const ENotEnoughveARCA: u64 = 0;
@@ -43,11 +41,10 @@ module loa_facilities::staking {
     const ENotAppendActionAvaialble: u64 = 5;
     const ENoActiveStakes: u64 = 6;
     const ENoRewardsLeft: u64 = 7;
-    const EDistributionRewardsNotAvailable: u64 = 8;
-    const EVersionMismatch: u64 = 9;
-    const EProofInvalid: u64 = 10;
-    const ENeedVote: u64 = 11;
-    const EClaimed: u64 = 12;
+    const EVersionMismatch: u64 = 8;
+    const EProofInvalid: u64 = 9;
+    const ENeedVote: u64 = 10;
+    const EClaimed: u64 = 11;
 
     const WithdrawReward: u64 = 4;
 

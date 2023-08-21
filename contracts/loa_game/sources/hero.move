@@ -17,9 +17,6 @@ module loa_game::hero {
 
     // === Error Codes ===
 
-    const ENotSameHeroRarity: u64 = 0;
-    const EVectorLengthMismatch: u64 = 1;
-
     // One Time Witness
     struct HERO has drop {}
     
@@ -261,10 +258,6 @@ module loa_game::unit_tests {
             0,
             0
         ];
-
-        // let others_values: vector<u8> = vector[
-        //     34
-        // ];
 
         let hero = hero::mint(
             name,

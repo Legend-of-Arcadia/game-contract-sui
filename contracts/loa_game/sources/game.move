@@ -36,7 +36,7 @@ module loa_game::game{
   const EReturningWrongHero: u64 = 5;
   const EWrongPowerUpgradeFee: u64 = 6;
   const EMustBurnAtLeastOneHero: u64 = 7;
-  const EWhitelistInputsNotSameLength: u64 = 8;
+  const ETimeSet: u64 = 8;
   const ENotWhitelisted: u64 = 9;
   const EBodyPartCannotBeExchanged: u64 = 10;
   const ESameAppearancePart: u64 = 11;
@@ -57,7 +57,7 @@ module loa_game::game{
   const EPriceEQZero: u64 = 26;
   const ECoinTypeMismatch: u64 = 27;
   const EVectorLen: u64 = 27;
-  const ETimeSet: u64 = 28;
+
 
 
   //multisig type
