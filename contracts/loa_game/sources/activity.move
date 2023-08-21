@@ -213,11 +213,12 @@ module loa_game::activity {
         let coin_type = type_name::get<COIN>();
         if (vec_map::contains(&config.coin_prices, &coin_type)) {
             vec_map::remove(&mut config.coin_prices, &coin_type);
+
+            event::emit(RemovePriceEvent {
+                config: object::id(config),
+                coin_type,
+            });
         };
-        event::emit(RemovePriceEvent {
-            config: object::id(config),
-            coin_type,
-        });
     }
 
     public entry fun buy<COIN>(

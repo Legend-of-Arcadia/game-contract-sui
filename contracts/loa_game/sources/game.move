@@ -579,11 +579,11 @@ module loa_game::game{
     let coin_type = type_name::get<COIN>();
     if (vec_map::contains(&config.coin_prices, &coin_type)) {
       vec_map::remove(&mut config.coin_prices, &coin_type);
+      event::emit(RemoveDiscountPriceEvent {
+        token_type,
+        coin_type,
+      });
     };
-    event::emit(RemoveDiscountPriceEvent {
-      token_type,
-      coin_type,
-    });
   }
 
   public fun withdraw_arca_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, amount: u64, to: address, ctx: &mut TxContext) {
