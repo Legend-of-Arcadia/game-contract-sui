@@ -268,10 +268,14 @@ module loa_facilities::staking {
     public fun append_time(sp: &mut StakingPool, veARCA: &mut VeARCA, appended_time: u64, clock: &Clock, ctx: &mut TxContext) {
 
         assert!(VERSION == 1, EVersionMismatch);
+        assert!(appended_time >= WEEK_TO_UNIX_SECONDS, ENotCorrectStakingPeriod);
 
         let current_timestamp = clock::timestamp_ms(clock) / 1000;
         let staking_period = veARCA.end_date - current_timestamp + appended_time;
-        assert!(staking_period >= WEEK_TO_UNIX_SECONDS && staking_period<= YEAR_TO_UNIX_SECONDS, ENotCorrectStakingPeriod);
+        if (staking_period > YEAR_TO_UNIX_SECONDS) {
+            staking_period = YEAR_TO_UNIX_SECONDS;
+        };
+
         assert!(veARCA.end_date > current_timestamp, ENoActiveStakes);
 
         let staked_amount = calc_initial_veARCA(veARCA.staked_amount*(staking_period/DAY_TO_UNIX_SECONDS), 365);
