@@ -271,7 +271,7 @@ module loa_game::game{
     end_time: u64
   }
 
-  struct RemoveGachaGonfigEvent has copy, drop {
+  struct RemoveGachaConfigEvent has copy, drop {
     token_type: u64
   }
 
@@ -570,7 +570,7 @@ module loa_game::game{
     if (table::contains(&gacha_config_tb.config, token_type)) {
       table::remove(&mut gacha_config_tb.config, token_type);
 
-      event::emit(RemoveGachaGonfigEvent{token_type});
+      event::emit(RemoveGachaConfigEvent{token_type});
     };
   }
 
