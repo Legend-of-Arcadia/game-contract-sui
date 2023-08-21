@@ -14,6 +14,7 @@ module loa_facilities::marketplace{
     use std::option::{Self, Option};
     use std::type_name::{Self, TypeName};
     use std::string;
+    use std::debug;
 
     use loa::arca::ARCA;
     use loa_game::game::{Self, GameCap, GameConfig};
@@ -530,6 +531,25 @@ module loa_facilities::marketplace{
         };
     }
 
+    // fun fee_calculation(
+    //     payment: u64,
+    //     base_trading_fee: u64,
+    //     to_burn_fee: u64,
+    //     team_fee: u64,
+    //     rewards_fee: u64,
+    //     referrer_fee: u64
+    // ): (u64, u64, u64, u64)
+    // {
+    //     // first the divisions to not overflow
+    //     let base_value: u64 = (payment / 10000) * base_trading_fee;
+    //     let to_burn_value: u64 = (base_value / 10000) * to_burn_fee;
+    //     let team_value: u64 = (base_value / 10000) * team_fee;
+    //     let rewards_value: u64 = (base_value / 10000) * rewards_fee;
+    //     let referrer_value: u64 = (base_value / 10000) * referrer_fee;
+    //
+    //     (to_burn_value, team_value, rewards_value, referrer_value)
+    // }
+
     fun fee_calculation(
         payment: u64,
         base_trading_fee: u64,
@@ -539,15 +559,14 @@ module loa_facilities::marketplace{
         referrer_fee: u64
     ): (u64, u64, u64, u64)
     {
-        // first the divisions to not overflow
-        let base_value: u64 = (payment / 10000) * base_trading_fee;
-        let to_burn_value: u64 = (base_value / 10000) * to_burn_fee;
-        let team_value: u64 = (base_value / 10000) * team_fee;
-        let rewards_value: u64 = (base_value / 10000) * rewards_fee;
-        let referrer_value: u64 = (base_value / 10000) * referrer_fee;
-
+        let base_value: u128 = ((payment as u128) * (base_trading_fee as u128)) / 10000;
+        let to_burn_value: u64 = (((base_value * (to_burn_fee as u128)) / 10000) as u64);
+        let team_value: u64 = (((base_value * (team_fee as u128)) / 10000) as u64);
+        let rewards_value: u64 = (((base_value * (rewards_fee as u128)) / 10000) as u64);
+        let referrer_value: u64 = (((base_value * (referrer_fee as u128)) / 10000) as u64);
         (to_burn_value, team_value, rewards_value, referrer_value)
     }
+
 
     fun fee_distribution<COIN>(
         payment: &mut Coin<COIN>,
@@ -664,5 +683,44 @@ module loa_facilities::marketplace{
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext) {
         init(ctx);
+    }
+
+    // #[test]
+    // public fun test_precision_loss() {
+    //     let payment: u64 = 12345;
+    //     let base_trading_fee: u64 = 1234;
+    //     let to_burn_fee: u64 = 567;
+    //     let team_fee: u64 = 890;
+    //     let rewards_fee: u64 = 123;
+    //     let referrer_fee: u64 = 456;
+    //     let (original_to_burn_value, _original_team_value,
+    //         _original_rewards_value, _original_referrer_value) =
+    //         fee_calculation(payment, base_trading_fee, to_burn_fee, team_fee,
+    //             rewards_fee, referrer_fee);
+    //     let (revised_to_burn_value, _revised_team_value,
+    //         _revised_rewards_value, _revised_referrer_value) =
+    //         revised_fee_calculation(payment, base_trading_fee, to_burn_fee,
+    //             team_fee, rewards_fee, referrer_fee);
+    //     // Print the results
+    //     debug::print(&original_to_burn_value);
+    //     debug::print(&revised_to_burn_value);
+    //     // Assert that the results are different
+    //     assert!(original_to_burn_value != revised_to_burn_value, 101);
+    // }
+
+    #[test]
+    public fun test_fee_calculation_overflow() {
+        let payment : u64 = 18446744073709551615; // the max value of u64
+        let base_trading_fee: u64 = 10_000; // the max value we can take as 10_000/10_000 = 1
+        let to_burn_fee: u64 = 10_000; // do not take this number seriously since it's only for overflow test
+        let team_fee: u64 = 0;
+        let rewards_fee: u64 = 0;
+        let referrer_fee: u64 = 0;
+        // if overflow then it will just abort
+        let (revised_to_burn_value, _revised_team_value,
+        _revised_rewards_value, _revised_referrer_value) =
+        fee_calculation(payment, base_trading_fee, to_burn_fee,
+        team_fee, rewards_fee, referrer_fee);
+        debug::print(&revised_to_burn_value);
     }
 }
