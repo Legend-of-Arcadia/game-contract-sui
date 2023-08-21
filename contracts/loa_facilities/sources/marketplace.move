@@ -348,7 +348,7 @@ module loa_facilities::marketplace{
         
         // get base_trading fee based on vip level
         let vip_level = staking::calc_vip_level(sp, seller, clock);
-        assert!(vip_level < 21, EIncorrectVipLevel);
+        //assert!(vip_level < 21, EIncorrectVipLevel);
         let base_fee = *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level);
         fee_distribution_arca(
             &mut payment, 
@@ -468,7 +468,7 @@ module loa_facilities::marketplace{
 
         // get base_trading fee based on vip level
         let vip_level = staking::calc_vip_level(sp, seller, clock);
-        assert!(vip_level < 21, EIncorrectVipLevel);
+        //assert!(vip_level < 21, EIncorrectVipLevel);
         let base_fee = *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level);
         fee_distribution(
             &mut payment,
