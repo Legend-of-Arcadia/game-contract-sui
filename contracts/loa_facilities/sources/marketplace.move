@@ -31,6 +31,7 @@ module loa_facilities::marketplace{
     const EVipLvNoExsit: u64 = 7;
     const ECoinTypeMismatch: u64 = 8;
     const ENeedVote: u64 = 9;
+    const EFeeSet: u64 = 10;
 
     const WithdrawFeeProfits: u64 = 5;
 
@@ -189,6 +190,9 @@ module loa_facilities::marketplace{
         new_rewards_fee: u64,
         new_referrer_fee: u64,) {
         assert!(VERSION == 1, EVersionMismatch);
+        assert!(new_base_fee <= 10000, EFeeSet);
+        assert!(new_to_burn_fee + new_team_fee + new_rewards_fee + new_referrer_fee == 10000, EFeeSet);
+
         marketplace.base_trading_fee = new_base_fee;
         marketplace.to_burn_fee = new_to_burn_fee;
         marketplace.team_fee = new_team_fee;
