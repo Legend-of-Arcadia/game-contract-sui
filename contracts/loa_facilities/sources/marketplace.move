@@ -48,7 +48,6 @@ module loa_facilities::marketplace{
         id: UID,
         main: Stand<ARCA>,
         vip_fees: Table<u64, u64>,
-        finance_address: address,
         base_trading_fee: u64,
         to_burn_fee: u64,
         team_fee: u64,
@@ -95,6 +94,13 @@ module loa_facilities::marketplace{
         listing_key: u64
     }
 
+    struct NewPrimaryListing has copy, drop {
+        coin_type: TypeName,
+        price: u64,
+        item_id: address,
+        listing_key: u64
+    }
+
     struct ItemBought has copy, drop {
         is_primary_listing: bool,
         buyer_vip_level: u64,
@@ -109,6 +115,23 @@ module loa_facilities::marketplace{
         seller: address,
         item_id: address,
         listing_key: u64
+    }
+
+    struct VipFeeUpdate has copy, drop {
+        vip_level: u64,
+        fee: u64
+    }
+
+    struct VipFeeRemove has copy, drop {
+        vip_level: u64
+    }
+
+    struct TradingFeeUpdate has copy, drop {
+        new_base_fee: u64,
+        new_to_burn_fee: u64,
+        new_team_fee: u64,
+        new_rewards_fee: u64,
+        new_referrer_fee: u64
     }
 
     fun init(ctx: &mut TxContext) {
@@ -149,7 +172,6 @@ module loa_facilities::marketplace{
             id: object::new(ctx),
             main: arca_stand,
             vip_fees,
-            finance_address: tx_context::sender(ctx),
             base_trading_fee: 300,
             to_burn_fee: 0,
             team_fee: 10000,
@@ -168,6 +190,12 @@ module loa_facilities::marketplace{
         } else {
             table::add(&mut marketplace.vip_fees, vip_level, fee);
         };
+
+        let evt = VipFeeUpdate {
+            vip_level,
+            fee
+        };
+        event::emit(evt);
     }
 
 
@@ -175,12 +203,13 @@ module loa_facilities::marketplace{
         assert!(VERSION == 1, EVersionMismatch);
         assert!(table::contains(&mut marketplace.vip_fees, vip_level), EVipLvNoExsit);
         table::remove(&mut marketplace.vip_fees, vip_level);
+
+        let evt = VipFeeRemove {
+            vip_level
+        };
+        event::emit(evt);
     }
 
-    public fun edit_finance_address(_: &GameCap, marketplace: &mut Marketplace, new_finance_address: address) {
-        assert!(VERSION == 1, EVersionMismatch);
-        marketplace.finance_address = new_finance_address;
-    }
 
     public fun update_trading_fee(
         _: &GameCap,
@@ -189,7 +218,7 @@ module loa_facilities::marketplace{
         new_to_burn_fee: u64,
         new_team_fee: u64,
         new_rewards_fee: u64,
-        new_referrer_fee: u64,) {
+        new_referrer_fee: u64) {
         assert!(VERSION == 1, EVersionMismatch);
         assert!(new_base_fee <= 10000, EFeeSet);
         assert!(new_to_burn_fee + new_team_fee + new_rewards_fee + new_referrer_fee == 10000, EFeeSet);
@@ -199,6 +228,15 @@ module loa_facilities::marketplace{
         marketplace.team_fee = new_team_fee;
         marketplace.rewards_fee = new_rewards_fee;
         marketplace.referrer_fee = new_referrer_fee;
+
+        let evt = TradingFeeUpdate {
+            new_base_fee,
+            new_to_burn_fee,
+            new_team_fee,
+            new_rewards_fee,
+            new_referrer_fee
+        };
+        event::emit(evt);
     }
 
     public fun list_primary_arca<Item: key+store>(
@@ -220,6 +258,14 @@ module loa_facilities::marketplace{
         table::add<u64, Listing_P>(&mut stand.primary_listings, key, listing);
         dof::add<address, Item>(&mut stand.id, item_id, item);
         // emit event
+
+        let evt = NewPrimaryListing {
+            coin_type: type_name::get<ARCA>(),
+            price,
+            item_id,
+            listing_key: key
+        };
+        event::emit(evt);
     }
 
     // any type of NFT can be listed by anyone
