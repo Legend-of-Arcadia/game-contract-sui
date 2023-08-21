@@ -57,6 +57,7 @@ module loa_game::game{
   const EPriceEQZero: u64 = 26;
   const ECoinTypeMismatch: u64 = 27;
   const EVectorLen: u64 = 27;
+  const ETimeSet: u64 = 28;
 
 
   //multisig type
@@ -487,6 +488,9 @@ module loa_game::game{
     _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_token_types: vector<u64>,
     gacha_amounts: vector<u64>, start_time: u64, end_time: u64) {
 
+    if(start_time > 0 && end_time > 0){
+      assert!(end_time >= start_time, ETimeSet);
+    };
 
     if (table::contains(&mut gacha_config_tb.config, token_type)) {
       let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
