@@ -282,7 +282,7 @@ module loa_facilities::staking {
             assert!(verified, EProofInvalid);
         };
 
-        assert!(amount + week_reward.claimed <= week_reward.total_reward, EProofInvalid);
+        assert!(amount + week_reward.claimed <= week_reward.total_reward, ENoRewardsLeft);
         let coin = coin::take<ARCA>(&mut sp.rewards, amount, ctx);
         week_reward.claimed = week_reward.claimed + amount;
 
