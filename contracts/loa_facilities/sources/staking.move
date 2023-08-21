@@ -9,7 +9,8 @@ module loa_facilities::staking {
     use sui::coin::{Self, Coin};
     use sui::dynamic_field as df;
     use sui::linked_table::{Self, LinkedTable};
-    use sui::object::{Self, UID};
+    use sui::object::{Self, UID, ID};
+    use sui::event;
     use sui::table::{Self, Table};
     use sui::transfer;
     use sui::tx_context::{Self, TxContext};
@@ -87,6 +88,44 @@ module loa_facilities::staking {
         id: UID,
         to: address,
         amount: u64
+    }
+
+    //event
+    struct ArcaStake has copy, drop {
+        user: address,
+        amount: u64,
+        end_time: u64,
+        veARCA_id: ID,
+    }
+
+    struct AppendArca has copy, drop {
+        user: address,
+        appended_amount: u64,
+        veARCA_id: ID,
+    }
+
+    struct AppendTime has copy, drop {
+        user: address,
+        end_time: u64,
+        veARCA_id: ID,
+    }
+
+    struct UnStake has copy, drop {
+        user: address,
+        veARCA_id: ID,
+    }
+
+    struct WeekRewardCreated has copy, drop {
+        name: String,
+        merkle_root: vector<u8>,
+        total_reward: u64,
+        week_reward_id: ID,
+    }
+
+    struct Claimed has copy, drop {
+        user: address,
+        amount: u64,
+        week_reward_id: ID,
     }
 
     fun init(ctx: &mut TxContext){
@@ -178,6 +217,15 @@ module loa_facilities::staking {
 
         let veARCA = mint_ve(arca_amount, staked_amount, start_tmstmp, end_tmstmp, locking_period_sec, ctx);
 
+        let evt = ArcaStake {
+            user: tx_context::sender(ctx),
+            amount: arca_amount,
+            end_time: end_tmstmp,
+            veARCA_id: object::id(&veARCA),
+        };
+
+        event::emit(evt);
+
         transfer::transfer(veARCA, tx_context::sender(ctx));
 
     }
@@ -207,6 +255,14 @@ module loa_facilities::staking {
         *vector::borrow_mut<u64>(&mut lt_initial, 0) = veARCA.initial;
 
         *linked_table::borrow_mut(&mut sp.veARCA_holders, tx_context::sender(ctx)) = lt_initial;
+
+        let evt = AppendArca {
+            user: tx_context::sender(ctx),
+            appended_amount,
+            veARCA_id: object::id(veARCA),
+        };
+
+        event::emit(evt);
     }
 
     public fun append_time(sp: &mut StakingPool, veARCA: &mut VeARCA, appended_time: u64, clock: &Clock, ctx: &mut TxContext) {
@@ -231,6 +287,14 @@ module loa_facilities::staking {
         *vector::borrow_mut<u64>(&mut lt_initial, 2) = veARCA.locking_period_sec;
 
         *linked_table::borrow_mut(&mut sp.veARCA_holders, tx_context::sender(ctx)) = lt_initial;
+
+        let evt = AppendTime {
+            user: tx_context::sender(ctx),
+            end_time: veARCA.end_date,
+            veARCA_id: object::id(veARCA),
+        };
+
+        event::emit(evt);
     }
 
     public fun unstake(veARCA: VeARCA, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext): Coin<ARCA> {
@@ -243,6 +307,13 @@ module loa_facilities::staking {
         let coin_balance = balance::split<ARCA>(&mut sp.liquidity, veARCA.staked_amount);
 
         let arca = coin::from_balance<ARCA>(coin_balance, ctx);
+
+        let evt = UnStake {
+            user: tx_context::sender(ctx),
+            veARCA_id: object::id(&veARCA),
+        };
+
+        event::emit(evt);
 
         burn_veARCA(veARCA);
 
@@ -261,6 +332,15 @@ module loa_facilities::staking {
             claimed: 0,
             claimed_address: table::new<address, bool>(ctx),
         };
+
+        let evt = WeekRewardCreated {
+            name,
+            merkle_root,
+            total_reward,
+            week_reward_id: object::id(&week_reward),
+        };
+
+        event::emit(evt);
 
         transfer::public_share_object(week_reward);
     }
@@ -287,6 +367,14 @@ module loa_facilities::staking {
         week_reward.claimed = week_reward.claimed + amount;
 
         table::add(&mut week_reward.claimed_address, user, true);
+
+        let evt = Claimed {
+            user,
+            amount,
+            week_reward_id: object::id(week_reward),
+        };
+
+        event::emit(evt);
 
         transfer::public_transfer(coin, user);
     }
