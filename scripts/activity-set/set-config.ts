@@ -36,7 +36,7 @@ let playerAddress = playerKeyPair.getPublicKey().toSuiAddress();
 // player puts their hero to makeover
 async function setConfig() {
     let start_time = 1688522400000 // 2023-07-05 10:00:00
-    let end_time = 1691200800000 // 2023-08-05 10:00:00
+    let end_time = 1791200800000 // 2023-08-05 10:00:00
     let max_supply = 1000
     let token_type = 19999
     let name = "blue gacha"
@@ -76,7 +76,7 @@ async function setConfig() {
 // player puts their hero to makeover
 async function setPrice() {
 
-    let configId = "0x30a7bcc4e06c948fd46c76a91abeeeebb01aa3998a7a361f84894894b1c5ec47"
+    let configId = "0x38bb56b3d30706f2c174603c7383940eeea1d7a927fe34d51e48ee9951ae5680"
     let txb = new TransactionBlock();
     let price = 1000;
     const coinType = "0x2::sui::SUI";
@@ -164,7 +164,7 @@ async function removeConfig() {
 async function main() {
 
     //let result = await setConfig();
-    let result = await removeConfig();
+    let result = await setPrice();
     console.log(result);
 
 }

@@ -37,7 +37,7 @@ let playerAddress = playerKeyPair.getPublicKey().toSuiAddress();
 
 async function buyBox() {
 
-    let configId = "0x30a7bcc4e06c948fd46c76a91abeeeebb01aa3998a7a361f84894894b1c5ec47"
+    let configId = "0x38bb56b3d30706f2c174603c7383940eeea1d7a927fe34d51e48ee9951ae5680"
     let txb = new TransactionBlock();
     let amount = 5;
     const coinType = "0x2::sui::SUI";

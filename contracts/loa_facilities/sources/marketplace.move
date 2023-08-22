@@ -33,6 +33,7 @@ module loa_facilities::marketplace{
     const ENeedVote: u64 = 8;
     const EFeeSet: u64 = 9;
     const EListExpire: u64 = 10;
+    const ENotUpgrade: u64 = 11;
 
     const WithdrawFeeProfits: u64 = 5;
 
@@ -52,7 +53,8 @@ module loa_facilities::marketplace{
         to_burn_fee: u64,
         team_fee: u64,
         rewards_fee: u64,
-        referrer_fee: u64
+        referrer_fee: u64,
+        version: u64,
     }
 
     // here we need key because we will add items dof
@@ -178,14 +180,15 @@ module loa_facilities::marketplace{
             to_burn_fee: 0,
             team_fee: 10000,
             rewards_fee: 0,
-            referrer_fee: 0
+            referrer_fee: 0,
+            version: VERSION
         };
         transfer::public_share_object<Marketplace>(marketplace);
     }
 
     // add or update vip fee
     public fun update_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
 
         if (table::contains(&mut marketplace.vip_fees, vip_level)) {
             *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level) = fee;
@@ -202,7 +205,7 @@ module loa_facilities::marketplace{
 
 
     public fun remove_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64) {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         assert!(table::contains(&mut marketplace.vip_fees, vip_level), EVipLvNoExsit);
         table::remove(&mut marketplace.vip_fees, vip_level);
 
@@ -221,7 +224,7 @@ module loa_facilities::marketplace{
         new_team_fee: u64,
         new_rewards_fee: u64,
         new_referrer_fee: u64) {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         assert!(new_base_fee <= 10000, EFeeSet);
         assert!(new_to_burn_fee + new_team_fee + new_rewards_fee + new_referrer_fee == 10000, EFeeSet);
 
@@ -248,7 +251,7 @@ module loa_facilities::marketplace{
         price: u64
     )
     {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         let item_id = object::id_address(&item);
         let listing = Listing_P {
@@ -280,7 +283,7 @@ module loa_facilities::marketplace{
         ctx: &mut TxContext
     )
     {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         assert_list_expire(clock::timestamp_ms(clock) /1000, expire_at);
         let stand = &mut marketplace.main;
         let item_id: address = object::id_address(&item);
@@ -315,7 +318,7 @@ module loa_facilities::marketplace{
         ctx: &mut TxContext
     ): Item
     {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing_P>(&stand.primary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing_P>(&mut stand.primary_listings, listing_number);
@@ -347,7 +350,7 @@ module loa_facilities::marketplace{
         clock: &Clock,
         ctx: &mut TxContext): Item 
     {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
@@ -399,7 +402,7 @@ module loa_facilities::marketplace{
         clock: &Clock,
         ctx: &mut TxContext
     ) {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         assert_list_expire(clock::timestamp_ms(clock) /1000, expire_at);
         let stand = &mut marketplace.main;
         let item_id: address = object::id_address(&item);
@@ -434,7 +437,7 @@ module loa_facilities::marketplace{
         clock: &Clock,
         ctx: &mut TxContext
     ): Item {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
@@ -474,7 +477,7 @@ module loa_facilities::marketplace{
         clock: &Clock,
         ctx: &mut TxContext): Item
     {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
@@ -629,6 +632,7 @@ module loa_facilities::marketplace{
         is_approve: bool,
         marketplace: &mut Marketplace,
         ctx: &mut TxContext): bool {
+        assert!(VERSION == marketplace.version, EVersionMismatch);
 
         game::only_multi_sig_scope(multi_signature, game_config);
         // Only participant
@@ -667,7 +671,7 @@ module loa_facilities::marketplace{
     }
 
     public fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &mut TxContext): Item {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
@@ -701,6 +705,12 @@ module loa_facilities::marketplace{
         if (expire_time > 0) {
             assert!(expire_time >= current_time, EListExpire);
         };
+    }
+
+    // package upgrade
+    entry fun migrate(marketplace: &mut Marketplace, _: &GameCap) {
+        assert!(marketplace.version < VERSION, ENotUpgrade);
+        marketplace.version = VERSION;
     }
 
     #[test_only]
