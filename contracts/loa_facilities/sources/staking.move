@@ -522,14 +522,19 @@ module loa_facilities::staking {
     public fun calc_vip_level(sp: &StakingPool, holder: address, clock: &Clock): u64 {
         assert!(VERSION == 1, EVersionMismatch);
 
-        let value = linked_table::borrow(&sp.veARCA_holders, holder);
-        let veARCA_amount = calc_veARCA(
-            *vector::borrow(value, 0),
-            clock,
-            *vector::borrow(value, 1),
-            *vector::borrow(value, 2));
+        let vip_level;
+        if (!linked_table::contains(&sp.veARCA_holders, holder)){
+            vip_level = 0;
+        } else {
+            let value = linked_table::borrow(&sp.veARCA_holders, holder);
+            let veARCA_amount = calc_veARCA(
+                *vector::borrow(value, 0),
+                clock,
+                *vector::borrow(value, 1),
+                *vector::borrow(value, 2));
 
-        let vip_level = calc_vip_level_veARCA(veARCA_amount, &sp.vip_level_veARCA);
+            vip_level = calc_vip_level_veARCA(veARCA_amount, &sp.vip_level_veARCA);
+        };
 
         vip_level
     }

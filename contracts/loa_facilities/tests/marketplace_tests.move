@@ -15,6 +15,7 @@ module loa_facilities::marketplace_tests {
     use loa_game::game::{Self, GameCap, GameConfig};
 
     use multisig::multisig::{Self, MultiSignature};
+    use sui::clock::Clock;
 
 
     const EToBurnNotCorrect: u64 = 0;
@@ -129,11 +130,13 @@ module loa_facilities::marketplace_tests {
             let marketplace = ts::take_shared<Marketplace>(&mut scenario);
             let hero = ts::take_from_sender<Hero>(&mut scenario);
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let clock= ts::take_shared<Clock>(&mut scenario);
 
-            marketplace::list_secondary_arca<Hero>(&mut marketplace, hero, 30*DECIMALS, ts::ctx(&mut scenario));
+            marketplace::list_secondary_arca<Hero>(&mut marketplace, hero, 30*DECIMALS, 0, &clock,ts::ctx(&mut scenario));
 
             ts::return_shared(marketplace);
             ts::return_to_sender<GameCap>(&scenario, cap);
+            ts::return_shared(clock);
         };
 
         ts::next_tx(&mut scenario, GAME);
@@ -141,10 +144,12 @@ module loa_facilities::marketplace_tests {
             let marketplace = ts::take_shared<Marketplace>(&mut scenario);
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
             let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
-            let hero = marketplace::buy_secondary_arca<Hero>(coin, 1, option::none<address>(), &mut marketplace, &mut sp, ts::ctx(&mut scenario));
+            let hero = marketplace::buy_secondary_vip_arca<Hero>(coin, 1, option::none<address>(), &mut marketplace, &mut sp, &clock,ts::ctx(&mut scenario));
 
             transfer::public_transfer(hero, GAME);
+            ts::return_shared(clock);
             ts::return_shared(marketplace);
             ts::return_shared(sp);
             ts::return_to_sender<GameCap>(&scenario, cap);
@@ -214,7 +219,7 @@ module loa_facilities::marketplace_tests {
                 ts::ctx(&mut scenario)
             );
 
-            marketplace::list_secondary_arca<Hero>(&mut marketplace, hero, 30*DECIMALS, ts::ctx(&mut scenario));
+            marketplace::list_secondary_arca<Hero>(&mut marketplace, hero, 30*DECIMALS, 0, &clock,ts::ctx(&mut scenario));
 
             ts::return_shared(marketplace);
             ts::return_shared(sp);
@@ -290,11 +295,13 @@ module loa_facilities::marketplace_tests {
             let marketplace = ts::take_shared<Marketplace>(&mut scenario);
             let hero = ts::take_from_sender<Hero>(&mut scenario);
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let clock= ts::take_shared<Clock>(&mut scenario);
 
-            marketplace::list_secondary<Hero, ARCA>(&mut marketplace, hero, 30*DECIMALS, ts::ctx(&mut scenario));
+            marketplace::list_secondary<Hero, ARCA>(&mut marketplace, hero, 30*DECIMALS, 0, &clock,ts::ctx(&mut scenario));
 
             ts::return_shared(marketplace);
             ts::return_to_sender<GameCap>(&scenario, cap);
+            ts::return_shared(clock);
         };
 
         ts::next_tx(&mut scenario, GAME);
@@ -302,8 +309,9 @@ module loa_facilities::marketplace_tests {
             let marketplace = ts::take_shared<Marketplace>(&mut scenario);
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
             let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
 
-            let hero = marketplace::buy_secondary<Hero, ARCA>(coin, 1,  &mut marketplace,  ts::ctx(&mut scenario));
+            let hero = marketplace::buy_secondary<Hero, ARCA>(coin, 1,  &mut marketplace,  &clock, ts::ctx(&mut scenario));
             ts::next_tx(&mut scenario, GAME);
             assert!(marketplace::get_fee_profits<ARCA>(&marketplace) == 30*DECIMALS * 3/100, 1)
             ;
@@ -312,6 +320,7 @@ module loa_facilities::marketplace_tests {
             ts::return_shared(marketplace);
             ts::return_shared(sp);
             ts::return_to_sender<GameCap>(&scenario, cap);
+            ts::return_shared(clock);
 
         };
 
@@ -397,7 +406,7 @@ module loa_facilities::marketplace_tests {
                 ts::ctx(&mut scenario)
             );
 
-            marketplace::list_secondary<Hero, ARCA>(&mut marketplace, hero, 30*DECIMALS, ts::ctx(&mut scenario));
+            marketplace::list_secondary<Hero, ARCA>(&mut marketplace, hero, 30*DECIMALS, 0, &clock,ts::ctx(&mut scenario));
 
             ts::return_shared(marketplace);
             ts::return_shared(sp);
@@ -460,11 +469,13 @@ module loa_facilities::marketplace_tests {
             let marketplace = ts::take_shared<Marketplace>(&mut scenario);
             let hero = ts::take_from_sender<Hero>(&mut scenario);
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let clock= ts::take_shared<Clock>(&mut scenario);
 
-            marketplace::list_secondary<Hero, ARCA>(&mut marketplace, hero, 30*DECIMALS, ts::ctx(&mut scenario));
+            marketplace::list_secondary<Hero, ARCA>(&mut marketplace, hero, 30*DECIMALS, 0, &clock,ts::ctx(&mut scenario));
 
             ts::return_shared(marketplace);
             ts::return_to_sender<GameCap>(&scenario, cap);
+            ts::return_shared(clock);
         };
 
         ts::next_tx(&mut scenario, GAME);
@@ -521,12 +532,14 @@ module loa_facilities::marketplace_tests {
             let marketplace = ts::take_shared<Marketplace>(&mut scenario);
             let hero = ts::take_from_sender<Hero>(&mut scenario);
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let clock= ts::take_shared<Clock>(&mut scenario);
 
             marketplace::update_vip_fees(&cap, &mut marketplace, viplv, 100);
-            marketplace::list_secondary<Hero, ARCA>(&mut marketplace, hero, buy_amount, ts::ctx(&mut scenario));
+            marketplace::list_secondary<Hero, ARCA>(&mut marketplace, hero, buy_amount, 0, &clock,ts::ctx(&mut scenario));
 
             ts::return_shared(marketplace);
             ts::return_to_sender<GameCap>(&scenario, cap);
+            ts::return_shared(clock);
         };
 
         ts::next_tx(&mut scenario, GAME);
