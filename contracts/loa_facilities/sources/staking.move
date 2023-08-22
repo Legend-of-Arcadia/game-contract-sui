@@ -47,6 +47,7 @@ module loa_facilities::staking {
     const EClaimed: u64 = 11;
     const EWeekRewardCreated: u64 = 12;
     const ENotUpgrade: u64 = 13;
+    const EMerkleRoot: u64 = 14;
 
     const WithdrawReward: u64 = 4;
 
@@ -341,6 +342,7 @@ module loa_facilities::staking {
     public fun create_week_reward(_: &GameCap, name: String, merkle_root: vector<u8>, total_reward: u64, sp: &mut StakingPool, ctx: &mut TxContext){
         assert!(VERSION == sp.version, EVersionMismatch);
         assert!(!table::contains(&sp.week_reward_table, name), EWeekRewardCreated);
+        assert!(vector::length(&merkle_root) > 0, EMerkleRoot);
         let week_reward = WeekReward{
             id: object::new(ctx),
             name,
