@@ -207,7 +207,7 @@ module loa_facilities::staking {
 
         staked_amount = calc_initial_veARCA(staked_amount*(staking_period/DAY_TO_UNIX_SECONDS), 365);
 
-        assert!(staked_amount >= 3*DECIMALS, ENotEnoughveARCA);
+        assert!(staked_amount > 0, ENotEnoughveARCA);
 
         let balance = coin::into_balance(arca);
         balance::join(&mut sp.liquidity, balance);
@@ -248,6 +248,7 @@ module loa_facilities::staking {
         assert!(time_left >= 1, ENotAppendActionAvaialble);
 
         let appended_amount = calc_initial_veARCA(amount *time_left, 365);
+        assert!(appended_amount > 0, ENotEnoughveARCA);
 
         let balance = coin::into_balance(arca);
         balance::join(&mut sp.liquidity, balance);
@@ -279,11 +280,13 @@ module loa_facilities::staking {
         let staking_period = veARCA.end_time - current_time + append_time;
         if (staking_period > YEAR_TO_UNIX_SECONDS) {
             staking_period = YEAR_TO_UNIX_SECONDS;
+            append_time = YEAR_TO_UNIX_SECONDS - current_time;
         };
 
         assert!(veARCA.end_time > current_time, ENoActiveStakes);
 
         let staked_amount = calc_initial_veARCA(veARCA.staked_amount*(staking_period/DAY_TO_UNIX_SECONDS), 365);
+        assert!(staked_amount > 0, ENotEnoughveARCA);
         veARCA.start_time = current_time;
         veARCA.end_time = current_time + staking_period;
         veARCA.initial = staked_amount;
