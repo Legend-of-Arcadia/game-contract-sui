@@ -401,11 +401,12 @@ module loa_facilities::staking_tests {
             let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
             let i = 0;
             let l = YEAR_TO_UNIX_SECONDS/WEEK_TO_UNIX_SECONDS;
-            while (i < l) {
-                clock::increment_for_testing(&mut clock, WEEK_TO_UNIX_SECONDS * 1000);
+            while (i < l+2 ) {
+
                 ts::next_tx(&mut scenario, USER1_ADDRESS);
                 let amount =staking::get_amount_VeARCA(&ve_arca, &clock);
                 debug::print(&amount);
+                clock::increment_for_testing(&mut clock, WEEK_TO_UNIX_SECONDS * 1000);
                 i = i + 1;
             };
             // ts::next_tx(&mut scenario, USER1_ADDRESS);

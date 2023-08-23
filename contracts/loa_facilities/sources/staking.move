@@ -519,6 +519,9 @@ module loa_facilities::staking {
         let current_timestamp = (clock::timestamp_ms(clock) / 1000 as u128);
 
         assert!(locking_period_sec_128 !=0, EDenominatorIsZero); // add an assertion
+        if (current_timestamp > end_date_128) {
+            current_timestamp = end_date_128;
+        };
         let veARCA_amount = initial_128 * (end_date_128 - current_timestamp) / locking_period_sec_128;
 
         (veARCA_amount as u64)
