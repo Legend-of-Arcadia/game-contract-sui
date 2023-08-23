@@ -117,6 +117,12 @@ module loa_facilities::staking {
         veARCA_id: ID,
     }
 
+    struct WeekFinished has copy, drop {
+        name: String,
+        total_reward: u64,
+        current_time: u64, // calc veArca base on this field when publish reward
+    }
+
     struct WeekRewardCreated has copy, drop {
         name: String,
         merkle_root: vector<u8>,
@@ -330,6 +336,17 @@ module loa_facilities::staking {
         linked_table::remove(&mut sp.veARCA_holders, tx_context::sender(ctx));
 
         arca
+    }
+
+    // week period end publish event for create week reward etc.
+    public entry fun finish_week(_: &GameCap, name:String, total_reward: u64, clock: &Clock){
+        let current_time = clock::timestamp_ms(clock) / 1000;
+        let evt = WeekFinished {
+            name,
+            total_reward,
+            current_time,
+        };
+        event::emit(evt);
     }
 
     public fun create_week_reward(_: &GameCap, name: String, merkle_root: vector<u8>, total_reward: u64, sp: &mut StakingPool, ctx: &mut TxContext){
