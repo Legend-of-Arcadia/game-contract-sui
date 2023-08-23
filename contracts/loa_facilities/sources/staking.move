@@ -133,6 +133,12 @@ module loa_facilities::staking {
         week_reward_id: ID,
     }
 
+    struct WeekRewardUpdated has copy, drop {
+        new_merkle_root: vector<u8>,
+        new_total_reward: u64,
+        week_reward_id: ID,
+    }
+
     struct Claimed has copy, drop {
         user: address,
         amount: u64,
@@ -380,6 +386,21 @@ module loa_facilities::staking {
 
         table::add(&mut sp.week_reward_table, name, true);
         transfer::public_share_object(week_reward);
+    }
+
+    //Prevent creation errors, Add update method
+    public fun update_week_reward(_: &GameCap, new_merkle_root: vector<u8>, new_total_reward: u64, wr: &mut WeekReward){
+        assert!(vector::length(&new_merkle_root) > 0, EMerkleRoot);
+        wr.merkle_root = new_merkle_root;
+        wr.total_reward = new_total_reward;
+
+        let evt = WeekRewardUpdated {
+            new_merkle_root,
+            new_total_reward,
+            week_reward_id: object::id(wr),
+        };
+
+        event::emit(evt);
     }
 
     public fun claim(
