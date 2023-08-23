@@ -9,6 +9,7 @@ const gameCap = process.env.GAME_CAP!;
 const upgrader = process.env.UPGRADER!;
 const objBurn = process.env.OBJBURN!;
 const gameConfig = process.env.GAME_CONFIG!;
+const ActivityConfig = process.env.ACTIVITYPROFITS!;
 
 /// helper to make keypair from private key that is in string format
 function getKeyPair(privateKey: string): Ed25519Keypair{
@@ -145,6 +146,31 @@ async function removeConfig() {
         arguments: [
             txb.object(gameCap),
             txb.object(configId),
+        ]
+    });
+
+    let result = await mugen.signAndExecuteTransactionBlock({
+        transactionBlock: txb,
+        requestType: "WaitForLocalExecution",
+        options: {
+            showEffects: true,
+            showObjectChanges: true
+        },
+    });
+
+    return result;
+
+}
+
+async function migrate() {
+
+    let txb = new TransactionBlock();
+
+    txb.moveCall({
+        target: `${packageId}::activity::migrate`,
+        arguments: [
+            txb.object(ActivityConfig),
+            txb.object(gameCap),
         ]
     });
 
