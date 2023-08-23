@@ -14,12 +14,12 @@ module loa_facilities::marketplace{
     use std::option::{Self, Option};
     use std::type_name::{Self, TypeName};
     use std::string;
-    use std::debug;
 
     use loa::arca::ARCA;
     use loa_game::game::{Self, GameCap, GameConfig};
     use loa_facilities::staking::{Self, StakingPool};
     use multisig::multisig::{Self, MultiSignature};
+    use sui::clock;
 
     // errors
     const EPaymentNotExact: u64 = 0;
@@ -32,6 +32,8 @@ module loa_facilities::marketplace{
     const ECoinTypeMismatch: u64 = 7;
     const ENeedVote: u64 = 8;
     const EFeeSet: u64 = 9;
+    const EListExpire: u64 = 10;
+    const ENotUpgrade: u64 = 11;
 
     const WithdrawFeeProfits: u64 = 5;
 
@@ -51,7 +53,8 @@ module loa_facilities::marketplace{
         to_burn_fee: u64,
         team_fee: u64,
         rewards_fee: u64,
-        referrer_fee: u64
+        referrer_fee: u64,
+        version: u64,
     }
 
     // here we need key because we will add items dof
@@ -76,7 +79,8 @@ module loa_facilities::marketplace{
         coin_type: TypeName,
         item_id: address,
         price: u64,
-        seller: address
+        seller: address,
+        expire_at: u64,
     }
 
     struct WithdrawFeeProfitsRequest has key, store {
@@ -90,7 +94,8 @@ module loa_facilities::marketplace{
         price: u64,
         seller: address,
         item_id: address,
-        listing_key: u64
+        listing_key: u64,
+        expire_at: u64,
     }
 
     struct NewPrimaryListing has copy, drop {
@@ -175,14 +180,15 @@ module loa_facilities::marketplace{
             to_burn_fee: 0,
             team_fee: 10000,
             rewards_fee: 0,
-            referrer_fee: 0
+            referrer_fee: 0,
+            version: VERSION
         };
         transfer::public_share_object<Marketplace>(marketplace);
     }
 
     // add or update vip fee
     public fun update_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
 
         if (table::contains(&mut marketplace.vip_fees, vip_level)) {
             *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level) = fee;
@@ -199,7 +205,7 @@ module loa_facilities::marketplace{
 
 
     public fun remove_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64) {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         assert!(table::contains(&mut marketplace.vip_fees, vip_level), EVipLvNoExsit);
         table::remove(&mut marketplace.vip_fees, vip_level);
 
@@ -218,7 +224,7 @@ module loa_facilities::marketplace{
         new_team_fee: u64,
         new_rewards_fee: u64,
         new_referrer_fee: u64) {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         assert!(new_base_fee <= 10000, EFeeSet);
         assert!(new_to_burn_fee + new_team_fee + new_rewards_fee + new_referrer_fee == 10000, EFeeSet);
 
@@ -245,7 +251,7 @@ module loa_facilities::marketplace{
         price: u64
     )
     {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         let item_id = object::id_address(&item);
         let listing = Listing_P {
@@ -272,10 +278,13 @@ module loa_facilities::marketplace{
         marketplace: &mut Marketplace,
         item: Item,
         price: u64,
+        expire_at: u64,
+        clock: &Clock,
         ctx: &mut TxContext
     )
     {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
+        assert_list_expire(clock::timestamp_ms(clock) /1000, expire_at);
         let stand = &mut marketplace.main;
         let item_id: address = object::id_address(&item);
         let coin_type = type_name::get<ARCA>();
@@ -283,7 +292,8 @@ module loa_facilities::marketplace{
             coin_type,
             item_id,
             price,
-            seller: tx_context::sender(ctx)
+            seller: tx_context::sender(ctx),
+            expire_at
         };
         stand.secondary_list_index = stand.secondary_list_index + 1;
         let key = stand.secondary_list_index;
@@ -295,7 +305,8 @@ module loa_facilities::marketplace{
             price,
             seller: tx_context::sender(ctx),
             item_id,
-            listing_key: key
+            listing_key: key,
+            expire_at
         };
         event::emit(evt);
     }
@@ -307,7 +318,7 @@ module loa_facilities::marketplace{
         ctx: &mut TxContext
     ): Item
     {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing_P>(&stand.primary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing_P>(&mut stand.primary_listings, listing_number);
@@ -330,51 +341,6 @@ module loa_facilities::marketplace{
         dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
-    public fun buy_secondary_arca<Item: key+store>(
-        payment: Coin<ARCA>,
-        listing_number: u64,
-        referrer: Option<address>,
-        marketplace: &mut Marketplace,
-        sp: &mut StakingPool,
-        ctx: &mut TxContext): Item 
-    {
-        assert!(VERSION == 1, EVersionMismatch);
-        let stand = &mut marketplace.main;
-        assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
-        let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {coin_type, item_id, price, seller} = listing;
-        assert!(coin_type == type_name::get<ARCA>(), EPaymentMismatch);
-        assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
-
-        fee_distribution_arca(
-            &mut payment, 
-            referrer,
-            marketplace.base_trading_fee,
-            marketplace.to_burn_fee,
-            marketplace.team_fee,
-            marketplace.rewards_fee,
-            marketplace.referrer_fee,
-            stand,
-            sp,
-            ctx
-        );
-        
-        transfer::public_transfer(payment, seller);
-        // event
-        let evt = ItemBought {
-            is_primary_listing: false,
-            buyer_vip_level: 0, // no vip
-            buyer: tx_context::sender(ctx),
-            seller,
-            coin_type: type_name::get<ARCA>(),
-            item_id: item_id,
-            listing_key: listing_number // now this is occupied by the last listing
-        };
-        event::emit(evt);
-        // return item
-        dof::remove<address, Item>(&mut stand.id, item_id)
-    }
-
     public fun buy_secondary_vip_arca<Item: key+store>(
         payment: Coin<ARCA>,
         listing_number: u64,
@@ -384,17 +350,17 @@ module loa_facilities::marketplace{
         clock: &Clock,
         ctx: &mut TxContext): Item 
     {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {coin_type, item_id, price, seller} = listing;
+        let Listing {coin_type, item_id, price, seller, expire_at} = listing;
+        assert_list_expire(clock::timestamp_ms(clock) /1000, expire_at);
         assert!(coin_type == type_name::get<ARCA>(), EPaymentMismatch);
         assert!(price == coin::value<ARCA>(&payment), EPaymentNotExact);
         
         // get base_trading fee based on vip level
         let vip_level = staking::calc_vip_level(sp, seller, clock);
-        //assert!(vip_level < 21, EIncorrectVipLevel);
         let base_fee = *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level);
         fee_distribution_arca(
             &mut payment, 
@@ -432,9 +398,12 @@ module loa_facilities::marketplace{
         marketplace: &mut Marketplace,
         item: Item,
         price: u64,
+        expire_at: u64,
+        clock: &Clock,
         ctx: &mut TxContext
     ) {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
+        assert_list_expire(clock::timestamp_ms(clock) /1000, expire_at);
         let stand = &mut marketplace.main;
         let item_id: address = object::id_address(&item);
         let coin_type = type_name::get<COIN>();
@@ -442,7 +411,8 @@ module loa_facilities::marketplace{
             coin_type,
             item_id,
             price,
-            seller: tx_context::sender(ctx)
+            seller: tx_context::sender(ctx),
+            expire_at
         };
         stand.secondary_list_index = stand.secondary_list_index + 1;
         let key = stand.secondary_list_index;
@@ -454,7 +424,8 @@ module loa_facilities::marketplace{
             price,
             seller: tx_context::sender(ctx),
             item_id,
-            listing_key: key
+            listing_key: key,
+            expire_at
         };
         event::emit(evt);
     }
@@ -463,13 +434,15 @@ module loa_facilities::marketplace{
         payment: Coin<COIN>,
         listing_number: u64,
         marketplace: &mut Marketplace,
+        clock: &Clock,
         ctx: &mut TxContext
     ): Item {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {coin_type, item_id, price, seller} = listing;
+        let Listing {coin_type, item_id, price, seller, expire_at} = listing;
+        assert_list_expire(clock::timestamp_ms(clock) /1000, expire_at);
         assert!(coin_type == type_name::get<COIN>(), EPaymentMismatch);
         assert!(price == coin::value<COIN>(&payment), EPaymentNotExact);
 
@@ -504,11 +477,12 @@ module loa_facilities::marketplace{
         clock: &Clock,
         ctx: &mut TxContext): Item
     {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {coin_type, item_id, price, seller} = listing;
+        let Listing {coin_type, item_id, price, seller, expire_at} = listing;
+        assert_list_expire(clock::timestamp_ms(clock) /1000, expire_at);
         assert!(coin_type == type_name::get<COIN>(), EPaymentMismatch);
         assert!(price == coin::value<COIN>(&payment), EPaymentNotExact);
 
@@ -658,6 +632,7 @@ module loa_facilities::marketplace{
         is_approve: bool,
         marketplace: &mut Marketplace,
         ctx: &mut TxContext): bool {
+        assert!(VERSION == marketplace.version, EVersionMismatch);
 
         game::only_multi_sig_scope(multi_signature, game_config);
         // Only participant
@@ -696,11 +671,11 @@ module loa_facilities::marketplace{
     }
 
     public fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &mut TxContext): Item {
-        assert!(VERSION == 1, EVersionMismatch);
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
         let listing = table::remove<u64, Listing>(&mut stand.secondary_listings, listing_number);
-        let Listing {coin_type: _, item_id, price: _, seller} = listing;
+        let Listing {coin_type: _, item_id, price: _, seller, expire_at: _} = listing;
         assert!(seller == tx_context::sender(ctx), ENoItemSeller);
 
         // event
@@ -725,33 +700,23 @@ module loa_facilities::marketplace{
         *table::borrow(&marketplace.vip_fees, key)
     }
 
+    // asserts
+    fun assert_list_expire(current_time: u64, expire_time: u64) {
+        if (expire_time > 0) {
+            assert!(expire_time >= current_time, EListExpire);
+        };
+    }
+
+    // package upgrade
+    entry fun migrate(marketplace: &mut Marketplace, _: &GameCap) {
+        assert!(marketplace.version < VERSION, ENotUpgrade);
+        marketplace.version = VERSION;
+    }
+
     #[test_only]
     public fun init_for_testing(ctx: &mut TxContext) {
         init(ctx);
     }
-
-    // #[test]
-    // public fun test_precision_loss() {
-    //     let payment: u64 = 12345;
-    //     let base_trading_fee: u64 = 1234;
-    //     let to_burn_fee: u64 = 567;
-    //     let team_fee: u64 = 890;
-    //     let rewards_fee: u64 = 123;
-    //     let referrer_fee: u64 = 456;
-    //     let (original_to_burn_value, _original_team_value,
-    //         _original_rewards_value, _original_referrer_value) =
-    //         fee_calculation(payment, base_trading_fee, to_burn_fee, team_fee,
-    //             rewards_fee, referrer_fee);
-    //     let (revised_to_burn_value, _revised_team_value,
-    //         _revised_rewards_value, _revised_referrer_value) =
-    //         revised_fee_calculation(payment, base_trading_fee, to_burn_fee,
-    //             team_fee, rewards_fee, referrer_fee);
-    //     // Print the results
-    //     debug::print(&original_to_burn_value);
-    //     debug::print(&revised_to_burn_value);
-    //     // Assert that the results are different
-    //     assert!(original_to_burn_value != revised_to_burn_value, 101);
-    // }
 
     #[test]
     public fun test_fee_calculation_overflow() {
@@ -766,6 +731,6 @@ module loa_facilities::marketplace{
         _revised_rewards_value, _revised_referrer_value) =
         fee_calculation(payment, base_trading_fee, to_burn_fee,
         team_fee, rewards_fee, referrer_fee);
-        debug::print(&revised_to_burn_value);
+        assert!(revised_to_burn_value == payment, 1);
     }
 }

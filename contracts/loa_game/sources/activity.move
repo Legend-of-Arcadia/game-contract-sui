@@ -17,6 +17,7 @@ module loa_game::activity {
     use loa_game::game::{Self, GameCap, GameConfig};
     use multisig::multisig::{Self, MultiSignature};
 
+    const VERSION: u64 = 2;
 
     const EPaymentAmountInvalid: u64 = 0;
     const EOverflowMaxSupply: u64 = 1;
@@ -27,11 +28,14 @@ module loa_game::activity {
     const ETimeSet: u64 = 6;
     const ECoinTypeMismatch: u64 = 7;
     const ENeedVote: u64 = 8;
+    const EIncorrectVersion: u64 = 9;
+    const ENotUpgrade: u64 = 10;
 
     const WithdrawActivityProfits: u64 = 3;
 
     struct ActivityProfits has key, store {
         id: UID,
+        version: u64,
     }
 
     struct ActivityConfig has key, store {
@@ -99,6 +103,7 @@ module loa_game::activity {
     fun init(ctx: &mut TxContext){
         let activity_profits = ActivityProfits{
             id: object::new(ctx),
+            version: VERSION,
         };
 
         transfer::public_share_object(activity_profits);
@@ -229,6 +234,7 @@ module loa_game::activity {
         profits: &mut ActivityProfits,
         ctx: &mut TxContext,
     ) {
+        assert!(VERSION == profits.version, EIncorrectVersion);
         let current_time: u64 = clock::timestamp_ms(clock);
         let coin_type = type_name::get<COIN>();
         let (contain, price) = (false, 0);
@@ -386,6 +392,11 @@ module loa_game::activity {
         };
     }
 
+    // package upgrade
+    entry fun migrate(profits: &mut ActivityProfits, _: &GameCap) {
+        assert!(profits.version < VERSION, ENotUpgrade);
+        profits.version = VERSION;
+    }
     // === Accessors ===
     public fun get_activity_profits<COIN>(profits: &ActivityProfits):u64 {
         let coin_type = type_name::get<COIN>();

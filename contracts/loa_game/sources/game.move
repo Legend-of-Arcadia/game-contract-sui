@@ -57,6 +57,7 @@ module loa_game::game{
   const EPriceEQZero: u64 = 26;
   const ECoinTypeMismatch: u64 = 27;
   const EVectorLen: u64 = 27;
+  const ENotUpgrade: u64 = 28;
 
 
 
@@ -79,6 +80,7 @@ module loa_game::game{
     game_address: address,
     mint_address: address,
     for_multi_sign: ID,
+    version: u64,
   }
 
   struct GachaConfigTable has key, store {
@@ -86,6 +88,7 @@ module loa_game::game{
     config: Table<u64, GachaConfig>,
     profits: Balance<ARCA>,
     gacha_info: Table<u64, GachaInfo>,
+    version: u64,
   }
 
   struct GachaInfo has store, drop {
@@ -120,23 +123,27 @@ module loa_game::game{
     id: UID,
     upgrade_address: address,
     power_prices: Table<String, u64>,
-    profits: Balance<ARCA>
+    profits: Balance<ARCA>,
+    version: u64,
   }
 
   // At present, the blind boxes and heroes that I need to destroy are all stored in this object
   struct ObjBurn has key, store {
-    id: UID
+    id: UID,
+    version: u64,
   }
 
   struct SeenMessages has key, store {
     id: UID,
     mugen_pk: vector<u8>,
-    salt_table: Table<u64, bool>
+    salt_table: Table<u64, bool>,
+    version: u64,
   }
 
   struct ArcaCounter has key, store {
     id: UID,
-    arca_balance : Balance<ARCA>
+    arca_balance : Balance<ARCA>,
+    version: u64,
   }
 
   struct WhitelistRewards has store {
@@ -307,7 +314,8 @@ module loa_game::game{
       id: object::new(ctx),
       upgrade_address: tx_context::sender(ctx),
       power_prices: power_upgrade_prices,
-      profits: balance::zero<ARCA>()
+      profits: balance::zero<ARCA>(),
+      version: VERSION,
     };
 
     let multi_sig = multisig::create_multisig(ctx);
@@ -315,22 +323,26 @@ module loa_game::game{
       id: object::new(ctx),
       game_address: tx_context::sender(ctx),
       mint_address: tx_context::sender(ctx),
-      for_multi_sign: object::id(&multi_sig)
+      for_multi_sign: object::id(&multi_sig),
+      version: VERSION,
     };
 
     let objBurn = ObjBurn {
       id: object::new(ctx),
+      version: VERSION,
     };
 
     let seen_messages = SeenMessages {
       id: object::new(ctx),
       mugen_pk: vector::empty<u8>(),
-      salt_table: table::new<u64, bool>(ctx)
+      salt_table: table::new<u64, bool>(ctx),
+      version: VERSION,
     };
 
     let arca_counter = ArcaCounter{
       id: object::new(ctx),
-      arca_balance: balance::zero<ARCA>()
+      arca_balance: balance::zero<ARCA>(),
+      version: VERSION,
     };
 
     let gacha_config = GachaConfigTable{
@@ -338,6 +350,7 @@ module loa_game::game{
       config: table::new<u64, GachaConfig>(ctx),
       profits: balance::zero<ARCA>(),
       gacha_info: table::new<u64, GachaInfo>(ctx),
+      version: VERSION,
     };
 
     transfer::public_share_object(multi_sig);
@@ -923,7 +936,7 @@ module loa_game::game{
     appearance_index: u64,
     upgrader: &mut Upgrader,
     ctx: &mut TxContext) {
-    assert!(VERSION == 1, EIncorrectVersion);
+    assert!(VERSION == upgrader.version, EIncorrectVersion);
     assert!(
       appearance_index != 0 &&
       appearance_index != 4 &&
@@ -968,7 +981,7 @@ module loa_game::game{
     upgrader: &mut Upgrader,
     ctx: &mut TxContext)
   {
-    assert!(VERSION == 1, EIncorrectVersion);
+    assert!(VERSION == upgrader.version, EIncorrectVersion);
 
     let l = vector::length<Hero>(&to_burn);
     assert!(l > 0, EMustBurnAtLeastOneHero);
@@ -1012,6 +1025,8 @@ module loa_game::game{
     ctx: &mut TxContext
   )
   {
+    assert!(VERSION == upgrader.version, EIncorrectVersion);
+
     let l = vector::length<Hero>(&to_burn);
     assert!(l > 0, EMustBurnAtLeastOneHero);
     let main_rarity = *hero::rarity(&main_hero);
@@ -1057,6 +1072,8 @@ module loa_game::game{
   }
 
   public fun charge_hero(to_burn: vector<Hero>, obj_burn: &mut ObjBurn, ctx: &mut TxContext){
+    assert!(VERSION == obj_burn.version, EIncorrectVersion);
+
     let l = vector::length<Hero>(&to_burn);
     let i: u64 = 0;
     let burn_addresses: vector<address> = vector::empty<address>();
@@ -1082,6 +1099,8 @@ module loa_game::game{
     ctx: &mut TxContext
   )
   {
+    assert!(VERSION == config.version, EIncorrectVersion);
+
     let sender: address = tx_context::sender(ctx);
     assert!(df::exists_<address>(&mut config.id, sender), ENotWhitelisted);
     let rewards = df::remove<address, WhitelistRewards>(&mut config.id, sender);
@@ -1103,6 +1122,8 @@ module loa_game::game{
     game_config: &GameConfig,
     ctx: &mut TxContext)
   {
+    assert!(VERSION == gacha_config.version, EIncorrectVersion);
+
     let token_type = *gacha::tokenType(&voucher);
     assert!(token_type / Base == Voucher, EInvalidType);
     let config = table::borrow(&gacha_config.config, token_type);
@@ -1126,6 +1147,8 @@ module loa_game::game{
     game_config: &GameConfig,
     ctx: &mut TxContext)
   {
+    assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
+
     let token_type = *gacha::tokenType(&discount);
     assert!(token_type / Base == Discount, EInvalidType);
     let config = table::borrow(&gacha_config_tb.config, token_type);
@@ -1206,6 +1229,8 @@ module loa_game::game{
   }
 
   public fun deposit(payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
+    assert!(VERSION == arca_counter.version, EIncorrectVersion);
+
     let amount = coin::value(&payment);
     assert!(amount > 0, EInvalidAmount);
     balance::join(&mut arca_counter.arca_balance, coin::into_balance<ARCA>(payment));
@@ -1226,6 +1251,7 @@ module loa_game::game{
     clock: & Clock,
     ctx: &mut TxContext,
   ): Coin<ARCA> {
+    assert!(VERSION == seen_messages.version, EIncorrectVersion);
     assert!(expire_at >= clock::timestamp_ms(clock) / 1000, ETimeExpired);
     let user_address = tx_context::sender(ctx);
     let msg: vector<u8> = address::to_bytes(user_address);
@@ -1265,6 +1291,8 @@ module loa_game::game{
     clock: & Clock,
     ctx: &mut TxContext,
   ) {
+    assert!(VERSION == seen_messages.version, EIncorrectVersion);
+    assert!(VERSION == gacha_config.version, EIncorrectVersion);
     assert!(expire_at >= clock::timestamp_ms(clock) / 1000, ETimeExpired);
     let user_address = tx_context::sender(ctx);
     let msg: vector<u8> = address::to_bytes(user_address);
@@ -1356,6 +1384,37 @@ module loa_game::game{
 
   public fun get_power_prices(upgrader: &Upgrader, key: String):u64 {
     *table::borrow(&upgrader.power_prices, key)
+  }
+
+  // package upgrade
+  entry fun migrate_game_config(config: &mut GameConfig, _: &GameCap) {
+    assert!(config.version < VERSION, ENotUpgrade);
+    config.version = VERSION;
+  }
+
+  entry fun migrate_upgrader(upgrader: &mut Upgrader, _: &GameCap) {
+    assert!(upgrader.version < VERSION, ENotUpgrade);
+    upgrader.version = VERSION;
+  }
+
+  entry fun migrate_obj_burn(obj_burn: &mut ObjBurn, _: &GameCap) {
+    assert!(obj_burn.version < VERSION, ENotUpgrade);
+    obj_burn.version = VERSION;
+  }
+
+  entry fun migrate_garca_counter(arca_counter: &mut ArcaCounter, _: &GameCap) {
+    assert!(arca_counter.version < VERSION, ENotUpgrade);
+    arca_counter.version = VERSION;
+  }
+
+  entry fun migrate_gacha_config_table(config: &mut GachaConfigTable, _: &GameCap) {
+    assert!(config.version < VERSION, ENotUpgrade);
+    config.version = VERSION;
+  }
+
+  entry fun migrate_seen_messages(seen_messages: &mut SeenMessages, _: &GameCap) {
+    assert!(seen_messages.version < VERSION, ENotUpgrade);
+    seen_messages.version = VERSION;
   }
   // === Test-only ===
 
