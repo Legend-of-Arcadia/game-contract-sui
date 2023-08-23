@@ -17,7 +17,7 @@ module loa_game::activity {
     use loa_game::game::{Self, GameCap, GameConfig};
     use multisig::multisig::{Self, MultiSignature};
 
-    const VERSION: u64 = 2;
+    const VERSION: u64 = 1;
 
     const EPaymentAmountInvalid: u64 = 0;
     const EOverflowMaxSupply: u64 = 1;
