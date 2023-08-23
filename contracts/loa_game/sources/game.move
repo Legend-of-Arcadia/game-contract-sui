@@ -556,6 +556,7 @@ module loa_game::game{
     if (table::contains(&mut gacha_config_tb.config, token_type)) {
       let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
       config.gacha_token_types = gacha_token_types;
+      config.gacha_amounts = gacha_amounts;
       config.start_time = start_time;
       config.end_time = end_time;
     } else {
