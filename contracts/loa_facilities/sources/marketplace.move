@@ -594,7 +594,7 @@ module loa_facilities::marketplace{
         ctx: &mut TxContext
     )
     {
-        let base_value: u64 = (coin::value<COIN>(payment) / 10000) * base_fee_per;
+        let base_value: u64 = (((coin::value<COIN>(payment) as u128) * (base_fee_per as u128) / 10000) as u64);
         let fee = coin::split<COIN>(payment, base_value, ctx);
         put_coin<COIN>(stand, fee);
     }
