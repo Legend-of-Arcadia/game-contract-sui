@@ -27,7 +27,7 @@ module loa_facilities::marketplace_tests {
 
     const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
     const MONTH_TO_UNIX_SECONDS: u64 = 2_629_744; // rounded up
-    const YEAR_TO_UNIX_SECONDS: u64 = 31_556_926;
+    const YEAR_TO_UNIX_SECONDS: u64 = 31_536_000;
 
     #[test]
     fun test_buy_primary_arca() {
@@ -215,7 +215,7 @@ module loa_facilities::marketplace_tests {
                 &mut sp,
                 coin2,
                 &clock,
-                31_556_926,
+                YEAR_TO_UNIX_SECONDS,
                 ts::ctx(&mut scenario)
             );
 
@@ -402,7 +402,7 @@ module loa_facilities::marketplace_tests {
                 &mut sp,
                 coin2,
                 &clock,
-                31_556_926,
+                YEAR_TO_UNIX_SECONDS,
                 ts::ctx(&mut scenario)
             );
 

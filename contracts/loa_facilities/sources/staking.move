@@ -31,7 +31,7 @@ module loa_facilities::staking {
     const DAY_TO_UNIX_SECONDS: u64 = 86_400;
     const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
     //const MONTH_TO_UNIX_SECONDS: u64 = 2_629_744; // rounded up
-    const YEAR_TO_UNIX_SECONDS: u64 = 31_556_926;
+    const YEAR_TO_UNIX_SECONDS: u64 = 31_536_000;
 
     const ENotEnoughveARCA: u64 = 0;
     const ELockPeriodNotElapsed: u64 = 1;
@@ -221,7 +221,7 @@ module loa_facilities::staking {
         let locking_period_sec = staking_period;
         let v = vector::empty<u64>();
 
-        staked_amount = calc_initial_veARCA(staked_amount*(staking_period/DAY_TO_UNIX_SECONDS), 365);
+        staked_amount = calc_initial_veARCA(staked_amount, staking_period, YEAR_TO_UNIX_SECONDS);
 
         assert!(staked_amount > 0, ENotEnoughveARCA);
 
@@ -259,11 +259,11 @@ module loa_facilities::staking {
         veARCA.staked_amount = veARCA.staked_amount + amount;
         let current_time = clock::timestamp_ms(clock) / 1000;
         assert!(veARCA.end_time > current_time, ENoActiveStakes);
-        let time_left = (veARCA.end_time - current_time)/DAY_TO_UNIX_SECONDS;
+        let time_left = veARCA.end_time - current_time;
 
         assert!(time_left >= 1, ENotAppendActionAvaialble);
 
-        let appended_amount = calc_initial_veARCA(amount *time_left, 365);
+        let appended_amount = calc_initial_veARCA(amount , time_left, YEAR_TO_UNIX_SECONDS);
         assert!(appended_amount > 0, ENotEnoughveARCA);
 
         let balance = coin::into_balance(arca);
@@ -301,7 +301,7 @@ module loa_facilities::staking {
 
         assert!(veARCA.end_time > current_time, ENoActiveStakes);
 
-        let staked_amount = calc_initial_veARCA(veARCA.staked_amount*(staking_period/DAY_TO_UNIX_SECONDS), 365);
+        let staked_amount = calc_initial_veARCA(veARCA.staked_amount, staking_period, YEAR_TO_UNIX_SECONDS);
         assert!(staked_amount > 0, ENotEnoughveARCA);
         veARCA.start_time = current_time;
         veARCA.end_time = current_time + staking_period;
@@ -503,13 +503,13 @@ module loa_facilities::staking {
 
     // ========================= Helper functions =========================
 
-    fun calc_initial_veARCA(staked_arca_amount: u64, denominator: u64): u64 {
+    fun calc_initial_veARCA(staked_arca_amount: u64, numerator: u64, denominator: u64): u64 {
 
         assert!(denominator !=0, EDenominatorIsZero);
 
-        let veARCA_amount = staked_arca_amount / denominator;
+        let veARCA_amount = (staked_arca_amount as u128) * (numerator as u128) / (denominator as u128);
 
-        veARCA_amount
+        (veARCA_amount as u64)
     }
 
     public fun calc_veARCA(initial: u64, clock: &Clock, end_date: u64, locking_period_sec: u64): u64 {
