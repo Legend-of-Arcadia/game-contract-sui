@@ -30,7 +30,7 @@ module loa_facilities::staking {
     //  https://www.advancedconverter.com/unit-conversions/time-conversion/weeks-to-milliseconds
     const DAY_TO_UNIX_SECONDS: u64 = 86_400;
     const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
-    //const MONTH_TO_UNIX_SECONDS: u64 = 2_629_744; // rounded up
+    //const MONTH_TO_UNIX_SECONDS: u64 = 2_628_000; // rounded up
     const YEAR_TO_UNIX_SECONDS: u64 = 31_536_000;
 
     const ENotEnoughveARCA: u64 = 0;
