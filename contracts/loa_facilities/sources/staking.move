@@ -263,7 +263,7 @@ module loa_facilities::staking {
 
         assert!(time_left >= 1, ENotAppendActionAvaialble);
 
-        let appended_amount = calc_initial_veARCA(amount , time_left, YEAR_TO_UNIX_SECONDS);
+        let appended_amount = calc_initial_veARCA(amount , veARCA.locking_period_sec, YEAR_TO_UNIX_SECONDS);
         assert!(appended_amount > 0, ENotEnoughveARCA);
 
         let balance = coin::into_balance(arca);

@@ -400,13 +400,13 @@ module loa_facilities::staking_tests {
             ts::next_tx(&mut scenario, USER1_ADDRESS);
             let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
             let i = 0;
-            let l = YEAR_TO_UNIX_SECONDS/WEEK_TO_UNIX_SECONDS;
-            while (i < l+2 ) {
-
+            let l = 12;
+            while (i < l) {
+                clock::increment_for_testing(&mut clock, MONTH_TO_UNIX_SECONDS * 1000);
                 ts::next_tx(&mut scenario, USER1_ADDRESS);
                 let amount =staking::get_amount_VeARCA(&ve_arca, &clock);
                 debug::print(&amount);
-                clock::increment_for_testing(&mut clock, WEEK_TO_UNIX_SECONDS * 1000);
+
                 i = i + 1;
             };
             // ts::next_tx(&mut scenario, USER1_ADDRESS);
@@ -448,17 +448,18 @@ module loa_facilities::staking_tests {
             ts::next_tx(&mut scenario, USER1_ADDRESS);
             let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
             let i = 0;
-            let l = 10;
+            let l = 12;
             while (i < l ) {
 
+                clock::increment_for_testing(&mut clock, MONTH_TO_UNIX_SECONDS * 1000);
                 ts::next_tx(&mut scenario, USER1_ADDRESS);
                 let amount =staking::get_amount_VeARCA(&ve_arca, &clock);
                 debug::print(&amount);
-                staking::append_time(&mut sp, &mut ve_arca, MONTH_TO_UNIX_SECONDS, &clock,ts::ctx(&mut scenario));
+                staking::append_time(&mut sp, &mut ve_arca, MONTH_TO_UNIX_SECONDS/2, &clock,ts::ctx(&mut scenario));
                 ts::next_tx(&mut scenario, USER1_ADDRESS);
-                amount =staking::get_amount_VeARCA(&ve_arca, &clock);
-                debug::print(&amount);
-                clock::increment_for_testing(&mut clock, 2 * MONTH_TO_UNIX_SECONDS * 1000);
+                // let amount =staking::get_amount_VeARCA(&ve_arca, &clock);
+                // debug::print(&amount);
+
                 i = i + 1;
             };
             // ts::next_tx(&mut scenario, USER1_ADDRESS);
@@ -471,5 +472,344 @@ module loa_facilities::staking_tests {
         };
         ts::end(scenario);
     }
-    
+
+
+    #[test]
+    fun test_staking_4() {
+        let scenario = ts::begin(GAME);
+
+
+        let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        clock::share_for_testing(clock);
+
+        game::init_for_test(ts::ctx(&mut scenario));
+
+        let coin = coin::mint_for_testing<ARCA>(1000*DECIMALS, ts::ctx(&mut scenario));
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            staking::init_for_testing(&cap, ts::ctx(&mut scenario));
+
+
+            ts::return_to_sender<GameCap>(&scenario, cap);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
+            ts::next_tx(&mut scenario, USER1_ADDRESS);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let i = 0;
+            let l = 11;
+            while (i < l ) {
+
+                let coin = coin::mint_for_testing<ARCA>(100*DECIMALS, ts::ctx(&mut scenario));
+                clock::increment_for_testing(&mut clock, MONTH_TO_UNIX_SECONDS * 1000);
+                ts::next_tx(&mut scenario, USER1_ADDRESS);
+                let amount =staking::get_amount_VeARCA(&ve_arca, &clock);
+                debug::print(&amount);
+                staking::append(&mut sp, &mut ve_arca, coin, &clock,ts::ctx(&mut scenario));
+                ts::next_tx(&mut scenario, USER1_ADDRESS);
+                // let amount =staking::get_amount_VeARCA(&ve_arca, &clock);
+                // debug::print(&amount);
+
+                i = i + 1;
+            };
+            // ts::next_tx(&mut scenario, USER1_ADDRESS);
+            // let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            // assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS, 1);
+
+            ts::return_shared(sp);
+            ts::return_shared(clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+        };
+        ts::end(scenario);
+    }
+
+    #[test]
+    fun test_staking_5() {
+        let scenario = ts::begin(GAME);
+
+
+        let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        clock::share_for_testing(clock);
+
+        game::init_for_test(ts::ctx(&mut scenario));
+
+        let coin = coin::mint_for_testing<ARCA>(1000*DECIMALS, ts::ctx(&mut scenario));
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            staking::init_for_testing(&cap, ts::ctx(&mut scenario));
+
+
+            ts::return_to_sender<GameCap>(&scenario, cap);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
+            ts::next_tx(&mut scenario, USER1_ADDRESS);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let i = 0;
+            let l = 10;
+            while (i < l ) {
+
+                let coin = coin::mint_for_testing<ARCA>(100*DECIMALS, ts::ctx(&mut scenario));
+                clock::increment_for_testing(&mut clock, 2 * MONTH_TO_UNIX_SECONDS * 1000);
+                ts::next_tx(&mut scenario, USER1_ADDRESS);
+                // let amount =staking::get_amount_VeARCA(&ve_arca, &clock);
+                // debug::print(&amount);
+                staking::append(&mut sp, &mut ve_arca, coin, &clock,ts::ctx(&mut scenario));
+                staking::append_time(&mut sp, &mut ve_arca, MONTH_TO_UNIX_SECONDS, &clock,ts::ctx(&mut scenario));
+                // ts::next_tx(&mut scenario, USER1_ADDRESS);
+                let amount =staking::get_amount_VeARCA(&ve_arca, &clock);
+                debug::print(&amount);
+
+                i = i + 1;
+            };
+            // ts::next_tx(&mut scenario, USER1_ADDRESS);
+            // let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            // assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS, 1);
+
+            ts::return_shared(sp);
+            ts::return_shared(clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+        };
+        ts::end(scenario);
+    }
+
+
+    #[test]
+    fun test_staking_6() {
+        let scenario = ts::begin(GAME);
+
+
+        let  user2: address = @0x223;
+        let  user3: address = @0x224;
+        let  user4: address = @0x225;
+
+        let amount1_1;
+        let amount1_2;
+        let amount1_3;
+        let amount1_4;
+
+        let amount2_1;
+        let amount2_2;
+        let amount2_3;
+        let amount2_4;
+
+        let amount3_1;
+        let amount3_2;
+        let amount3_3;
+        let amount3_4;
+
+        let amount4_1;
+        let amount4_2;
+        let amount4_3;
+        let amount4_4;
+
+        let clock = clock::create_for_testing(ts::ctx(&mut scenario));
+        clock::share_for_testing(clock);
+
+        game::init_for_test(ts::ctx(&mut scenario));
+
+        let coin = coin::mint_for_testing<ARCA>(1000*DECIMALS, ts::ctx(&mut scenario));
+        ts::next_tx(&mut scenario, GAME);
+        {
+            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            staking::init_for_testing(&cap, ts::ctx(&mut scenario));
+
+
+            ts::return_to_sender<GameCap>(&scenario, cap);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
+            ts::next_tx(&mut scenario, user2);
+            let coin2 = coin::mint_for_testing<ARCA>(100*DECIMALS, ts::ctx(&mut scenario));
+            staking::stake(&mut sp, coin2, &clock, 11*MONTH_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
+
+            ts::next_tx(&mut scenario, user3);
+            let coin2 = coin::mint_for_testing<ARCA>(100*DECIMALS, ts::ctx(&mut scenario));
+            staking::stake(&mut sp, coin2, &clock, 10*MONTH_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
+
+            ts::next_tx(&mut scenario, user4);
+            let coin2 = coin::mint_for_testing<ARCA>(100*DECIMALS, ts::ctx(&mut scenario));
+            staking::stake(&mut sp, coin2, &clock, 9*MONTH_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
+            // let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            // let i = 0;
+            // let l = 11;
+            // while (i < l ) {
+            //
+            //     let coin = coin::mint_for_testing<ARCA>(100*DECIMALS, ts::ctx(&mut scenario));
+            //     clock::increment_for_testing(&mut clock, MONTH_TO_UNIX_SECONDS * 1000);
+            //     ts::next_tx(&mut scenario, USER1_ADDRESS);
+            //     // let amount =staking::get_amount_VeARCA(&ve_arca, &clock);
+            //     // debug::print(&amount);
+            //     staking::append(&mut sp, &mut ve_arca, coin, &clock,ts::ctx(&mut scenario));
+            //     ts::next_tx(&mut scenario, USER1_ADDRESS);
+            //     let amount =staking::get_amount_VeARCA(&ve_arca, &clock);
+            //     debug::print(&amount);
+            //
+            //     i = i + 1;
+            // };
+            // ts::next_tx(&mut scenario, USER1_ADDRESS);
+            // let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            // assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS, 1);
+
+            ts::return_shared(sp);
+            ts::return_shared(clock);
+            //ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            ts::next_tx(&mut scenario, USER1_ADDRESS);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount1_1 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user2);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount2_1 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user3);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount3_1 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user4);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount4_1 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::return_shared(clock);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            clock::increment_for_testing(&mut clock, MONTH_TO_UNIX_SECONDS * 1000);
+            ts::next_tx(&mut scenario, USER1_ADDRESS);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount1_2 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user2);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount2_2 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user3);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount3_2 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user4);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount4_2 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::return_shared(clock);
+        };
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            clock::increment_for_testing(&mut clock, MONTH_TO_UNIX_SECONDS * 1000);
+            ts::next_tx(&mut scenario, USER1_ADDRESS);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount1_3 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user2);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount2_3 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user3);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount3_3 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user4);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount4_3 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::return_shared(clock);
+        };
+
+        ts::next_tx(&mut scenario, USER1_ADDRESS);
+        {
+            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            clock::increment_for_testing(&mut clock, MONTH_TO_UNIX_SECONDS * 1000);
+            ts::next_tx(&mut scenario, USER1_ADDRESS);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount1_4 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user2);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount2_4 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user3);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount3_4 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::next_tx(&mut scenario, user4);
+            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            amount4_4 =staking::get_amount_VeARCA(&ve_arca, &clock);
+            ts::return_to_sender<VeARCA>(&scenario, ve_arca);
+
+            ts::return_shared(clock);
+        };
+
+        let total_p_1 = amount1_2;
+        let total_p_2 = amount1_3 + amount2_2;
+        let total_p_3 = amount1_4 + amount2_3 + amount3_2;
+
+        let total_1 = amount1_2 + amount2_1;
+        let total_2 = amount1_3 + amount2_2 + amount3_1;
+        let total_3 = amount1_4 + amount2_3 + amount3_2 + amount4_1;
+
+
+        debug::print(&amount1_1);
+        debug::print(&amount1_2);
+        debug::print(&amount1_3);
+        debug::print(&amount1_4);
+        debug::print(&amount2_1);
+        debug::print(&amount2_2);
+        debug::print(&amount2_3);
+        debug::print(&amount2_4);
+        debug::print(&amount3_1);
+        debug::print(&amount3_2);
+        debug::print(&amount3_3);
+        debug::print(&amount3_4);
+        debug::print(&amount4_1);
+        debug::print(&amount4_2);
+        debug::print(&amount4_3);
+        debug::print(&amount4_4);
+
+
+
+        debug::print(&total_p_1);
+        debug::print(&total_p_2);
+        debug::print(&total_p_3);
+        debug::print(&total_1);
+        debug::print(&total_2);
+        debug::print(&total_3);
+        ts::end(scenario);
+    }
 }
