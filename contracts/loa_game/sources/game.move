@@ -67,9 +67,9 @@ module loa_game::game{
   const WithdrawDiscountProfits: u64 = 2;
 
   // gacha type
-  const Box: u64 = 1;
-  const Voucher: u64 = 5;
-  const Discount: u64 = 6;
+  // const Box: u64 = 1;
+  // const Voucher: u64 = 5;
+  // const Discount: u64 = 6;
 
   const Base:u64 = 10000;
 
@@ -909,8 +909,9 @@ module loa_game::game{
     let gacha_ball_id = gacha::id(&gacha_ball);
     let user = tx_context::sender(ctx);
     //let type = *gacha::type(&gacha_ball);
-    let token_type = *gacha::tokenType(&gacha_ball);
-    assert!(token_type / Base == Box, EInvalidType);
+    let token_type= *gacha::tokenType(&gacha_ball);
+    let collection = *gacha::collection(&gacha_ball);
+    assert!(collection == string::utf8(b"Boxes"), EInvalidType);
 
     let ticket = BoxTicket{
       id: object::new(ctx),
@@ -1125,8 +1126,9 @@ module loa_game::game{
   {
     assert!(VERSION == gacha_config.version, EIncorrectVersion);
 
+    let collection = *gacha::collection(&voucher);
+    assert!(collection == string::utf8(b"Voucher"), EInvalidType);
     let token_type = *gacha::tokenType(&voucher);
-    assert!(token_type / Base == Voucher, EInvalidType);
     let config = table::borrow(&gacha_config.config, token_type);
     mint_gachas_by_config(gacha_config, config, tx_context::sender(ctx), clock, ctx);
     let id = object::id(&voucher);
@@ -1150,8 +1152,9 @@ module loa_game::game{
   {
     assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
 
+    let collection = *gacha::collection(&discount);
+    assert!(collection == string::utf8(b"Coupon"), EInvalidType);
     let token_type = *gacha::tokenType(&discount);
-    assert!(token_type / Base == Discount, EInvalidType);
     let config = table::borrow(&gacha_config_tb.config, token_type);
 
     let coin_type = type_name::get<COIN>();
@@ -1458,7 +1461,7 @@ module loa_game::game{
     mint_gacha(
       cap,
       10000,
-      string::utf8(b"Halloween"),
+      string::utf8(b"Boxes"),
       string::utf8(b"Grandia"),
       string::utf8(b"VIP"),
       string::utf8(b"test gacha"),
@@ -1471,7 +1474,7 @@ module loa_game::game{
     mint_gacha(
       cap,
       50000,
-      string::utf8(b"Halloween"),
+      string::utf8(b"Voucher"),
       string::utf8(b"Voucher"),
       string::utf8(b"Voucher"),
       string::utf8(b"test Voucher"),
@@ -1484,7 +1487,7 @@ module loa_game::game{
     mint_gacha(
       cap,
       69999,
-      string::utf8(b"Halloween"),
+      string::utf8(b"Coupon"),
       string::utf8(b"Discount"),
       string::utf8(b"Discount"),
       string::utf8(b"test Discount"),
