@@ -96,6 +96,7 @@ module loa_game::game{
     gacha_type: String,
     gacha_collction: String,
     gacha_description: String,
+    gacha_external_id: String
   }
 
   struct GachaConfig has store, drop {
@@ -469,10 +470,11 @@ module loa_game::game{
     name: String,
     type: String,
     description: String,
+    external_id: String,
     ctx: &mut TxContext
   ): GachaBall {
 
-    let gacha_ball = gacha::mint(token_type, collection, name, type, description, ctx);
+    let gacha_ball = gacha::mint(token_type, collection, name, type, description, external_id, ctx);
 
     gacha_ball
   }
@@ -589,8 +591,8 @@ module loa_game::game{
   }
 
   public fun add_gacha_info(
-    _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64,
-    gacha_name: String, gacha_type: String, gacha_collction: String, gacha_description: String,
+    _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_name: String,
+    gacha_type: String, gacha_collction: String, gacha_description: String, gacha_external_id: String
   ) {
 
     if (table::contains(&mut gacha_config_tb.gacha_info, token_type)) {
@@ -599,6 +601,7 @@ module loa_game::game{
       gacha_info.gacha_type = gacha_type;
       gacha_info.gacha_collction = gacha_collction;
       gacha_info.gacha_description = gacha_description;
+      gacha_info.gacha_external_id = gacha_external_id;
     } else {
 
       let gacha_info = GachaInfo{
@@ -606,6 +609,7 @@ module loa_game::game{
         gacha_type,
         gacha_collction,
         gacha_description,
+        gacha_external_id,
       };
       table::add(&mut gacha_config_tb.gacha_info, token_type, gacha_info);
     };
@@ -1227,6 +1231,7 @@ module loa_game::game{
       gacha_info.gacha_type,
       gacha_info.gacha_collction,
       gacha_info.gacha_description,
+      gacha_info.gacha_external_id,
       ctx,
     );
     gacha_ball
@@ -1465,6 +1470,7 @@ module loa_game::game{
       string::utf8(b"Grandia"),
       string::utf8(b"VIP"),
       string::utf8(b"test gacha"),
+      string::utf8(b"0"),
       ctx
     )
   }
@@ -1478,6 +1484,7 @@ module loa_game::game{
       string::utf8(b"Voucher"),
       string::utf8(b"Voucher"),
       string::utf8(b"test Voucher"),
+      string::utf8(b"0"),
       ctx
     )
   }
@@ -1491,6 +1498,7 @@ module loa_game::game{
       string::utf8(b"Discount"),
       string::utf8(b"Discount"),
       string::utf8(b"test Discount"),
+      string::utf8(b"0"),
       ctx
     )
   }

@@ -30,7 +30,7 @@ module loa_game::activity_test {
         let cap = ts::take_from_sender<GameCap>(&mut scenario);
         activity::create_config(&cap, 1688522400000, 1691200800000, 1000,
             19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
-            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), ts::ctx(&mut scenario)
+            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), string::utf8(b"0"),ts::ctx(&mut scenario)
         );
 
         ts::next_tx(&mut scenario, GAME);
@@ -102,7 +102,7 @@ module loa_game::activity_test {
         let cap = ts::take_from_sender<GameCap>(&mut scenario);
         activity::create_config(&cap, 1688522400000, 1691200800000, 1000,
             19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
-            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), ts::ctx(&mut scenario)
+            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), string::utf8(b"0"),ts::ctx(&mut scenario)
         );
 
         ts::next_tx(&mut scenario, GAME);
@@ -170,7 +170,7 @@ module loa_game::activity_test {
         let cap = ts::take_from_sender<GameCap>(&mut scenario);
         activity::create_config(&cap, 1688522400000, 1691200800000, 1000,
             19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
-            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), ts::ctx(&mut scenario)
+            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), string::utf8(b"0"),ts::ctx(&mut scenario)
         );
 
         ts::next_tx(&mut scenario, GAME);
@@ -254,7 +254,7 @@ module loa_game::activity_test {
         let cap = ts::take_from_sender<GameCap>(&mut scenario);
         activity::create_config(&cap, 1688522400000, 1691200800000, 1000,
             19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
-            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), ts::ctx(&mut scenario)
+            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), string::utf8(b"0"),ts::ctx(&mut scenario)
         );
 
         ts::next_tx(&mut scenario, GAME);
