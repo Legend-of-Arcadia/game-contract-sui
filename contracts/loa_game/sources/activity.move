@@ -50,7 +50,6 @@ module loa_game::activity {
         type: String,
         collection: String,
         description: String,
-        external_id: String,
     }
 
     struct WithdrawActivityProfitsRequest has key, store {
@@ -120,7 +119,6 @@ module loa_game::activity {
         type: String,
         collection: String,
         description: String,
-        external_id: String,
         ctx: &mut TxContext,
     ) {
         assert_time_set(start_time, end_time);
@@ -135,8 +133,7 @@ module loa_game::activity {
             name,
             type,
             collection,
-            description,
-            external_id
+            description
         };
 
         event::emit(CreateConfigEvent {
@@ -161,7 +158,6 @@ module loa_game::activity {
         type: String,
         collection: String,
         description: String,
-        external_id: String,
     ) {
         assert_time_set(start_time, end_time);
         config.start_time = start_time;
@@ -172,7 +168,6 @@ module loa_game::activity {
         config.type = type;
         config.collection = collection;
         config.description = description;
-        config.external_id = external_id;
 
         event::emit(UpdateConfigEvent {
             config: object::id(config),
@@ -267,7 +262,6 @@ module loa_game::activity {
                 config.name,
                 config.type,
                 config.description,
-                config.external_id,
                 ctx,
             );
 

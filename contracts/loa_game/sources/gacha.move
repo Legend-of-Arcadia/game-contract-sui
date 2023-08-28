@@ -21,8 +21,7 @@ module loa_game::gacha{
         collection: String,
         name: String,
         type: String,
-        description: String,
-        external_id: String,
+        description: String
     }
 
     struct GachaBallMinted has copy, drop {
@@ -74,7 +73,6 @@ module loa_game::gacha{
         name: String,
         type: String,
         description: String,
-        external_id: String,
         ctx: &mut TxContext
     ): GachaBall {
         let id = object::new(ctx);
@@ -86,7 +84,6 @@ module loa_game::gacha{
             name,
             type,
             description,
-            external_id,
         };
 
         event::emit(GachaBallMinted {id: object::uid_to_inner(&new_ball.id),token_type});
@@ -95,7 +92,7 @@ module loa_game::gacha{
     }
 
     public(friend) fun burn(gacha_ball: GachaBall) {
-        let GachaBall {id, token_type, collection: _, name: _, type: _, description: _, external_id: _,} = gacha_ball;
+        let GachaBall {id, token_type, collection: _, name: _, type: _, description: _} = gacha_ball;
         event::emit(GachaBallBurned {id: object::uid_to_inner(&id), token_type});
         object::delete(id);
     }

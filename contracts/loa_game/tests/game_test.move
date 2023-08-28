@@ -799,14 +799,13 @@ module loa_game::test_game {
       let gacha_type = string::utf8(b"Grandia");
       let gacha_collction = string::utf8(b"Grandia");
       let gacha_description = string::utf8(b"Grandia");
-      let gacha_external_id= string::utf8(b"0");
       let start_time = 0;
       let end_time = 0;
 
       game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id, gacha_token_types, gacha_token_amounts, start_time, end_time);
-      game::add_gacha_info(&cap, &mut gacha_config_tb, 28888, gacha_name, gacha_type, gacha_collction, gacha_description, gacha_external_id);
-      game::add_gacha_info(&cap, &mut gacha_config_tb, 27777, gacha_name, gacha_type, gacha_collction, gacha_description, gacha_external_id);
-      game::add_gacha_info(&cap, &mut gacha_config_tb, 29999, gacha_name, gacha_type, gacha_collction, gacha_description, gacha_external_id);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 28888, gacha_name, gacha_type, gacha_collction, gacha_description);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 27777, gacha_name, gacha_type, gacha_collction, gacha_description);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 29999, gacha_name, gacha_type, gacha_collction, gacha_description);
 
       let voucher = game::mint_test_voucher(&cap, ts::ctx(&mut scenario));
       transfer::public_transfer(voucher, USER);
@@ -909,13 +908,12 @@ module loa_game::test_game {
       let gacha_type = string::utf8(b"Grandia");
       let gacha_collction = string::utf8(b"Grandia");
       let gacha_description = string::utf8(b"Grandia");
-      let gacha_external_id= string::utf8(b"0");
       let start_time = 0;
       let end_time = 0;
 
       game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id, gacha_token_types, gacha_token_amounts, start_time, end_time);
-      game::add_gacha_info(&cap, &mut gacha_config_tb, 28888, gacha_name, gacha_type, gacha_collction, gacha_description, gacha_external_id);
-      game::add_gacha_info(&cap, &mut gacha_config_tb, 27777, gacha_name, gacha_type, gacha_collction, gacha_description, gacha_external_id);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 28888, gacha_name, gacha_type, gacha_collction, gacha_description);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 27777, gacha_name, gacha_type, gacha_collction, gacha_description);
 
       ts::next_tx(&mut scenario, GAME);
       game::set_discount_price<ARCA>(&cap, &mut gacha_config_tb, gacha_id, 1000);
@@ -1213,10 +1211,9 @@ module loa_game::test_game {
       let gacha_type = string::utf8(b"Grandia");
       let gacha_collction = string::utf8(b"Grandia");
       let gacha_description = string::utf8(b"Grandia");
-      let gacha_external_id= string::utf8(b"0");
 
 
-      game::add_gacha_info(&cap, &mut gacha_config_tb, token_type, gacha_name, gacha_type, gacha_collction, gacha_description, gacha_external_id);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, token_type, gacha_name, gacha_type, gacha_collction, gacha_description);
 
       ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(gacha_config_tb);
