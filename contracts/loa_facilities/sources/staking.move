@@ -28,7 +28,7 @@ module loa_facilities::staking {
     const DECIMALS: u64 = 1_000_000_000;
 
     //  https://www.advancedconverter.com/unit-conversions/time-conversion/weeks-to-milliseconds
-    const DAY_TO_UNIX_SECONDS: u64 = 86_400;
+    //const DAY_TO_UNIX_SECONDS: u64 = 86_400;
     const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
     //const MONTH_TO_UNIX_SECONDS: u64 = 2_628_000; // rounded up
     const YEAR_TO_UNIX_SECONDS: u64 = 31_536_000;

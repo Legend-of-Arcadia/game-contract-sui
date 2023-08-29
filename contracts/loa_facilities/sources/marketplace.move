@@ -24,7 +24,7 @@ module loa_facilities::marketplace{
     // errors
     const EPaymentNotExact: u64 = 0;
     const ENoListingFound: u64 = 1;
-    const EIncorrectVipLevel: u64 = 2;
+    const ENotUpgrade: u64 = 2;
     const EVersionMismatch: u64 = 3;
     const EPaymentMismatch: u64 = 4;
     const ENoItemSeller: u64 = 5;
@@ -33,7 +33,7 @@ module loa_facilities::marketplace{
     const ENeedVote: u64 = 8;
     const EFeeSet: u64 = 9;
     const EListExpire: u64 = 10;
-    const ENotUpgrade: u64 = 11;
+
 
     const WithdrawFeeProfits: u64 = 5;
 

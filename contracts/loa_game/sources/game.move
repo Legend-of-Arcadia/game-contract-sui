@@ -56,7 +56,7 @@ module loa_game::game{
   const EInvalidType: u64 = 25;
   const EPriceEQZero: u64 = 26;
   const ECoinTypeMismatch: u64 = 27;
-  const EVectorLen: u64 = 27;
+  // const EVectorLen: u64 = 27;
   const ENotUpgrade: u64 = 28;
 
 
