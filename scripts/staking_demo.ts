@@ -12,7 +12,7 @@ dotenv.config();
 
 const privKey: string = process.env.PRIVATE_KEY as string;
 const gameCapId = process.env.GAME_CAP as string;
-const packageId = process.env.PACKAGE_ID as string;
+const packageId = process.env.PACKAGE as string;
 const TreasuryCap = process.env.TREASURY_CAP as string;
 const Clock = process.env.CLOCK as string;
 const StakingPool = process.env.STAKING_POOL_ID as string;
@@ -21,11 +21,12 @@ const ArcaCoin2 = process.env.ARCA_COIN_ID2 as string;
 const ArcaCoin3 = process.env.ARCA_COIN_ID3 as string;
 const veARCAId = process.env.VEARCA_ID as string;
 const Sui = process.env.SUI as string;
+const sp = process.env.SP as string;
 
 export function getKeyPair(privateKey: string): Ed25519Keypair{
-  let privateKeyArray = Array.from(fromB64(privateKey));
-  privateKeyArray.shift();
-  return Ed25519Keypair.fromSecretKey(Uint8Array.from(privateKeyArray));
+  // let privateKeyArray = Array.from(fromB64(privateKey));
+  // privateKeyArray.shift();
+  return Ed25519Keypair.fromSecretKey(Buffer.from(privateKey.slice(2), "hex"), { skipValidation: true });
 }
 
 let keyPair = getKeyPair(privKey);
@@ -195,15 +196,49 @@ async function distribute_rewards() {
 
 }
 
-// async function main() {
-  
-//   // let response = await mintARCA();
-//   // let response = await createStakingPool();
-//   // let response = await stake();
-//   // let response = await unstake();
-//   // let response = await append();
-//   let response = await distribute_rewards();
-//   console.log(response);
-// }
 
-// main();
+async function append_rewards() {
+  let txb = new TransactionBlock();
+
+  let balance = txb.moveCall({
+    target: `0x2::coin::into_balance`,
+    typeArguments: [`${packageId}::arca::ARCA`],
+    arguments: [
+      txb.object("0x51e46ad1211eef18939ed2e56d0466653d49d2c60e914f02dea2d85b66fa8410"),
+    ]
+  });
+
+  txb.moveCall({
+    target: `${packageId}::staking::append_rewards`,
+    arguments: [
+      txb.object(gameCapId),
+      txb.object(sp),
+      balance,
+    ]
+  });
+
+  //txb.setGasBudget(100000000);
+
+  let response = await mugen.signAndExecuteTransactionBlock({
+    transactionBlock: txb,
+    requestType: "WaitForLocalExecution",
+    options: {
+      showEffects: true,
+    }
+  });
+
+  return response;
+
+}
+async function main() {
+  
+  // let response = await mintARCA();
+  // let response = await createStakingPool();
+  // let response = await stake();
+  // let response = await unstake();
+  // let response = await append();
+  let response = await append_rewards();
+  console.log(response);
+}
+
+main();
