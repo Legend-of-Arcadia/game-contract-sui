@@ -904,7 +904,7 @@ module loa_game::game{
   // User opens blind box
   public entry fun open_gacha_ball(gacha_ball: GachaBall, game_config: &GameConfig, ctx: &mut TxContext){
 
-    assert!(VERSION == 1, EIncorrectVersion); 
+    assert!(VERSION == game_config.version, EIncorrectVersion);
 
     let gacha_ball_id = gacha::id(&gacha_ball);
     let user = tx_context::sender(ctx);
