@@ -332,6 +332,7 @@ module loa_game::activity {
         profits: &mut ActivityProfits,
         ctx: &mut TxContext): bool {
 
+        assert!(VERSION == profits.version, EIncorrectVersion);
         game::only_multi_sig_scope(multi_signature, game_config);
         // Only participant
         game::only_participant(multi_signature, ctx);

@@ -550,25 +550,6 @@ module loa_facilities::marketplace{
         };
     }
 
-    // fun fee_calculation(
-    //     payment: u64,
-    //     base_trading_fee: u64,
-    //     to_burn_fee: u64,
-    //     team_fee: u64,
-    //     rewards_fee: u64,
-    //     referrer_fee: u64
-    // ): (u64, u64, u64, u64)
-    // {
-    //     // first the divisions to not overflow
-    //     let base_value: u64 = (payment / 10000) * base_trading_fee;
-    //     let to_burn_value: u64 = (base_value / 10000) * to_burn_fee;
-    //     let team_value: u64 = (base_value / 10000) * team_fee;
-    //     let rewards_value: u64 = (base_value / 10000) * rewards_fee;
-    //     let referrer_value: u64 = (base_value / 10000) * referrer_fee;
-    //
-    //     (to_burn_value, team_value, rewards_value, referrer_value)
-    // }
-
     fun fee_calculation(
         payment: u64,
         base_trading_fee: u64,
@@ -634,6 +615,7 @@ module loa_facilities::marketplace{
         ctx: &mut TxContext): bool {
         assert!(VERSION == marketplace.version, EVersionMismatch);
 
+        assert!(VERSION == marketplace.version, EVersionMismatch);
         game::only_multi_sig_scope(multi_signature, game_config);
         // Only participant
         game::only_participant(multi_signature, ctx);

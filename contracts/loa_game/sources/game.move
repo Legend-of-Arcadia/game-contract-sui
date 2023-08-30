@@ -367,18 +367,21 @@ module loa_game::game{
  
   /// set address that will claim gacha sell profits
   public fun set_game_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
+    assert!(VERSION == config.version, EIncorrectVersion);
     config.game_address = new_address;
 
     event::emit(SetGameAddressEvent{new_address});
   }
 
   public fun set_mint_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
+    assert!(VERSION == config.version, EIncorrectVersion);
     config.mint_address = new_address;
 
     event::emit(SetMintAddressEvent{new_address});
   }
 
   public fun set_upgrade_address(_: &GameCap, new_address: address, upgrader: &mut Upgrader) {
+    assert!(VERSION == upgrader.version, EIncorrectVersion);
     upgrader.upgrade_address = new_address;
 
     event::emit(SetUpgradeAddressEvent{new_address});
@@ -394,6 +397,7 @@ module loa_game::game{
     gacha_rewards:vector<GachaBall>,
     config: &mut GameConfig)
   {
+    assert!(VERSION == config.version, EIncorrectVersion);
     let rewards = WhitelistRewards {
       heroes: hero_rewards,
       gacha_balls: gacha_rewards
@@ -486,6 +490,7 @@ module loa_game::game{
   }
 
   public fun create_game_cap_by_admin(config: &GameConfig, ctx: &mut TxContext){
+    assert!(VERSION == config.version, EIncorrectVersion);
     assert!(config.game_address == tx_context::sender(ctx), ENoGameAdmin);
     let game_cap = GameCap { id: object::new(ctx) };
     transfer::transfer(game_cap, config.game_address);
@@ -500,6 +505,7 @@ module loa_game::game{
 
   // Set the cost of power upgrades
   public fun set_upgrade_price(_: &GameCap, upgrader: &mut Upgrader , keys: vector<String>, values: vector<u64>){
+    assert!(VERSION == upgrader.version, EIncorrectVersion);
     let i = 0;
     let len = vector::length(&keys);
     assert!(len == vector::length(&values), EVectorLen);
@@ -515,6 +521,7 @@ module loa_game::game{
   }
 
   public fun add_arca(_: &GameCap, payment: Coin<ARCA>, arca_counter: &mut ArcaCounter) {
+    assert!(VERSION == arca_counter.version, EIncorrectVersion);
     balance::join(&mut arca_counter.arca_balance, coin::into_balance<ARCA>(payment));
   }
 
@@ -540,6 +547,7 @@ module loa_game::game{
 
   /// configure mugen_pk field of SeenMessages
   public fun set_mugen_pk(_: &GameCap, mugen_pk: vector<u8>, seen_messages: &mut SeenMessages) {
+    assert!(VERSION == seen_messages.version, EIncorrectVersion);
     seen_messages.mugen_pk = mugen_pk;
 
     event::emit(SetMugenPkEvent{mugen_pk});
@@ -550,6 +558,7 @@ module loa_game::game{
     _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_token_types: vector<u64>,
     gacha_amounts: vector<u64>, start_time: u64, end_time: u64) {
 
+    assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     if(start_time > 0 && end_time > 0){
       assert!(end_time >= start_time, ETimeSet);
     };
@@ -583,6 +592,7 @@ module loa_game::game{
   }
 
   public fun remove_gacha_config(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
+    assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     if (table::contains(&gacha_config_tb.config, token_type)) {
       table::remove(&mut gacha_config_tb.config, token_type);
 
@@ -595,6 +605,7 @@ module loa_game::game{
     gacha_name: String, gacha_type: String, gacha_collction: String, gacha_description: String,
   ) {
 
+    assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     if (table::contains(&mut gacha_config_tb.gacha_info, token_type)) {
       let gacha_info = table::borrow_mut(&mut gacha_config_tb.gacha_info, token_type);
       gacha_info.gacha_name = gacha_name;
@@ -622,6 +633,7 @@ module loa_game::game{
   }
 
   public fun remove_gacha_info(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
+    assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     if (table::contains(&gacha_config_tb.gacha_info, token_type)) {
       table::remove(&mut gacha_config_tb.gacha_info, token_type);
 
@@ -636,6 +648,7 @@ module loa_game::game{
     token_type: u64,
     price: u64,
   ) {
+    assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     assert_price_gt_zero(price);
     let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
     let coin_type = type_name::get<COIN>();
@@ -658,6 +671,7 @@ module loa_game::game{
     gacha_config_tb: &mut GachaConfigTable,
     token_type: u64,
   ) {
+    assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
     let coin_type = type_name::get<COIN>();
     if (vec_map::contains(&config.coin_prices, &coin_type)) {
@@ -694,6 +708,7 @@ module loa_game::game{
     arca_counter: &mut ArcaCounter,
     ctx: &mut TxContext): bool {
 
+    assert!(VERSION == arca_counter.version, EIncorrectVersion);
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
     only_participant(multi_signature, ctx);
@@ -742,6 +757,7 @@ module loa_game::game{
     upgrader: &mut Upgrader,
     ctx: &mut TxContext): bool {
 
+    assert!(VERSION == upgrader.version, EIncorrectVersion);
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
     only_participant(multi_signature, ctx);
@@ -792,6 +808,7 @@ module loa_game::game{
     gacha_config_tb: &mut GachaConfigTable,
     ctx: &mut TxContext): bool {
 
+    assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
     only_participant(multi_signature, ctx);
@@ -817,8 +834,6 @@ module loa_game::game{
     abort ENeedVote
   }
   /// === Upgrader functions ===
-  // place an upgraded hero
-
   // Admins return upgraded heroes
   public fun return_upgraded_hero_by_ticket(ticket: HeroTicket) {
     let HeroTicket {id, main_hero, burn_heroes, user} = ticket;
@@ -1071,7 +1086,6 @@ module loa_game::game{
 
     event::emit(evt);
 
-    //put_power_hero(main_hero, tx_context::sender(ctx), l, fee, upgrader);
     transfer::transfer(ticket, upgrader.upgrade_address);
   }
 
@@ -1336,8 +1350,9 @@ module loa_game::game{
     assert!(multisig::is_participant(multi_signature, tx_context::sender(tx)), ENotParticipant);
   }
 
-  public fun only_multi_sig_scope (multi_signature: &MultiSignature, game_congif: &GameConfig) {
-    assert!(object::id(multi_signature) == game_congif.for_multi_sign, ENotInMultiSigScope);
+  public fun only_multi_sig_scope (multi_signature: &MultiSignature, game_config: &GameConfig) {
+    assert!(VERSION == game_config.version, EIncorrectVersion);
+    assert!(object::id(multi_signature) == game_config.for_multi_sign, ENotInMultiSigScope);
   }
 
   // === assert ===

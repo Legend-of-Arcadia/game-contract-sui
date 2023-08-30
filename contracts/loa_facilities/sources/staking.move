@@ -477,6 +477,7 @@ module loa_facilities::staking {
         sp: &mut StakingPool,
         ctx: &mut TxContext): bool {
 
+        assert!(VERSION == sp.version, EVersionMismatch);
         game::only_multi_sig_scope(multi_signature, game_config);
         // Only participant
         game::only_participant(multi_signature, ctx);
