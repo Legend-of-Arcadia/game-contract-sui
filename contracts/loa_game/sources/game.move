@@ -56,8 +56,8 @@ module loa_game::game{
   const EInvalidType: u64 = 25;
   const EPriceEQZero: u64 = 26;
   const ECoinTypeMismatch: u64 = 27;
-  // const EVectorLen: u64 = 27;
-  const ENotUpgrade: u64 = 28;
+  const EVectorLen: u64 = 28;
+  const ENotUpgrade: u64 = 29;
 
 
 
@@ -502,6 +502,7 @@ module loa_game::game{
   public fun set_upgrade_price(_: &GameCap, upgrader: &mut Upgrader , keys: vector<String>, values: vector<u64>){
     let i = 0;
     let len = vector::length(&keys);
+    assert!(len == vector::length(&values), EVectorLen);
     while(i < len) {
       let key = vector::borrow(&keys, i);
       let value = vector::borrow(&values, i);
@@ -513,11 +514,11 @@ module loa_game::game{
     }
   }
 
-  public fun add_acra(_: &GameCap, payment: Coin<ARCA>, arca_counter: &mut ArcaCounter) {
+  public fun add_arca(_: &GameCap, payment: Coin<ARCA>, arca_counter: &mut ArcaCounter) {
     balance::join(&mut arca_counter.arca_balance, coin::into_balance<ARCA>(payment));
   }
 
-  fun withdraw_acra(amount: u64, to:address, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
+  fun withdraw_arca(amount: u64, to:address, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
     let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amount);
 
     transfer::public_transfer(coin::from_balance(coin_balance, ctx), to);
@@ -553,6 +554,7 @@ module loa_game::game{
       assert!(end_time >= start_time, ETimeSet);
     };
 
+    assert!(vector::length(&gacha_token_types) == vector::length(&gacha_token_types), EVectorLen);
     if (table::contains(&mut gacha_config_tb.config, token_type)) {
       let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
       config.gacha_token_types = gacha_token_types;
@@ -701,7 +703,7 @@ module loa_game::game{
       if (approved) {
         let request = multisig::borrow_proposal_request<WithdrawArcaRequest>(multi_signature, &proposal_id, ctx);
 
-        withdraw_acra(request.amount, request.to, arca_counter, ctx);
+        withdraw_arca(request.amount, request.to, arca_counter, ctx);
         multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
         return true
       };
