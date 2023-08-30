@@ -306,7 +306,7 @@ module loa_game::activity {
         transfer::public_transfer(coin::from_balance<COIN>(balance_all, ctx), to);
     }
 
-    public fun withdraw_activity_profits_request<COIN>(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
+    public entry fun withdraw_activity_profits_request<COIN>(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
         // Only multi sig guardian
         game::only_multi_sig_scope(multi_signature, game_config);
         // Only participant
@@ -324,7 +324,7 @@ module loa_game::activity {
         multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawActivityProfits, request, ctx);
     }
 
-    public fun withdraw_activity_profits_execute<COIN>(
+    public entry fun withdraw_activity_profits_execute<COIN>(
         game_config:&mut GameConfig,
         multi_signature : &mut MultiSignature,
         proposal_id: u256,

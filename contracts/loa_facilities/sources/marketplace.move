@@ -187,7 +187,7 @@ module loa_facilities::marketplace{
     }
 
     // add or update vip fee
-    public fun update_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
+    public entry fun update_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
         assert!(VERSION == marketplace.version, EVersionMismatch);
 
         if (table::contains(&mut marketplace.vip_fees, vip_level)) {
@@ -204,7 +204,7 @@ module loa_facilities::marketplace{
     }
 
 
-    public fun remove_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64) {
+    public entry fun remove_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64) {
         assert!(VERSION == marketplace.version, EVersionMismatch);
         assert!(table::contains(&mut marketplace.vip_fees, vip_level), EVipLvNoExsit);
         table::remove(&mut marketplace.vip_fees, vip_level);
@@ -216,7 +216,7 @@ module loa_facilities::marketplace{
     }
 
 
-    public fun update_trading_fee(
+    public entry fun update_trading_fee(
         _: &GameCap,
         marketplace: &mut Marketplace,
         new_base_fee: u64,
@@ -244,7 +244,7 @@ module loa_facilities::marketplace{
         event::emit(evt);
     }
 
-    public fun list_primary_arca<Item: key+store>(
+    public entry fun list_primary_arca<Item: key+store>(
         _: &GameCap,
         marketplace: &mut Marketplace,
         item: Item,
@@ -274,7 +274,7 @@ module loa_facilities::marketplace{
     }
 
     // any type of NFT can be listed by anyone
-    public fun list_secondary_arca<Item: key+store>(
+    public entry fun list_secondary_arca<Item: key+store>(
         marketplace: &mut Marketplace,
         item: Item,
         price: u64,
@@ -311,7 +311,7 @@ module loa_facilities::marketplace{
         event::emit(evt);
     }
 
-    public fun buy_primary_arca<Item: key+store>(
+    public entry fun buy_primary_arca<Item: key+store>(
         payment: Coin<ARCA>,
         marketplace: &mut Marketplace,
         listing_number: u64,
@@ -341,7 +341,7 @@ module loa_facilities::marketplace{
         dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
-    public fun buy_secondary_vip_arca<Item: key+store>(
+    public entry fun buy_secondary_vip_arca<Item: key+store>(
         payment: Coin<ARCA>,
         listing_number: u64,
         referrer: Option<address>,
@@ -394,7 +394,7 @@ module loa_facilities::marketplace{
     // TODO: for any Coin when LPs are available
     // public fun list_primary<Item: key+store, COIN>()
     // public fun buy_primary<Item: key+store, COIN>()
-    public fun list_secondary<Item: key+store, COIN>(
+    public entry fun list_secondary<Item: key+store, COIN>(
         marketplace: &mut Marketplace,
         item: Item,
         price: u64,
@@ -430,7 +430,7 @@ module loa_facilities::marketplace{
         event::emit(evt);
     }
 
-    public fun buy_secondary<Item: key+store, COIN>(
+    public entry fun buy_secondary<Item: key+store, COIN>(
         payment: Coin<COIN>,
         listing_number: u64,
         marketplace: &mut Marketplace,
@@ -469,7 +469,7 @@ module loa_facilities::marketplace{
         dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
-    public fun buy_secondary_vip<Item: key+store, COIN>(
+    public entry fun buy_secondary_vip<Item: key+store, COIN>(
         payment: Coin<COIN>,
         listing_number: u64,
         marketplace: &mut Marketplace,
@@ -588,7 +588,7 @@ module loa_facilities::marketplace{
         transfer::public_transfer(coin::from_balance<COIN>(balance_all, ctx), to);
     }
 
-    public fun withdraw_fee_profits_request<COIN>(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
+    public entry fun withdraw_fee_profits_request<COIN>(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
         // Only multi sig guardian
         game::only_multi_sig_scope(multi_signature, game_config);
         // Only participant
@@ -606,7 +606,7 @@ module loa_facilities::marketplace{
         multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawFeeProfits, request, ctx);
     }
 
-    public fun withdraw_fee_profits_execute<COIN>(
+    public entry fun withdraw_fee_profits_execute<COIN>(
         game_config:&mut GameConfig,
         multi_signature : &mut MultiSignature,
         proposal_id: u256,
@@ -652,7 +652,7 @@ module loa_facilities::marketplace{
         };
     }
 
-    public fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &mut TxContext): Item {
+    public entry fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &mut TxContext): Item {
         assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);

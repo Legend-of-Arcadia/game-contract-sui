@@ -206,7 +206,7 @@ module loa_facilities::staking {
         veARCA
     }
 
-    public fun stake(sp: &mut StakingPool, arca: Coin<ARCA>, clock: &Clock, staking_period: u64, ctx: &mut TxContext) {
+    public entry fun stake(sp: &mut StakingPool, arca: Coin<ARCA>, clock: &Clock, staking_period: u64, ctx: &mut TxContext) {
 
         assert!(VERSION == sp.version, EVersionMismatch);
 
@@ -250,7 +250,7 @@ module loa_facilities::staking {
 
     }
 
-    public fun append(sp: &mut StakingPool, veARCA: &mut VeARCA, arca: Coin<ARCA>, clock: &Clock, ctx: &mut TxContext) {
+    public entry fun append(sp: &mut StakingPool, veARCA: &mut VeARCA, arca: Coin<ARCA>, clock: &Clock, ctx: &mut TxContext) {
 
         assert!(VERSION == sp.version, EVersionMismatch);
 
@@ -287,7 +287,7 @@ module loa_facilities::staking {
         event::emit(evt);
     }
 
-    public fun append_time(sp: &mut StakingPool, veARCA: &mut VeARCA, append_time: u64, clock: &Clock, ctx: &mut TxContext) {
+    public entry fun append_time(sp: &mut StakingPool, veARCA: &mut VeARCA, append_time: u64, clock: &Clock, ctx: &mut TxContext) {
 
         assert!(VERSION == sp.version, EVersionMismatch);
         assert!(append_time >= WEEK_TO_UNIX_SECONDS, ENotCorrectStakingPeriod);
@@ -326,7 +326,7 @@ module loa_facilities::staking {
         event::emit(evt);
     }
 
-    public fun unstake(veARCA: VeARCA, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext): Coin<ARCA> {
+    public entry fun unstake(veARCA: VeARCA, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext): Coin<ARCA> {
 
         assert!(VERSION == sp.version, EVersionMismatch);
         
@@ -362,7 +362,7 @@ module loa_facilities::staking {
         event::emit(evt);
     }
 
-    public fun create_week_reward(_: &GameCap, name: String, merkle_root: vector<u8>, total_reward: u64, sp: &mut StakingPool, ctx: &mut TxContext){
+    public entry fun create_week_reward(_: &GameCap, name: String, merkle_root: vector<u8>, total_reward: u64, sp: &mut StakingPool, ctx: &mut TxContext){
         assert!(VERSION == sp.version, EVersionMismatch);
         assert!(!table::contains(&sp.week_reward_table, name), EWeekRewardCreated);
         assert!(vector::length(&merkle_root) > 0, EMerkleRoot);
@@ -389,7 +389,7 @@ module loa_facilities::staking {
     }
 
     //Prevent creation errors, Add update method
-    public fun update_week_reward(_: &GameCap, new_merkle_root: vector<u8>, new_total_reward: u64, wr: &mut WeekReward){
+    public entry fun update_week_reward(_: &GameCap, new_merkle_root: vector<u8>, new_total_reward: u64, wr: &mut WeekReward){
         assert!(vector::length(&new_merkle_root) > 0, EMerkleRoot);
         wr.merkle_root = new_merkle_root;
         wr.total_reward = new_total_reward;
@@ -403,7 +403,7 @@ module loa_facilities::staking {
         event::emit(evt);
     }
 
-    public fun claim(
+    public entry fun claim(
         sp: &mut StakingPool,
         week_reward: &mut WeekReward,
         week_reward_name: String,
@@ -452,7 +452,7 @@ module loa_facilities::staking {
         transfer::public_transfer(coin, to);
     }
 
-    public fun withdraw_rewards_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, amount: u64, ctx: &mut TxContext) {
+    public entry fun withdraw_rewards_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, amount: u64, ctx: &mut TxContext) {
         // Only multi sig guardian
         game::only_multi_sig_scope(multi_signature, game_config);
         // Only participant
@@ -469,7 +469,7 @@ module loa_facilities::staking {
         multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawReward, request, ctx);
     }
 
-    public fun withdraw_rewards_execute(
+    public entry fun withdraw_rewards_execute(
         game_config:&mut GameConfig,
         multi_signature : &mut MultiSignature,
         proposal_id: u256,

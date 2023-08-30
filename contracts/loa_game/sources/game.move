@@ -366,21 +366,21 @@ module loa_game::game{
   // === Game-only function ===
  
   /// set address that will claim gacha sell profits
-  public fun set_game_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
+  public entry fun set_game_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
     assert!(VERSION == config.version, EIncorrectVersion);
     config.game_address = new_address;
 
     event::emit(SetGameAddressEvent{new_address});
   }
 
-  public fun set_mint_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
+  public entry fun set_mint_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
     assert!(VERSION == config.version, EIncorrectVersion);
     config.mint_address = new_address;
 
     event::emit(SetMintAddressEvent{new_address});
   }
 
-  public fun set_upgrade_address(_: &GameCap, new_address: address, upgrader: &mut Upgrader) {
+  public entry fun set_upgrade_address(_: &GameCap, new_address: address, upgrader: &mut Upgrader) {
     assert!(VERSION == upgrader.version, EIncorrectVersion);
     upgrader.upgrade_address = new_address;
 
@@ -389,8 +389,7 @@ module loa_game::game{
 
   // TODO: Each address can get more than one rewards
   /// whitelist add addresses and corresponding rewards
-  // address.length == rewards.length
-  public fun whitelist_add(
+  public entry fun whitelist_add(
     _: &GameCap,
     user_address: address,
     hero_rewards: vector<Hero>,
@@ -405,7 +404,7 @@ module loa_game::game{
     df::add<address, WhitelistRewards>(&mut config.id, user_address, rewards);
   }
 
-  public fun mint_hero(
+  public entry fun mint_hero(
     _: &GameCap,
     name: String,
     class: String,
@@ -434,7 +433,7 @@ module loa_game::game{
     hero
   }
 
-  public fun mint_hero_by_ticket(
+  public entry fun mint_hero_by_ticket(
     box_ticket: BoxTicket,
     name: String,
     class: String,
@@ -466,7 +465,7 @@ module loa_game::game{
 
   // For casting blind boxes, a new id attribute is added. Use type or id to distinguish the level of blind boxes?
   // The content described in display is currently fixed, whether to use the parameters passed in
-  public fun mint_gacha(
+  public entry fun mint_gacha(
     _: &GameCap,
     token_type: u64,
     collection: String,
@@ -481,7 +480,7 @@ module loa_game::game{
     gacha_ball
   }
 
-  public fun burn_box_ticket(box_ticket: BoxTicket) {
+  public entry fun burn_box_ticket(box_ticket: BoxTicket) {
     let BoxTicket {id, gacha_ball} = box_ticket;
     gacha::burn(gacha_ball);
 
@@ -489,7 +488,7 @@ module loa_game::game{
     object::delete(id);
   }
 
-  public fun create_game_cap_by_admin(config: &GameConfig, ctx: &mut TxContext){
+  public entry fun create_game_cap_by_admin(config: &GameConfig, ctx: &mut TxContext){
     assert!(VERSION == config.version, EIncorrectVersion);
     assert!(config.game_address == tx_context::sender(ctx), ENoGameAdmin);
     let game_cap = GameCap { id: object::new(ctx) };
@@ -497,14 +496,14 @@ module loa_game::game{
   }
 
   // burn the game cap
-  public fun burn_game_cap(game_cap: GameCap){
+  public entry fun burn_game_cap(game_cap: GameCap){
     let GameCap { id } = game_cap;
     event::emit(TicketBurned {ticket_id: object::uid_to_inner(&id)});
     object::delete(id); 
   }
 
   // Set the cost of power upgrades
-  public fun set_upgrade_price(_: &GameCap, upgrader: &mut Upgrader , keys: vector<String>, values: vector<u64>){
+  public entry fun set_upgrade_price(_: &GameCap, upgrader: &mut Upgrader , keys: vector<String>, values: vector<u64>){
     assert!(VERSION == upgrader.version, EIncorrectVersion);
     let i = 0;
     let len = vector::length(&keys);
@@ -520,7 +519,7 @@ module loa_game::game{
     }
   }
 
-  public fun add_arca(_: &GameCap, payment: Coin<ARCA>, arca_counter: &mut ArcaCounter) {
+  public entry fun add_arca(_: &GameCap, payment: Coin<ARCA>, arca_counter: &mut ArcaCounter) {
     assert!(VERSION == arca_counter.version, EIncorrectVersion);
     balance::join(&mut arca_counter.arca_balance, coin::into_balance<ARCA>(payment));
   }
@@ -546,7 +545,7 @@ module loa_game::game{
   }
 
   /// configure mugen_pk field of SeenMessages
-  public fun set_mugen_pk(_: &GameCap, mugen_pk: vector<u8>, seen_messages: &mut SeenMessages) {
+  public entry fun set_mugen_pk(_: &GameCap, mugen_pk: vector<u8>, seen_messages: &mut SeenMessages) {
     assert!(VERSION == seen_messages.version, EIncorrectVersion);
     seen_messages.mugen_pk = mugen_pk;
 
@@ -554,7 +553,7 @@ module loa_game::game{
   }
 
   /// add or update config
-  public fun add_gacha_config(
+  public entry fun add_gacha_config(
     _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_token_types: vector<u64>,
     gacha_amounts: vector<u64>, start_time: u64, end_time: u64) {
 
@@ -591,7 +590,7 @@ module loa_game::game{
     });
   }
 
-  public fun remove_gacha_config(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
+  public entry fun remove_gacha_config(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
     assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     if (table::contains(&gacha_config_tb.config, token_type)) {
       table::remove(&mut gacha_config_tb.config, token_type);
@@ -600,7 +599,7 @@ module loa_game::game{
     };
   }
 
-  public fun add_gacha_info(
+  public entry fun add_gacha_info(
     _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64,
     gacha_name: String, gacha_type: String, gacha_collction: String, gacha_description: String,
   ) {
@@ -632,7 +631,7 @@ module loa_game::game{
     });
   }
 
-  public fun remove_gacha_info(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
+  public entry fun remove_gacha_info(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
     assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     if (table::contains(&gacha_config_tb.gacha_info, token_type)) {
       table::remove(&mut gacha_config_tb.gacha_info, token_type);
@@ -683,7 +682,7 @@ module loa_game::game{
     };
   }
 
-  public fun withdraw_arca_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, amount: u64, to: address, ctx: &mut TxContext) {
+  public entry fun withdraw_arca_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, amount: u64, to: address, ctx: &mut TxContext) {
     // Only multi sig guardian
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
@@ -700,7 +699,7 @@ module loa_game::game{
     multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawArca, request, ctx);
   }
 
-  public fun withdraw_arca_execute(
+  public entry fun withdraw_arca_execute(
     game_config:&mut GameConfig,
     multi_signature : &mut MultiSignature,
     proposal_id: u256,
@@ -733,7 +732,7 @@ module loa_game::game{
     abort ENeedVote
   }
 
-  public fun withdraw_upgrade_profits_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
+  public entry fun withdraw_upgrade_profits_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
     // Only multi sig guardian
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
@@ -749,7 +748,7 @@ module loa_game::game{
     multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawUpgradeProfits, request, ctx);
   }
 
-  public fun withdraw_upgrade_profits_execute(
+  public entry fun withdraw_upgrade_profits_execute(
     game_config:&mut GameConfig,
     multi_signature : &mut MultiSignature,
     proposal_id: u256,
@@ -782,7 +781,7 @@ module loa_game::game{
     abort ENeedVote
   }
 
-  public fun withdraw_discount_profits_request<COIN>(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
+  public entry fun withdraw_discount_profits_request<COIN>(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
     // Only multi sig guardian
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
@@ -800,7 +799,7 @@ module loa_game::game{
     multisig::create_proposal(multi_signature, *string::bytes(&desc), WithdrawDiscountProfits, request, ctx);
   }
 
-  public fun withdraw_discount_profits_execute<COIN>(
+  public entry fun withdraw_discount_profits_execute<COIN>(
     game_config:&mut GameConfig,
     multi_signature : &mut MultiSignature,
     proposal_id: u256,
@@ -835,7 +834,7 @@ module loa_game::game{
   }
   /// === Upgrader functions ===
   // Admins return upgraded heroes
-  public fun return_upgraded_hero_by_ticket(ticket: HeroTicket) {
+  public entry fun return_upgraded_hero_by_ticket(ticket: HeroTicket) {
     let HeroTicket {id, main_hero, burn_heroes, user} = ticket;
     let l = vector::length(&burn_heroes);
     let i = 0;
@@ -862,7 +861,7 @@ module loa_game::game{
   }
 
   // admin burn hero
-  public fun get_hero_and_burn(_: &GameCap, hero_address: address, obj_burn: &mut ObjBurn) {
+  public entry fun get_hero_and_burn(_: &GameCap, hero_address: address, obj_burn: &mut ObjBurn) {
     let burn_hero = dof::remove<address, Hero>(&mut obj_burn.id, hero_address);
     hero::burn(burn_hero);
     // event
@@ -886,19 +885,19 @@ module loa_game::game{
     hero::edit_fields<u16>(hero, string::utf8(b"growth"), new_values);
   }
 
-  public fun upgrade_base_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+  public entry fun upgrade_base_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
     hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"base"), new_values);
   }
 
-  public fun upgrade_skill_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+  public entry fun upgrade_skill_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
     hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"skill"), new_values);
   }
 
-  public fun upgrade_appearance_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+  public entry fun upgrade_appearance_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
     hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"appearance"), new_values);
   }
 
-  public fun upgrade_growth_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
+  public entry fun upgrade_growth_by_ticket(ticket: &mut HeroTicket, new_values: vector<u16>) {
     hero::edit_fields<u16>(&mut ticket.main_hero, string::utf8(b"growth"), new_values);
   }
 
@@ -910,7 +909,7 @@ module loa_game::game{
   // }
 
   // The administrator destroys the blind box
-  public fun get_gacha_and_burn(_: &GameCap, gacha_ball_address: address, obj_burn: &mut ObjBurn) {
+  public entry fun get_gacha_and_burn(_: &GameCap, gacha_ball_address: address, obj_burn: &mut ObjBurn) {
     let gacha_ball = dof::remove<address, GachaBall>(&mut obj_burn.id, gacha_ball_address);
     gacha::burn(gacha_ball);
     // event
@@ -942,14 +941,14 @@ module loa_game::game{
     transfer::transfer(ticket, game_config.mint_address);
   }
 
-  public fun abandon_gacha_ball(_: &GameCap, gacha_ball: GachaBall){
+  public entry fun abandon_gacha_ball(_: &GameCap, gacha_ball: GachaBall){
     gacha::burn(gacha_ball);
   }
 
 
   // appearance_index is the index of the part inside the appearance vector
   // eg: eye is 0, appearance[0]
-  public fun makeover_hero(
+  public entry fun makeover_hero(
     main_hero: Hero,
     to_burn: Hero,
     appearance_index: u64,
@@ -994,7 +993,7 @@ module loa_game::game{
     transfer::transfer(ticket, upgrader.upgrade_address);
   }
 
-  public fun upgrade_hero(
+  public entry fun upgrade_hero(
     main_hero: Hero,
     to_burn: vector<Hero>,
     upgrader: &mut Upgrader,
@@ -1036,7 +1035,7 @@ module loa_game::game{
     transfer::transfer(ticket, upgrader.upgrade_address);
   }
 
-  public fun power_upgrade_hero(
+  public entry fun power_upgrade_hero(
     main_hero: Hero,
     to_burn: vector<Hero>,
     fee: Coin<ARCA>,
@@ -1089,7 +1088,7 @@ module loa_game::game{
     transfer::transfer(ticket, upgrader.upgrade_address);
   }
 
-  public fun charge_hero(to_burn: vector<Hero>, obj_burn: &mut ObjBurn, ctx: &mut TxContext){
+  public entry fun charge_hero(to_burn: vector<Hero>, obj_burn: &mut ObjBurn, ctx: &mut TxContext){
     assert!(VERSION == obj_burn.version, EIncorrectVersion);
 
     let l = vector::length<Hero>(&to_burn);
@@ -1112,7 +1111,7 @@ module loa_game::game{
     event::emit(evt);
   }
   // whitelist claim
-  public fun whitelist_claim(
+  public entry fun whitelist_claim(
     config: &mut GameConfig,
     ctx: &mut TxContext
   )
@@ -1133,7 +1132,7 @@ module loa_game::game{
     vector::destroy_empty<GachaBall>(gacha_balls);
   }
 
-  public fun voucher_exchange(
+  public entry fun voucher_exchange(
     voucher: GachaBall,
     gacha_config: &GachaConfigTable,
     clock: & Clock,
@@ -1158,7 +1157,7 @@ module loa_game::game{
     transfer::transfer(ticket, game_config.mint_address)
   }
 
-  public fun discount_exchange<COIN>(
+  public entry fun discount_exchange<COIN>(
     discount: GachaBall,
     gacha_config_tb: &mut GachaConfigTable,
     payment: Coin<COIN>,
@@ -1248,7 +1247,7 @@ module loa_game::game{
     gacha_ball
   }
 
-  public fun deposit(payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
+  public entry fun deposit(payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
     assert!(VERSION == arca_counter.version, EIncorrectVersion);
 
     let amount = coin::value(&payment);
@@ -1258,7 +1257,7 @@ module loa_game::game{
     event::emit(UserDeposit{user: tx_context::sender(ctx), amount});
   }
 
-  public fun withdraw(
+  public entry fun withdraw(
     arca_counter: &mut ArcaCounter,
     amount: u64,
     expire_at: u64,
@@ -1298,7 +1297,7 @@ module loa_game::game{
     coin::from_balance(coin_balance, ctx)
   }
 
-  public fun withdraw_gacha(
+  public entry fun withdraw_gacha(
     gacha_config: &GachaConfigTable,
     token_type: u64,
     amount: u64,
