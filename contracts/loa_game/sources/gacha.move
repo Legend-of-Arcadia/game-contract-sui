@@ -45,7 +45,6 @@ module loa_game::gacha{
             string::utf8(b"name"),
             string::utf8(b"image_url"),
             string::utf8(b"description"),
-            string::utf8(b"type"),
             string::utf8(b"project_url"),
         ];
 
@@ -54,9 +53,8 @@ module loa_game::gacha{
             string::utf8(b"{name}"),
             // link empty right now
             // one example of a link is b"{example.com/{type}"
-            string::utf8(b"https://lh3.googleusercontent.com/pw/AJFCJaVqjr41iECxSNLZ2POCLVwRuKPu5UE0MrCCGMCclzg9ssDjNqeCpPSYIWzryjLKRRGPD70_iVpo9m71wEWPssYU4DeL7BgZlAsofiFo9bqYtxcQqQ=w113-h86-no"),
+            string::utf8(b"https://display.legendofarcadia.io/gacha/{type}.png"),
             string::utf8(b"{description}"),
-            string::utf8(b"{type}"),
             string::utf8(b"https://legendofarcadia.io"),
         ];
 
