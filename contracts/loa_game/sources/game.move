@@ -59,17 +59,11 @@ module loa_game::game{
   const EVectorLen: u64 = 28;
   const ENotUpgrade: u64 = 29;
 
-
-
   //multisig type
   const WithdrawArca: u64 = 0;
   const WithdrawUpgradeProfits: u64 = 1;
   const WithdrawDiscountProfits: u64 = 2;
 
-  // gacha type
-  // const Box: u64 = 1;
-  // const Voucher: u64 = 5;
-  // const Discount: u64 = 6;
 
   const Base:u64 = 10000;
 
@@ -222,6 +216,10 @@ module loa_game::game{
 
   struct TicketBurned has copy, drop {
     ticket_id: ID,
+  }
+
+  struct GameCapBurned has copy, drop {
+    game_cap_id: ID,
   }
 
   struct UserDeposit has copy, drop {
@@ -498,7 +496,7 @@ module loa_game::game{
   // burn the game cap
   public entry fun burn_game_cap(game_cap: GameCap){
     let GameCap { id } = game_cap;
-    event::emit(TicketBurned {ticket_id: object::uid_to_inner(&id)});
+    event::emit(GameCapBurned {game_cap_id: object::uid_to_inner(&id)});
     object::delete(id); 
   }
 
