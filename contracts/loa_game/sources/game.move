@@ -590,6 +590,7 @@ module loa_game::game{
     });
   }
 
+  // admin remove gacha config
   public entry fun remove_gacha_config(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
     assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     if (table::contains(&gacha_config_tb.config, token_type)) {
@@ -599,6 +600,7 @@ module loa_game::game{
     };
   }
 
+  // admin add or apdate gacha info
   public entry fun add_gacha_info(
     _: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64,
     gacha_name: String, gacha_type: String, gacha_collction: String, gacha_description: String,
@@ -631,6 +633,7 @@ module loa_game::game{
     });
   }
 
+  // remove gacha info
   public entry fun remove_gacha_info(_: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type: u64) {
     assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     if (table::contains(&gacha_config_tb.gacha_info, token_type)) {
@@ -639,7 +642,6 @@ module loa_game::game{
       event::emit(RemoveGachaInfoEvent{token_type});
     };
   }
-
 
   public entry fun set_discount_price<COIN>(
     _: &GameCap,
@@ -857,14 +859,12 @@ module loa_game::game{
   // place destroyed hero
   fun put_burn_hero(hero: Hero, hero_address: address, obj_burn: &mut ObjBurn) {
     dof::add<address, Hero>(&mut obj_burn.id, hero_address, hero);
-    // event
   }
 
   // admin burn hero
   public entry fun get_hero_and_burn(_: &GameCap, hero_address: address, obj_burn: &mut ObjBurn) {
     let burn_hero = dof::remove<address, Hero>(&mut obj_burn.id, hero_address);
     hero::burn(burn_hero);
-    // event
   }
   // upgrade
 
@@ -1247,6 +1247,7 @@ module loa_game::game{
     gacha_ball
   }
 
+  // user deposit arca
   public entry fun deposit(payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
     assert!(VERSION == arca_counter.version, EIncorrectVersion);
 
@@ -1257,6 +1258,7 @@ module loa_game::game{
     event::emit(UserDeposit{user: tx_context::sender(ctx), amount});
   }
 
+  // user withdraw arca by admin signature
   public fun withdraw(
     arca_counter: &mut ArcaCounter,
     amount: u64,
@@ -1297,6 +1299,7 @@ module loa_game::game{
     coin::from_balance(coin_balance, ctx)
   }
 
+  // user withdraw gacha by admin signature
   public entry fun withdraw_gacha(
     gacha_config: &GachaConfigTable,
     token_type: u64,

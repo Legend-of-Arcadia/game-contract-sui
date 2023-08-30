@@ -226,6 +226,7 @@ module loa_game::activity {
         };
     }
 
+    // user buy gacha
     public entry fun buy<COIN>(
         config: &mut ActivityConfig,
         paid: Coin<COIN>,

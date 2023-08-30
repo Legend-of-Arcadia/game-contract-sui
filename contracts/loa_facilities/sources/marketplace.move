@@ -186,7 +186,7 @@ module loa_facilities::marketplace{
         transfer::public_share_object<Marketplace>(marketplace);
     }
 
-    // add or update vip fee
+    // admin add or update vip fee
     public entry fun update_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
         assert!(VERSION == marketplace.version, EVersionMismatch);
 
@@ -203,7 +203,7 @@ module loa_facilities::marketplace{
         event::emit(evt);
     }
 
-
+    // admin remove vip fee
     public entry fun remove_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64) {
         assert!(VERSION == marketplace.version, EVersionMismatch);
         assert!(table::contains(&mut marketplace.vip_fees, vip_level), EVipLvNoExsit);
@@ -215,7 +215,7 @@ module loa_facilities::marketplace{
         event::emit(evt);
     }
 
-
+    // admin update trading fee
     public entry fun update_trading_fee(
         _: &GameCap,
         marketplace: &mut Marketplace,
@@ -341,6 +341,7 @@ module loa_facilities::marketplace{
         dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
+    // vip user buy item by arca(fees will be distributed)
     public fun buy_secondary_vip_arca<Item: key+store>(
         payment: Coin<ARCA>,
         listing_number: u64,
@@ -391,9 +392,7 @@ module loa_facilities::marketplace{
         dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
-    // TODO: for any Coin when LPs are available
-    // public fun list_primary<Item: key+store, COIN>()
-    // public fun buy_primary<Item: key+store, COIN>()
+    // user list item
     public entry fun list_secondary<Item: key+store, COIN>(
         marketplace: &mut Marketplace,
         item: Item,
@@ -430,6 +429,7 @@ module loa_facilities::marketplace{
         event::emit(evt);
     }
 
+    // user buy item
     public fun buy_secondary<Item: key+store, COIN>(
         payment: Coin<COIN>,
         listing_number: u64,
@@ -469,6 +469,7 @@ module loa_facilities::marketplace{
         dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
+    // vip user buy item
     public fun buy_secondary_vip<Item: key+store, COIN>(
         payment: Coin<COIN>,
         listing_number: u64,
@@ -652,6 +653,7 @@ module loa_facilities::marketplace{
         };
     }
 
+    // cancel list
     public fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &mut TxContext): Item {
         assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;

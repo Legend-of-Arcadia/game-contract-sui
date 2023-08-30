@@ -206,6 +206,7 @@ module loa_facilities::staking {
         veARCA
     }
 
+    // user stake arca token
     public entry fun stake(sp: &mut StakingPool, arca: Coin<ARCA>, clock: &Clock, staking_period: u64, ctx: &mut TxContext) {
 
         assert!(VERSION == sp.version, EVersionMismatch);
@@ -250,6 +251,7 @@ module loa_facilities::staking {
 
     }
 
+    // user append arca token
     public entry fun append(sp: &mut StakingPool, veARCA: &mut VeARCA, arca: Coin<ARCA>, clock: &Clock, ctx: &mut TxContext) {
 
         assert!(VERSION == sp.version, EVersionMismatch);
@@ -287,6 +289,7 @@ module loa_facilities::staking {
         event::emit(evt);
     }
 
+    // user append stake time
     public entry fun append_time(sp: &mut StakingPool, veARCA: &mut VeARCA, append_time: u64, clock: &Clock, ctx: &mut TxContext) {
 
         assert!(VERSION == sp.version, EVersionMismatch);
@@ -326,6 +329,7 @@ module loa_facilities::staking {
         event::emit(evt);
     }
 
+    // user unstake arca
     public fun unstake(veARCA: VeARCA, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext): Coin<ARCA> {
 
         assert!(VERSION == sp.version, EVersionMismatch);
@@ -362,6 +366,7 @@ module loa_facilities::staking {
         event::emit(evt);
     }
 
+    // admin creates weekly rewards by merkle_root
     public entry fun create_week_reward(_: &GameCap, name: String, merkle_root: vector<u8>, total_reward: u64, sp: &mut StakingPool, ctx: &mut TxContext){
         assert!(VERSION == sp.version, EVersionMismatch);
         assert!(!table::contains(&sp.week_reward_table, name), EWeekRewardCreated);
@@ -403,6 +408,7 @@ module loa_facilities::staking {
         event::emit(evt);
     }
 
+    // user claim weekly rewards
     public entry fun claim(
         sp: &mut StakingPool,
         week_reward: &mut WeekReward,
@@ -642,7 +648,7 @@ module loa_facilities::staking {
         };
     }
 
-
+    // admin append reward to pool
     public fun append_rewards(_: &GameCap, sp: &mut StakingPool, new_balance: Balance<ARCA>) {
 
         assert!(VERSION == sp.version, EVersionMismatch);
