@@ -311,7 +311,7 @@ module loa_facilities::marketplace{
         event::emit(evt);
     }
 
-    public entry fun buy_primary_arca<Item: key+store>(
+    public fun buy_primary_arca<Item: key+store>(
         payment: Coin<ARCA>,
         marketplace: &mut Marketplace,
         listing_number: u64,
@@ -341,7 +341,7 @@ module loa_facilities::marketplace{
         dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
-    public entry fun buy_secondary_vip_arca<Item: key+store>(
+    public fun buy_secondary_vip_arca<Item: key+store>(
         payment: Coin<ARCA>,
         listing_number: u64,
         referrer: Option<address>,
@@ -430,7 +430,7 @@ module loa_facilities::marketplace{
         event::emit(evt);
     }
 
-    public entry fun buy_secondary<Item: key+store, COIN>(
+    public fun buy_secondary<Item: key+store, COIN>(
         payment: Coin<COIN>,
         listing_number: u64,
         marketplace: &mut Marketplace,
@@ -469,7 +469,7 @@ module loa_facilities::marketplace{
         dof::remove<address, Item>(&mut stand.id, item_id)
     }
 
-    public entry fun buy_secondary_vip<Item: key+store, COIN>(
+    public fun buy_secondary_vip<Item: key+store, COIN>(
         payment: Coin<COIN>,
         listing_number: u64,
         marketplace: &mut Marketplace,
@@ -652,7 +652,7 @@ module loa_facilities::marketplace{
         };
     }
 
-    public entry fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &mut TxContext): Item {
+    public fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &mut TxContext): Item {
         assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);

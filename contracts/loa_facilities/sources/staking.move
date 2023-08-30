@@ -326,7 +326,7 @@ module loa_facilities::staking {
         event::emit(evt);
     }
 
-    public entry fun unstake(veARCA: VeARCA, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext): Coin<ARCA> {
+    public fun unstake(veARCA: VeARCA, sp: &mut StakingPool, clock: &Clock, ctx: &mut TxContext): Coin<ARCA> {
 
         assert!(VERSION == sp.version, EVersionMismatch);
         

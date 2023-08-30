@@ -404,7 +404,7 @@ module loa_game::game{
     df::add<address, WhitelistRewards>(&mut config.id, user_address, rewards);
   }
 
-  public entry fun mint_hero(
+  public fun mint_hero(
     _: &GameCap,
     name: String,
     class: String,
@@ -433,7 +433,7 @@ module loa_game::game{
     hero
   }
 
-  public entry fun mint_hero_by_ticket(
+  public fun mint_hero_by_ticket(
     box_ticket: BoxTicket,
     name: String,
     class: String,
@@ -465,7 +465,7 @@ module loa_game::game{
 
   // For casting blind boxes, a new id attribute is added. Use type or id to distinguish the level of blind boxes?
   // The content described in display is currently fixed, whether to use the parameters passed in
-  public entry fun mint_gacha(
+  public fun mint_gacha(
     _: &GameCap,
     token_type: u64,
     collection: String,
@@ -1257,7 +1257,7 @@ module loa_game::game{
     event::emit(UserDeposit{user: tx_context::sender(ctx), amount});
   }
 
-  public entry fun withdraw(
+  public fun withdraw(
     arca_counter: &mut ArcaCounter,
     amount: u64,
     expire_at: u64,
