@@ -66,7 +66,7 @@ module loa_facilities::staking {
         liquidity: Balance<ARCA>,
         rewards: Balance<ARCA>,
         veARCA_holders: LinkedTable<address, vector<u64>>,
-        vip_level_veARCA: vector<u128>,
+        vip_level_veARCA: vector<u64>,
         week_reward_table: Table<String, bool>,
         version: u64,
     }
@@ -151,7 +151,7 @@ module loa_facilities::staking {
             liquidity: balance::zero<ARCA>(),
             rewards: balance::zero<ARCA>(),
             veARCA_holders: linked_table::new<address, vector<u64>>(ctx),
-            vip_level_veARCA: vector::empty<u128>(),
+            vip_level_veARCA: vector::empty<u64>(),
             week_reward_table: table::new<String, bool>(ctx),
             version: VERSION
         };
@@ -166,26 +166,26 @@ module loa_facilities::staking {
 
 
     fun populate_vip_level_veARCA(sp: &mut StakingPool) {
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 3*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 35*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 170*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 670*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 1_400*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 2_700*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 4_700*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 6_700*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 14_000*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 17_000*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 20_000*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 27_000*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 34_000*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 67_000*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 140_000*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 270_000*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 400_000*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 670_000*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 1_700_000*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 3_400_000*(DECIMALS as u128));
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 3*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 35*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 170*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 670*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 1_400*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 2_700*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 4_700*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 6_700*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 14_000*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 17_000*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 20_000*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 27_000*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 34_000*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 67_000*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 140_000*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 270_000*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 400_000*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 670_000*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 1_700_000*DECIMALS);
+        vector::push_back<u64>(&mut sp.vip_level_veARCA, 3_400_000*DECIMALS);
     }
 
     // =============================================
@@ -539,23 +539,21 @@ module loa_facilities::staking {
         calc_veARCA(initial, clock, end_date, locking_period_sec)
     }
 
-    public fun calc_vip_level_veARCA( veARCA_amount: u64, vip_level_veARCA: &vector<u128>): u64 {
+    public fun calc_vip_level_veARCA( veARCA_amount: u64, vip_level_veARCA: &vector<u64>): u64 {
 
         let vip_level = 0;
 
-        let veARCA_amount_128 = (veARCA_amount as u128);
-
         let l = vector::length(vip_level_veARCA) - 1;
 
-        if(veARCA_amount_128 >= *vector::borrow(vip_level_veARCA, l)) {
+        if(veARCA_amount >= *vector::borrow(vip_level_veARCA, l)) {
             vip_level = vector::length(vip_level_veARCA);
-        } else if(veARCA_amount_128 < *vector::borrow(vip_level_veARCA, 0)) {
+        } else if(veARCA_amount < *vector::borrow(vip_level_veARCA, 0)) {
             vip_level = 0;
         };
 
         l = l - 1;
         while(l >= 0) {
-            if(veARCA_amount_128 >= *vector::borrow(vip_level_veARCA, l) && veARCA_amount_128 < *vector::borrow(vip_level_veARCA, l+1)){
+            if(veARCA_amount >= *vector::borrow(vip_level_veARCA, l) && veARCA_amount < *vector::borrow(vip_level_veARCA, l+1)){
                 vip_level = l + 1;
                 break
             };
@@ -639,12 +637,10 @@ module loa_facilities::staking {
     public fun update_vip_veARCA_vector(_: &GameCap, sp: &mut StakingPool, index: u64, veARCA_amount: u64) {
         assert!(VERSION == sp.version, EVersionMismatch);
 
-        let value: u128 = (veARCA_amount as u128)* (DECIMALS as u128);
-
         if(index >= vector::length(&sp.vip_level_veARCA)) {
-            vector::push_back(&mut sp.vip_level_veARCA, value);
+            vector::push_back(&mut sp.vip_level_veARCA, veARCA_amount);
         } else {
-            *vector::borrow_mut(&mut sp.vip_level_veARCA, index) = value;
+            *vector::borrow_mut(&mut sp.vip_level_veARCA, index) = veARCA_amount;
         };
     }
 
