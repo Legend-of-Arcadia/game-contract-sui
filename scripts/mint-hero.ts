@@ -77,7 +77,7 @@ async function mintGacha() {
   //     name: String,
   //     type: String,
   let token_type = 18888;
-  let collection = "gacha";
+  let collection = "Boxes";
   let name = "test gacha";
   let type = "legend";
   let description = "Test gacha";
