@@ -155,7 +155,7 @@ module loa_facilities::staking {
             week_reward_table: table::new<String, bool>(ctx),
             version: VERSION
         };
-        populate_vip_level_veARCA(&mut staking_pool, 1);
+        populate_vip_level_veARCA(&mut staking_pool);
         // marketplace fee part that is to be burned
         df::add<String, Balance<ARCA>>(
             &mut staking_pool.id,
@@ -165,27 +165,27 @@ module loa_facilities::staking {
     }
 
 
-    fun populate_vip_level_veARCA(sp: &mut StakingPool, decimals: u64) {
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 3*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 35*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 170*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 670*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 1_400*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 2_700*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 4_700*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 6_700*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 14_000*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 17_000*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 20_000*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 27_000*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 34_000*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 67_000*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 140_000*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 270_000*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 400_000*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 670_000*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 1_700_000*(decimals as u128)*(DECIMALS as u128));
-        vector::push_back<u128>(&mut sp.vip_level_veARCA, 3_400_000*(decimals as u128)*(DECIMALS as u128));
+    fun populate_vip_level_veARCA(sp: &mut StakingPool) {
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 3*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 35*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 170*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 670*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 1_400*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 2_700*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 4_700*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 6_700*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 14_000*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 17_000*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 20_000*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 27_000*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 34_000*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 67_000*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 140_000*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 270_000*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 400_000*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 670_000*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 1_700_000*(DECIMALS as u128));
+        vector::push_back<u128>(&mut sp.vip_level_veARCA, 3_400_000*(DECIMALS as u128));
     }
 
     // =============================================
@@ -636,10 +636,10 @@ module loa_facilities::staking {
         balance::value(&sp.rewards)
     }
 
-    public fun update_vip_veARCA_vector(_: &GameCap, sp: &mut StakingPool, index: u64, veARCA_amount: u64, decimals: u64) {
+    public fun update_vip_veARCA_vector(_: &GameCap, sp: &mut StakingPool, index: u64, veARCA_amount: u64) {
         assert!(VERSION == sp.version, EVersionMismatch);
 
-        let value: u128 = (veARCA_amount as u128) * (decimals as u128) * (DECIMALS as u128);
+        let value: u128 = (veARCA_amount as u128)* (DECIMALS as u128);
 
         if(index >= vector::length(&sp.vip_level_veARCA)) {
             vector::push_back(&mut sp.vip_level_veARCA, value);
