@@ -28,15 +28,16 @@ module loa_game::activity_test {
 
         ts::next_tx(&mut scenario, GAME);
         let cap = ts::take_from_sender<GameCap>(&mut scenario);
+        let game_config = ts::take_shared<GameConfig>(&mut scenario);
         activity::create_config(&cap, 1688522400000, 1691200800000, 1000,
             19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
-            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), ts::ctx(&mut scenario)
+            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), &game_config,ts::ctx(&mut scenario)
         );
 
         ts::next_tx(&mut scenario, GAME);
         {
             let activity_config = ts::take_shared<ActivityConfig>(&mut scenario);
-            activity::set_price<ARCA>(&cap, &mut activity_config, 1000);
+            activity::set_price<ARCA>(&cap, &mut activity_config, 1000, &game_config);
             let fee: Coin<ARCA> = coin::mint_for_testing<ARCA>(5000, ts::ctx(&mut scenario));
 
             ts::next_tx(&mut scenario, GAME);
@@ -53,6 +54,7 @@ module loa_game::activity_test {
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_shared(activity_config);
             ts::return_shared(profits);
+            ts::return_shared(game_config);
         };
         ts::next_tx(&mut scenario, GAME);
         {
@@ -100,20 +102,22 @@ module loa_game::activity_test {
 
         ts::next_tx(&mut scenario, GAME);
         let cap = ts::take_from_sender<GameCap>(&mut scenario);
+        let game_config = ts::take_shared<GameConfig>(&mut scenario);
         activity::create_config(&cap, 1688522400000, 1691200800000, 1000,
             19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
-            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), ts::ctx(&mut scenario)
+            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), &game_config,ts::ctx(&mut scenario)
         );
 
         ts::next_tx(&mut scenario, GAME);
         {
             let activity_config = ts::take_shared<ActivityConfig>(&mut scenario);
-            activity::set_price<ARCA>(&cap, &mut activity_config, 1000);
+            activity::set_price<ARCA>(&cap, &mut activity_config, 1000, &game_config);
             ts::next_tx(&mut scenario, GAME);
-            activity::remove_price<ARCA>(&cap, &mut activity_config);
+            activity::remove_price<ARCA>(&cap, &mut activity_config, &game_config);
 
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_shared(activity_config);
+            ts::return_shared(game_config);
         };
         ts::next_tx(&mut scenario, GAME);
         {
@@ -168,15 +172,16 @@ module loa_game::activity_test {
 
         ts::next_tx(&mut scenario, GAME);
         let cap = ts::take_from_sender<GameCap>(&mut scenario);
+        let game_config = ts::take_shared<GameConfig>(&mut scenario);
         activity::create_config(&cap, 1688522400000, 1691200800000, 1000,
             19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
-            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), ts::ctx(&mut scenario)
+            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), &game_config,ts::ctx(&mut scenario)
         );
 
         ts::next_tx(&mut scenario, GAME);
         {
             let activity_config = ts::take_shared<ActivityConfig>(&mut scenario);
-            activity::set_price<ARCA>(&cap, &mut activity_config, 1000);
+            activity::set_price<ARCA>(&cap, &mut activity_config, 1000, &game_config);
             let fee: Coin<ARCA> = coin::mint_for_testing<ARCA>(5000, ts::ctx(&mut scenario));
 
             ts::next_tx(&mut scenario, GAME);
@@ -196,6 +201,7 @@ module loa_game::activity_test {
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_shared(activity_config);
             ts::return_shared(profits);
+            ts::return_shared(game_config);
         };
         ts::next_tx(&mut scenario, GAME);
         {
@@ -252,15 +258,16 @@ module loa_game::activity_test {
 
         ts::next_tx(&mut scenario, GAME);
         let cap = ts::take_from_sender<GameCap>(&mut scenario);
+        let game_config = ts::take_shared<GameConfig>(&mut scenario);
         activity::create_config(&cap, 1688522400000, 1691200800000, 1000,
             19999, string::utf8(b"blue gacha"), string::utf8(b"blue gacha"),
-            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), ts::ctx(&mut scenario)
+            string::utf8(b"blue gacha"),string::utf8(b"blue gacha"), &game_config,ts::ctx(&mut scenario)
         );
 
         ts::next_tx(&mut scenario, GAME);
         {
             let activity_config = ts::take_shared<ActivityConfig>(&mut scenario);
-            activity::set_price<ARCA>(&cap, &mut activity_config, 1000);
+            activity::set_price<ARCA>(&cap, &mut activity_config, 1000, &game_config);
             let fee: Coin<ARCA> = coin::mint_for_testing<ARCA>(5000, ts::ctx(&mut scenario));
 
             ts::next_tx(&mut scenario, GAME);
@@ -277,6 +284,7 @@ module loa_game::activity_test {
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_shared(activity_config);
             ts::return_shared(profits);
+            ts::return_shared(game_config);
         };
         ts::next_tx(&mut scenario, GAME);
         {

@@ -31,7 +31,7 @@ module loa_game::activity {
     const EIncorrectVersion: u64 = 9;
     const ENotUpgrade: u64 = 10;
 
-    const WithdrawActivityProfits: u64 = 3;
+    const WithdrawActivityProfits: u64 = 5;
 
     struct ActivityProfits has key, store {
         id: UID,
@@ -110,7 +110,7 @@ module loa_game::activity {
     }
 
     public entry fun create_config(
-        _: &GameCap,
+        game_cap: &GameCap,
         start_time: u64,
         end_time: u64,
         max_supply: u64,
@@ -119,8 +119,10 @@ module loa_game::activity {
         type: String,
         collection: String,
         description: String,
+        game_config: &GameConfig,
         ctx: &mut TxContext,
     ) {
+        game::check_game_cap(game_cap, game_config);
         assert_time_set(start_time, end_time);
         let config = ActivityConfig {
             id: object::new(ctx),
@@ -148,7 +150,7 @@ module loa_game::activity {
 
     // add update config for future use
     public entry fun update_config(
-        _: &GameCap,
+        game_cap: &GameCap,
         config: &mut ActivityConfig,
         start_time: u64,
         end_time: u64,
@@ -158,7 +160,9 @@ module loa_game::activity {
         type: String,
         collection: String,
         description: String,
+        game_config: &GameConfig,
     ) {
+        game::check_game_cap(game_cap, game_config);
         assert_time_set(start_time, end_time);
         config.start_time = start_time;
         config.end_time = end_time;
@@ -179,9 +183,11 @@ module loa_game::activity {
 
     // add reset supply for future use
     public entry fun reset_supply(
-        _: &GameCap,
+        game_cap: &GameCap,
         config: &mut ActivityConfig,
+        game_config: &GameConfig,
     ) {
+        game::check_game_cap(game_cap, game_config);
         event::emit(ResetSupplyEvent {
             config: object::id(config),
             total_supply: config.total_supply,
@@ -191,10 +197,12 @@ module loa_game::activity {
     }
 
     public entry fun set_price<COIN>(
-        _: &GameCap,
+        game_cap: &GameCap,
         config: &mut ActivityConfig,
         price: u64,
+        game_config: &GameConfig,
     ) {
+        game::check_game_cap(game_cap, game_config);
         assert_price_gt_zero(price);
         let coin_type = type_name::get<COIN>();
         if (vec_map::contains(&config.coin_prices, &coin_type)) {
@@ -212,9 +220,11 @@ module loa_game::activity {
     }
 
     public entry fun remove_price<COIN>(
-        _: &GameCap,
+        game_cap: &GameCap,
         config: &mut ActivityConfig,
+        game_config: &GameConfig,
     ) {
+        game::check_game_cap(game_cap, game_config);
         let coin_type = type_name::get<COIN>();
         if (vec_map::contains(&config.coin_prices, &coin_type)) {
             vec_map::remove(&mut config.coin_prices, &coin_type);

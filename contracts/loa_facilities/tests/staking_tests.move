@@ -274,15 +274,17 @@ module loa_facilities::staking_tests {
             //public fun create_week_reward(_: &mut TreasuryCap<ARCA>, name: String, merkle_root: vector<u8>, total_reward: u64, ctx: &mut TxContext){
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
             let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let config = ts::take_shared<GameConfig>(&mut scenario);
             let name = string::utf8(b"2023-7-19");
             let merkle_root = x"76355b7a319f1fa85e831800eea9d8e041801fab8c3daadc7ff0f416cc9d36ee";
             let total_reward = 1000*DECIMALS;
-            staking::create_week_reward(&cap, name, merkle_root, total_reward, &mut sp,ts::ctx(&mut scenario));
+            staking::create_week_reward(&cap, name, merkle_root, total_reward, &mut sp, &config,ts::ctx(&mut scenario));
 
 
-            staking::append_rewards(&cap, &mut sp, coin::into_balance(coin));
+            staking::append_rewards(&cap, &mut sp, coin::into_balance(coin), &config);
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_shared(sp);
+            ts::return_shared(config);
         };
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
@@ -329,12 +331,14 @@ module loa_facilities::staking_tests {
         {
             let cap = ts::take_from_sender<GameCap>(&mut scenario);
             let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let config = ts::take_shared<GameConfig>(&mut scenario);
 
-            staking::append_rewards(&cap, &mut sp, coin::into_balance(coin));
+            staking::append_rewards(&cap, &mut sp, coin::into_balance(coin), &config);
             ts::next_tx(&mut scenario, GAME);
             assert!(staking::get_rewards_value(&sp) == 300*DECIMALS, 1);
             ts::return_to_sender<GameCap>(&scenario, cap);
             ts::return_shared(sp);
+            ts::return_shared(config);
         };
 
 

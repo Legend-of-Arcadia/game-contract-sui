@@ -35,11 +35,13 @@ module loa_game::test_game {
 
     ts::next_tx(&mut scenario, GAME);
     let cap = ts::take_from_sender<GameCap>(&mut scenario);
+    let config = ts::take_shared<GameConfig>(&mut scenario);
 
-    let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+    let hero = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
     transfer::public_transfer(hero, GAME);
 
     ts::return_to_sender<GameCap>(&scenario, cap);
+    ts::return_shared(config);
 
     ts::end(scenario);
   }
@@ -54,14 +56,16 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
+      let hero2 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       transfer::public_transfer(hero2, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -122,14 +126,16 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
+      let hero2 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       transfer::public_transfer(hero2, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -186,14 +192,16 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
+      let hero2 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       transfer::public_transfer(hero2, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -254,14 +262,16 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
+      let hero2 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       transfer::public_transfer(hero2, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -324,10 +334,12 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
 
       transfer::public_transfer(hero, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -356,14 +368,16 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
 
-      game::upgrade_appearance(&cap, &mut hero1, appearance);
+      game::upgrade_appearance(&cap, &mut hero1, appearance, &config);
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -416,15 +430,17 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
 
-      game::upgrade_appearance(&cap, &mut hero1, appearance);
-      game::upgrade_base(&cap, &mut hero1, base);
+      game::upgrade_appearance(&cap, &mut hero1, appearance, &config);
+      game::upgrade_base(&cap, &mut hero1, base, &config);
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -475,12 +491,14 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -508,14 +526,16 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
+      let hero2 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       transfer::public_transfer(hero2, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -584,14 +604,16 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
+      let hero2 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       transfer::public_transfer(hero2, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -625,9 +647,9 @@ module loa_game::test_game {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
       let config = ts::take_shared<GameConfig>(&mut scenario);
       // mint a hero
-      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let gacha_ball1 = game::mint_test_gacha(&cap, ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
+      let hero2 = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
+      let gacha_ball1 = game::mint_test_gacha(&cap, &config,ts::ctx(&mut scenario));
       game::whitelist_add(&cap, USER, vector[hero1, hero2], vector[gacha_ball1], &mut config);
       ts::return_shared(config);
       ts::return_to_sender<GameCap>(&scenario, cap);
@@ -661,14 +683,16 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let hero = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero1 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
-      let hero2 = game::mint_test_hero(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let hero = game::mint_test_hero(&cap, &config,ts::ctx(&mut scenario));
+      let hero1 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
+      let hero2 = game::mint_test_hero(&cap, &config, ts::ctx(&mut scenario));
 
       transfer::public_transfer(hero, USER);
       transfer::public_transfer(hero1, USER);
       transfer::public_transfer(hero2, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -696,10 +720,12 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let gacha = game::mint_test_gacha(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let gacha = game::mint_test_gacha(&cap, &config,ts::ctx(&mut scenario));
 
       transfer::public_transfer(gacha, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -731,10 +757,12 @@ module loa_game::test_game {
     ts::next_tx(&mut scenario, GAME);
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
-      let gacha = game::mint_test_gacha(&cap, ts::ctx(&mut scenario));
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let gacha = game::mint_test_gacha(&cap, &config,ts::ctx(&mut scenario));
 
       transfer::public_transfer(gacha, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -792,6 +820,7 @@ module loa_game::test_game {
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
       let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
       let gacha_id = 50000;
       let gacha_token_types = vector[28888, 27777];
       let gacha_token_amounts = vector[1, 1];
@@ -802,15 +831,16 @@ module loa_game::test_game {
       let start_time = 0;
       let end_time = 0;
 
-      game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id, gacha_token_types, gacha_token_amounts, start_time, end_time);
-      game::add_gacha_info(&cap, &mut gacha_config_tb, 28888, gacha_name, gacha_type, gacha_collction, gacha_description);
-      game::add_gacha_info(&cap, &mut gacha_config_tb, 27777, gacha_name, gacha_type, gacha_collction, gacha_description);
-      game::add_gacha_info(&cap, &mut gacha_config_tb, 29999, gacha_name, gacha_type, gacha_collction, gacha_description);
+      game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id, gacha_token_types, gacha_token_amounts, start_time, end_time, &config);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 28888, gacha_name, gacha_type, gacha_collction, gacha_description, &config);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 27777, gacha_name, gacha_type, gacha_collction, gacha_description, &config);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 29999, gacha_name, gacha_type, gacha_collction, gacha_description, &config);
 
-      let voucher = game::mint_test_voucher(&cap, ts::ctx(&mut scenario));
+      let voucher = game::mint_test_voucher(&cap, &config, ts::ctx(&mut scenario));
       transfer::public_transfer(voucher, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(gacha_config_tb);
+      ts::return_shared(config);
     };
 
     ts::next_tx(&mut scenario, USER);
@@ -835,11 +865,13 @@ module loa_game::test_game {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
       let gacha_id = 50000;
       let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
 
-      game::remove_gacha_config(&cap, &mut gacha_config_tb, gacha_id);
+      game::remove_gacha_config(&cap, &mut gacha_config_tb, gacha_id, &config);
 
       ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(gacha_config_tb);
+      ts::return_shared(config);
     };
 
     // test update config
@@ -847,18 +879,20 @@ module loa_game::test_game {
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
       let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
       let gacha_id = 50000;
       let gacha_token_types = vector[29999];
       let gacha_token_amounts = vector[1];
       let start_time = 0;
       let end_time = 0;
 
-      game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id, gacha_token_types, gacha_token_amounts, start_time, end_time);
+      game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id, gacha_token_types, gacha_token_amounts, start_time, end_time, &config);
 
-      let voucher = game::mint_test_voucher(&cap, ts::ctx(&mut scenario));
+      let voucher = game::mint_test_voucher(&cap, &config,ts::ctx(&mut scenario));
       transfer::public_transfer(voucher, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(gacha_config_tb);
+      ts::return_shared(config);
     };
 
     ts::next_tx(&mut scenario, USER);
@@ -901,6 +935,7 @@ module loa_game::test_game {
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
       let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
       let gacha_id = 69999;
       let gacha_token_types = vector[28888, 27777];
       let gacha_token_amounts = vector[1, 1];
@@ -911,17 +946,18 @@ module loa_game::test_game {
       let start_time = 0;
       let end_time = 0;
 
-      game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id, gacha_token_types, gacha_token_amounts, start_time, end_time);
-      game::add_gacha_info(&cap, &mut gacha_config_tb, 28888, gacha_name, gacha_type, gacha_collction, gacha_description);
-      game::add_gacha_info(&cap, &mut gacha_config_tb, 27777, gacha_name, gacha_type, gacha_collction, gacha_description);
+      game::add_gacha_config(&cap, &mut gacha_config_tb, gacha_id, gacha_token_types, gacha_token_amounts, start_time, end_time, &config);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 28888, gacha_name, gacha_type, gacha_collction, gacha_description, &config);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 27777, gacha_name, gacha_type, gacha_collction, gacha_description, &config);
 
       ts::next_tx(&mut scenario, GAME);
-      game::set_discount_price<ARCA>(&cap, &mut gacha_config_tb, gacha_id, 1000);
+      game::set_discount_price<ARCA>(&cap, &mut gacha_config_tb, gacha_id, 1000, &config);
 
-      let discount = game::mint_test_discount(&cap, ts::ctx(&mut scenario));
+      let discount = game::mint_test_discount(&cap, &config,ts::ctx(&mut scenario));
       transfer::public_transfer(discount, USER);
       ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(gacha_config_tb);
+      ts::return_shared(config);
     };
 
     //user starts the upgrade
@@ -1046,7 +1082,14 @@ module loa_game::test_game {
       let seen_messages = ts::take_shared<SeenMessages>(&mut scenario);
       let clock = ts::take_shared<clock::Clock>(&mut scenario);
       let game_cap = ts::take_from_sender<GameCap>(&mut scenario);
-      game::set_mugen_pk(&game_cap, mugen_pk,&mut seen_messages);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+      game::set_mugen_pk_request(&mut config,  &mut multi_signature, mugen_pk, ts::ctx(&mut scenario));
+      ts::next_tx(&mut scenario, GAME);
+      multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
+      let b = game::set_mugen_pk_execute(&mut config, &mut multi_signature, 0, true, &mut seen_messages,ts::ctx(&mut scenario));
+      assert!(b, 1);
+      //game::set_mugen_pk(&game_cap, mugen_pk,&mut seen_messages);
       let coin_arca = game::withdraw(&mut arca_counter, amount, 0, 1, fee, chain_id, package, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
 
       assert!(coin::value(&coin_arca) == amount - fee, 1);
@@ -1055,6 +1098,8 @@ module loa_game::test_game {
       ts::return_shared(seen_messages);
       ts::return_shared(clock);
       ts::return_to_sender<GameCap>(&scenario, game_cap);
+      ts::return_shared(multi_signature);
+      ts::return_shared(config);
     };
 
     ts::end(scenario);
@@ -1102,7 +1147,13 @@ module loa_game::test_game {
       let seen_messages = ts::take_shared<SeenMessages>(&mut scenario);
       let clock = ts::take_shared<clock::Clock>(&mut scenario);
       let game_cap = ts::take_from_sender<GameCap>(&mut scenario);
-      game::set_mugen_pk(&game_cap,mugen_pk,&mut seen_messages);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+      game::set_mugen_pk_request(&mut config,  &mut multi_signature, mugen_pk, ts::ctx(&mut scenario));
+      ts::next_tx(&mut scenario, GAME);
+      multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
+      let b = game::set_mugen_pk_execute(&mut config, &mut multi_signature, 0, true, &mut seen_messages,ts::ctx(&mut scenario));
+      assert!(b, 1);
       let coin_arca = game::withdraw(&mut arca_counter, amount, 0, 1, fee, chain_id, package, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
 
       assert!(coin::value(&coin_arca) == amount - fee, 1);
@@ -1111,6 +1162,8 @@ module loa_game::test_game {
       ts::return_shared(seen_messages);
       ts::return_shared(clock);
       ts::return_to_sender<GameCap>(&scenario, game_cap);
+      ts::return_shared(multi_signature);
+      ts::return_shared(config);
     };
 
     ts::end(scenario);
@@ -1160,7 +1213,13 @@ module loa_game::test_game {
       let seen_messages = ts::take_shared<SeenMessages>(&mut scenario);
       let clock = ts::take_shared<clock::Clock>(&mut scenario);
       let game_cap = ts::take_from_sender<GameCap>(&mut scenario);
-      game::set_mugen_pk(&game_cap, mugen_pk,&mut seen_messages);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+      game::set_mugen_pk_request(&mut config,  &mut multi_signature, mugen_pk, ts::ctx(&mut scenario));
+      ts::next_tx(&mut scenario, GAME);
+      multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
+      let b = game::set_mugen_pk_execute(&mut config, &mut multi_signature, 0, true, &mut seen_messages,ts::ctx(&mut scenario));
+      assert!(b, 1);
       clock::increment_for_testing(&mut clock, 1689304580000);
       let coin_arca = game::withdraw(&mut arca_counter, amount, 1691982960, 1, fee, chain_id, package, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
 
@@ -1170,6 +1229,8 @@ module loa_game::test_game {
       ts::return_shared(seen_messages);
       ts::return_shared(clock);
       ts::return_to_sender<GameCap>(&scenario, game_cap);
+      ts::return_shared(multi_signature);
+      ts::return_shared(config);
     };
 
     ts::end(scenario);
@@ -1207,25 +1268,35 @@ module loa_game::test_game {
     {
       let cap = ts::take_from_sender<GameCap>(&mut scenario);
       let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
       let gacha_name = string::utf8(b"Grandia");
       let gacha_type = string::utf8(b"Grandia");
       let gacha_collction = string::utf8(b"Grandia");
       let gacha_description = string::utf8(b"Grandia");
 
 
-      game::add_gacha_info(&cap, &mut gacha_config_tb, token_type, gacha_name, gacha_type, gacha_collction, gacha_description);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, token_type, gacha_name, gacha_type, gacha_collction, gacha_description, &config);
 
       ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(gacha_config_tb);
+      ts::return_shared(config);
     };
     ts::next_tx(&mut scenario, GAME);
     {
       let seen_messages = ts::take_shared<SeenMessages>(&mut scenario);
       let game_cap = ts::take_from_sender<GameCap>(&mut scenario);
-      game::set_mugen_pk(&game_cap, mugen_pk,&mut seen_messages);
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
+      game::set_mugen_pk_request(&mut config,  &mut multi_signature, mugen_pk, ts::ctx(&mut scenario));
+      ts::next_tx(&mut scenario, GAME);
+      multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
+      let b = game::set_mugen_pk_execute(&mut config, &mut multi_signature, 0, true, &mut seen_messages,ts::ctx(&mut scenario));
+      assert!(b, 1);
 
       ts::return_shared(seen_messages);
       ts::return_to_sender<GameCap>(&scenario, game_cap);
+      ts::return_shared(multi_signature);
+      ts::return_shared(config);
     };
 
     ts::next_tx(&mut scenario, USER);

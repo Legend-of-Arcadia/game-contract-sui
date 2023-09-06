@@ -35,7 +35,7 @@ module loa_facilities::marketplace{
     const EListExpire: u64 = 10;
 
 
-    const WithdrawFeeProfits: u64 = 5;
+    const WithdrawFeeProfits: u64 = 7;
 
     // constants
 
@@ -187,9 +187,10 @@ module loa_facilities::marketplace{
     }
 
     // admin add or update vip fee
-    public entry fun update_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64) {
+    public entry fun update_vip_fees(game_cap: &GameCap, marketplace: &mut Marketplace, vip_level: u64, fee: u64, game_config: &GameConfig) {
         assert!(VERSION == marketplace.version, EVersionMismatch);
 
+        game::check_game_cap(game_cap, game_config);
         if (table::contains(&mut marketplace.vip_fees, vip_level)) {
             *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level) = fee;
         } else {
@@ -204,8 +205,9 @@ module loa_facilities::marketplace{
     }
 
     // admin remove vip fee
-    public entry fun remove_vip_fees(_: &GameCap, marketplace: &mut Marketplace, vip_level: u64) {
+    public entry fun remove_vip_fees(game_cap: &GameCap, marketplace: &mut Marketplace, vip_level: u64, game_config: &GameConfig) {
         assert!(VERSION == marketplace.version, EVersionMismatch);
+        game::check_game_cap(game_cap, game_config);
         assert!(table::contains(&mut marketplace.vip_fees, vip_level), EVipLvNoExsit);
         table::remove(&mut marketplace.vip_fees, vip_level);
 
@@ -217,16 +219,18 @@ module loa_facilities::marketplace{
 
     // admin update trading fee
     public entry fun update_trading_fee(
-        _: &GameCap,
+        game_cap: &GameCap,
         marketplace: &mut Marketplace,
         new_base_fee: u64,
         new_to_burn_fee: u64,
         new_team_fee: u64,
         new_rewards_fee: u64,
-        new_referrer_fee: u64) {
+        new_referrer_fee: u64,
+        game_config: &GameConfig) {
         assert!(VERSION == marketplace.version, EVersionMismatch);
         assert!(new_base_fee <= 10000, EFeeSet);
         assert!(new_to_burn_fee + new_team_fee + new_rewards_fee + new_referrer_fee == 10000, EFeeSet);
+        game::check_game_cap(game_cap, game_config);
 
         marketplace.base_trading_fee = new_base_fee;
         marketplace.to_burn_fee = new_to_burn_fee;
@@ -245,13 +249,14 @@ module loa_facilities::marketplace{
     }
 
     public entry fun list_primary_arca<Item: key+store>(
-        _: &GameCap,
+        game_cap: &GameCap,
         marketplace: &mut Marketplace,
         item: Item,
-        price: u64
-    )
+        price: u64,
+        game_config: &GameConfig)
     {
         assert!(VERSION == marketplace.version, EVersionMismatch);
+        game::check_game_cap(game_cap, game_config);
         let stand = &mut marketplace.main;
         let item_id = object::id_address(&item);
         let listing = Listing_P {

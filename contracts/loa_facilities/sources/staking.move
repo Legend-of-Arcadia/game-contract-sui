@@ -49,7 +49,7 @@ module loa_facilities::staking {
     const ENotUpgrade: u64 = 13;
     const EMerkleRoot: u64 = 14;
 
-    const WithdrawReward: u64 = 4;
+    const WithdrawReward: u64 = 6;
 
     struct VeARCA has key {
         id: UID,
@@ -356,7 +356,8 @@ module loa_facilities::staking {
     }
 
     // week period end publish event for create week reward etc.
-    public entry fun finish_week(_: &GameCap, name:String, total_reward: u64, clock: &Clock){
+    public entry fun finish_week(game_cap: &GameCap, name:String, total_reward: u64, clock: &Clock, game_config: &GameConfig){
+        game::check_game_cap(game_cap, game_config);
         let current_time = clock::timestamp_ms(clock) / 1000;
         let evt = WeekFinished {
             name,
@@ -367,10 +368,18 @@ module loa_facilities::staking {
     }
 
     // admin creates weekly rewards by merkle_root
-    public entry fun create_week_reward(_: &GameCap, name: String, merkle_root: vector<u8>, total_reward: u64, sp: &mut StakingPool, ctx: &mut TxContext){
+    public entry fun create_week_reward(
+        game_cap: &GameCap,
+        name: String,
+        merkle_root: vector<u8>,
+        total_reward: u64,
+        sp: &mut StakingPool,
+        game_config: &GameConfig,
+        ctx: &mut TxContext){
         assert!(VERSION == sp.version, EVersionMismatch);
         assert!(!table::contains(&sp.week_reward_table, name), EWeekRewardCreated);
         assert!(vector::length(&merkle_root) > 0, EMerkleRoot);
+        game::check_game_cap(game_cap, game_config);
         let week_reward = WeekReward{
             id: object::new(ctx),
             name,
@@ -394,8 +403,14 @@ module loa_facilities::staking {
     }
 
     //Prevent creation errors, Add update method
-    public entry fun update_week_reward(_: &GameCap, new_merkle_root: vector<u8>, new_total_reward: u64, wr: &mut WeekReward){
+    public entry fun update_week_reward(
+        game_cap: &GameCap,
+        new_merkle_root: vector<u8>,
+        new_total_reward: u64,
+        wr: &mut WeekReward,
+        game_config: &GameConfig){
         assert!(vector::length(&new_merkle_root) > 0, EMerkleRoot);
+        game::check_game_cap(game_cap, game_config);
         wr.merkle_root = new_merkle_root;
         wr.total_reward = new_total_reward;
 
@@ -634,8 +649,9 @@ module loa_facilities::staking {
         balance::value(&sp.rewards)
     }
 
-    public fun update_vip_veARCA_vector(_: &GameCap, sp: &mut StakingPool, index: u64, veARCA_amount: u64) {
+    public fun update_vip_veARCA_vector(game_cap: &GameCap, sp: &mut StakingPool, index: u64, veARCA_amount: u64, game_config: &GameConfig) {
         assert!(VERSION == sp.version, EVersionMismatch);
+        game::check_game_cap(game_cap, game_config);
 
         if(index >= vector::length(&sp.vip_level_veARCA)) {
             vector::push_back(&mut sp.vip_level_veARCA, veARCA_amount);
@@ -645,9 +661,9 @@ module loa_facilities::staking {
     }
 
     // admin append reward to pool
-    public fun append_rewards(_: &GameCap, sp: &mut StakingPool, new_balance: Balance<ARCA>) {
-
+    public fun append_rewards(game_cap: &GameCap, sp: &mut StakingPool, new_balance: Balance<ARCA>, game_config: &GameConfig) {
         assert!(VERSION == sp.version, EVersionMismatch);
+        game::check_game_cap(game_cap, game_config);
 
         balance::join(&mut sp.rewards, new_balance);
     }
