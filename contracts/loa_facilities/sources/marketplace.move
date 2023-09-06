@@ -696,8 +696,9 @@ module loa_facilities::marketplace{
     }
 
     // package upgrade
-    entry fun migrate(marketplace: &mut Marketplace, _: &GameCap) {
+    entry fun migrate(marketplace: &mut Marketplace, game_cap: &GameCap, game_config: &GameConfig) {
         assert!(marketplace.version < VERSION, ENotUpgrade);
+        game::check_game_cap(game_cap, game_config);
         marketplace.version = VERSION;
     }
 

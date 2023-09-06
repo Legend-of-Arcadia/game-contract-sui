@@ -684,8 +684,9 @@ module loa_facilities::staking {
     }
 
     // package upgrade
-    entry fun migrate(sp: &mut StakingPool, _: &GameCap) {
+    entry fun migrate(sp: &mut StakingPool, game_cap: &GameCap, game_config: &GameConfig) {
         assert!(sp.version < VERSION, ENotUpgrade);
+        game::check_game_cap(game_cap, game_config);
         sp.version = VERSION;
     }
 

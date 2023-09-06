@@ -406,7 +406,6 @@ module loa_game::game{
     gacha_rewards:vector<GachaBall>,
     config: &mut GameConfig)
   {
-    assert!(VERSION == config.version, EIncorrectVersion);
     check_game_cap(game_cap, config);
     let rewards = WhitelistRewards {
       heroes: hero_rewards,
@@ -1519,6 +1518,7 @@ module loa_game::game{
   }
 
   public fun check_game_cap(game_cap: &GameCap, config: &GameConfig) {
+    assert!(VERSION == config.version, EIncorrectVersion);
     assert!(game_cap.game_address == config.game_address, ENoGameAdmin)
   }
 
@@ -1540,33 +1540,39 @@ module loa_game::game{
   }
 
   // package upgrade
-  entry fun migrate_game_config(config: &mut GameConfig, _: &GameCap) {
+  entry fun migrate_game_config(config: &mut GameConfig, game_cap: &GameCap) {
     assert!(config.version < VERSION, ENotUpgrade);
+    assert!(game_cap.game_address == config.game_address, ENoGameAdmin);
     config.version = VERSION;
   }
 
-  entry fun migrate_upgrader(upgrader: &mut Upgrader, _: &GameCap) {
+  entry fun migrate_upgrader(upgrader: &mut Upgrader, game_cap: &GameCap, config: &GameConfig) {
     assert!(upgrader.version < VERSION, ENotUpgrade);
+    check_game_cap(game_cap, config);
     upgrader.version = VERSION;
   }
 
-  entry fun migrate_obj_burn(obj_burn: &mut ObjBurn, _: &GameCap) {
+  entry fun migrate_obj_burn(obj_burn: &mut ObjBurn, game_cap: &GameCap, config: &GameConfig) {
     assert!(obj_burn.version < VERSION, ENotUpgrade);
+    check_game_cap(game_cap, config);
     obj_burn.version = VERSION;
   }
 
-  entry fun migrate_garca_counter(arca_counter: &mut ArcaCounter, _: &GameCap) {
+  entry fun migrate_garca_counter(arca_counter: &mut ArcaCounter, game_cap: &GameCap, config: &GameConfig) {
     assert!(arca_counter.version < VERSION, ENotUpgrade);
+    check_game_cap(game_cap, config);
     arca_counter.version = VERSION;
   }
 
-  entry fun migrate_gacha_config_table(config: &mut GachaConfigTable, _: &GameCap) {
+  entry fun migrate_gacha_config_table(config: &mut GachaConfigTable, game_cap: &GameCap, game_config: &GameConfig) {
     assert!(config.version < VERSION, ENotUpgrade);
+    check_game_cap(game_cap, game_config);
     config.version = VERSION;
   }
 
-  entry fun migrate_seen_messages(seen_messages: &mut SeenMessages, _: &GameCap) {
+  entry fun migrate_seen_messages(seen_messages: &mut SeenMessages, game_cap: &GameCap, game_config: &GameConfig) {
     assert!(seen_messages.version < VERSION, ENotUpgrade);
+    check_game_cap(game_cap, game_config);
     seen_messages.version = VERSION;
   }
   // === Test-only ===

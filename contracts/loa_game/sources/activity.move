@@ -405,8 +405,9 @@ module loa_game::activity {
     }
 
     // package upgrade
-    entry fun migrate(profits: &mut ActivityProfits, _: &GameCap) {
+    entry fun migrate(profits: &mut ActivityProfits, game_cap: &GameCap, game_config: &GameConfig) {
         assert!(profits.version < VERSION, ENotUpgrade);
+        game::check_game_cap(game_cap, game_config);
         profits.version = VERSION;
     }
     // === Accessors ===
