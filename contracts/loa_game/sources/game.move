@@ -28,12 +28,12 @@ module loa_game::game{
   const VERSION: u64 = 1;
 
   // errors
-  const EAmountNotExact: u64 = 0;
-  const ECoinNotAllowed: u64 = 1;
-  const ETypeDoesNotExist: u64 = 2;
+  const ECoinTypeMismatch: u64 = 0;
+  const EVectorLen: u64 = 1;
+  const ENotUpgrade: u64 = 2;
   const EIncorrectVersion: u64 = 3;
   const ERarityMismatch: u64 = 4;
-  const EReturningWrongHero: u64 = 5;
+  const EPriceEQZero: u64 = 5;
   const EWrongPowerUpgradeFee: u64 = 6;
   const EMustBurnAtLeastOneHero: u64 = 7;
   const ETimeSet: u64 = 8;
@@ -54,10 +54,6 @@ module loa_game::game{
   const ECurrentTimeLTStartTime: u64 = 23;
   const ECurrentTimeGEEndTime: u64 = 24;
   const EInvalidType: u64 = 25;
-  const EPriceEQZero: u64 = 26;
-  const ECoinTypeMismatch: u64 = 27;
-  const EVectorLen: u64 = 28;
-  const ENotUpgrade: u64 = 29;
 
   //multisig type
   const WithdrawArca: u64 = 0;
