@@ -498,11 +498,15 @@ module loa_game::game{
     object::delete(id);
   }
 
-  public entry fun create_game_cap_by_admin(config: &GameConfig, ctx: &mut TxContext){
+  public entry fun create_game_cap_by_admin(config: &GameConfig, to: address, amount: u16, ctx: &mut TxContext){
     assert!(VERSION == config.version, EIncorrectVersion);
     assert!(config.game_address == tx_context::sender(ctx), ENoGameAdmin);
-    let game_cap = GameCap { id: object::new(ctx), game_address: config.game_address};
-    transfer::transfer(game_cap, config.game_address);
+    let i = 0;
+    while(i < amount) {
+          let game_cap = GameCap { id: object::new(ctx), game_address: config.game_address};
+          transfer::transfer(game_cap, to);
+          i = i + 1;
+    };
   }
 
   // burn the game cap
@@ -775,7 +779,7 @@ module loa_game::game{
     proposal_id: u256,
     is_approve: bool,
     seen_messages: &mut SeenMessages,
-    ctx: &mut TxContext): bool {
+    ctx: &mut TxContext){
 
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
@@ -788,13 +792,13 @@ module loa_game::game{
 
         set_mugen_pk(request.mugen_pk, seen_messages);
         multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
-        return true
+        return
       };
     }else {
       let (rejected, _ ) = multisig::is_proposal_rejected(multi_signature, proposal_id);
       if (rejected) {
         multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
-        return true
+        return
       }
     };
 
