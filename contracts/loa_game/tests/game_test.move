@@ -1355,4 +1355,25 @@ module loa_game::test_game {
     };
     ts::end(scenario);
   }
+
+  #[test]
+  fun test_create_game_cap(){
+    let scenario = ts::begin(GAME);
+    game::init_for_test(ts::ctx(&mut scenario));
+    ts::next_tx(&mut scenario, GAME);
+    {
+      let config = ts::take_shared<GameConfig>(&mut scenario);
+      game::create_game_cap_by_admin(&config, USER, 2, ts::ctx(&mut scenario));
+      ts::return_shared(config);
+    };
+
+    ts::next_tx(&mut scenario, USER);
+    {
+      let game_cap1 = ts::take_from_sender<GameCap>(&mut scenario);
+      let game_cap2 = ts::take_from_sender<GameCap>(&mut scenario);
+      ts::return_to_sender<GameCap>(&scenario, game_cap1);
+      ts::return_to_sender<GameCap>(&scenario, game_cap2);
+    };
+    ts::end(scenario);
+  }
 }

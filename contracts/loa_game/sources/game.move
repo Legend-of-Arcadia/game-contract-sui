@@ -779,7 +779,7 @@ module loa_game::game{
     proposal_id: u256,
     is_approve: bool,
     seen_messages: &mut SeenMessages,
-    ctx: &mut TxContext){
+    ctx: &mut TxContext) :bool {
 
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
@@ -792,13 +792,13 @@ module loa_game::game{
 
         set_mugen_pk(request.mugen_pk, seen_messages);
         multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
-        return
+        return true
       };
     }else {
       let (rejected, _ ) = multisig::is_proposal_rejected(multi_signature, proposal_id);
       if (rejected) {
         multisig::multisig::mark_proposal_complete(multi_signature, proposal_id, ctx);
-        return
+        return true
       }
     };
 
