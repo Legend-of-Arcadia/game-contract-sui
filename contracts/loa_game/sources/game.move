@@ -1363,9 +1363,9 @@ module loa_game::game{
     let gacha_info = table::borrow(&gacha_config_tb.gacha_info, token_type);
     let gacha_ball = gacha::mint(
       token_type,
+      gacha_info.gacha_collction,
       gacha_info.gacha_name,
       gacha_info.gacha_type,
-      gacha_info.gacha_collction,
       gacha_info.gacha_description,
       ctx,
     );
