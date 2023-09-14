@@ -87,7 +87,7 @@ module loa_game::game{
   struct GachaInfo has store, drop {
     gacha_name: String,
     gacha_type: String,
-    gacha_collction: String,
+    gacha_collection: String,
     gacha_description: String,
   }
 
@@ -293,7 +293,7 @@ module loa_game::game{
     token_type:u64,
     gacha_name: String,
     gacha_type: String,
-    gacha_collction: String,
+    gacha_collection: String,
     gacha_description: String
   }
 
@@ -621,7 +621,7 @@ module loa_game::game{
   // admin add or apdate gacha info
   public entry fun add_gacha_info(
     game_cap: &GameCap, gacha_config_tb: &mut GachaConfigTable, token_type:u64, gacha_name: String,
-    gacha_type: String, gacha_collction: String, gacha_description: String, config: &GameConfig
+    gacha_type: String, gacha_collection: String, gacha_description: String, config: &GameConfig
   ) {
 
     assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
@@ -630,14 +630,14 @@ module loa_game::game{
       let gacha_info = table::borrow_mut(&mut gacha_config_tb.gacha_info, token_type);
       gacha_info.gacha_name = gacha_name;
       gacha_info.gacha_type = gacha_type;
-      gacha_info.gacha_collction = gacha_collction;
+      gacha_info.gacha_collection = gacha_collection;
       gacha_info.gacha_description = gacha_description;
     } else {
 
       let gacha_info = GachaInfo{
         gacha_name,
         gacha_type,
-        gacha_collction,
+        gacha_collection,
         gacha_description,
       };
       table::add(&mut gacha_config_tb.gacha_info, token_type, gacha_info);
@@ -647,7 +647,7 @@ module loa_game::game{
       token_type,
       gacha_name,
       gacha_type,
-      gacha_collction,
+      gacha_collection,
       gacha_description
     });
   }
@@ -1363,7 +1363,7 @@ module loa_game::game{
     let gacha_info = table::borrow(&gacha_config_tb.gacha_info, token_type);
     let gacha_ball = gacha::mint(
       token_type,
-      gacha_info.gacha_collction,
+      gacha_info.gacha_collection,
       gacha_info.gacha_name,
       gacha_info.gacha_type,
       gacha_info.gacha_description,
