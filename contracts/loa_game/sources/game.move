@@ -379,15 +379,17 @@ module loa_game::game{
     event::emit(SetGameAddressEvent{new_address});
   }
 
-  public entry fun set_mint_address(_: &GameCap, new_address: address, config: &mut GameConfig) {
+  public entry fun set_mint_address(game_cap: &GameCap, new_address: address, config: &mut GameConfig) {
     assert!(VERSION == config.version, EIncorrectVersion);
+    check_game_cap(game_cap, config);
     config.mint_address = new_address;
 
     event::emit(SetMintAddressEvent{new_address});
   }
 
-  public entry fun set_upgrade_address(_: &GameCap, new_address: address, upgrader: &mut Upgrader) {
+  public entry fun set_upgrade_address(game_cap: &GameCap, new_address: address, upgrader: &mut Upgrader, config: &mut GameConfig) {
     assert!(VERSION == upgrader.version, EIncorrectVersion);
+    check_game_cap(game_cap, config);
     upgrader.upgrade_address = new_address;
 
     event::emit(SetUpgradeAddressEvent{new_address});
@@ -983,7 +985,8 @@ module loa_game::game{
   }
 
   // admin burn hero
-  public entry fun get_hero_and_burn(_: &GameCap, hero_address: address, obj_burn: &mut ObjBurn) {
+  public entry fun get_hero_and_burn(game_cap: &GameCap, hero_address: address, obj_burn: &mut ObjBurn, config: &GameConfig) {
+    check_game_cap(game_cap, config);
     let burn_hero = dof::remove<address, Hero>(&mut obj_burn.id, hero_address);
     hero::burn(burn_hero);
   }
@@ -1066,7 +1069,8 @@ module loa_game::game{
     transfer::transfer(ticket, game_config.mint_address);
   }
 
-  public entry fun abandon_gacha_ball(_: &GameCap, gacha_ball: GachaBall){
+  public entry fun abandon_gacha_ball(game_cap: &GameCap, gacha_ball: GachaBall, config: &GameConfig){
+    check_game_cap(game_cap, config);
     gacha::burn(gacha_ball);
   }
 
