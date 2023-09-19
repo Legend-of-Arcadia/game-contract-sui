@@ -299,7 +299,7 @@ module loa_facilities::staking {
         let staking_period = veARCA.end_time - current_time + append_time;
         if (staking_period > YEAR_TO_UNIX_SECONDS) {
             staking_period = YEAR_TO_UNIX_SECONDS;
-            append_time = YEAR_TO_UNIX_SECONDS - current_time;
+            append_time = YEAR_TO_UNIX_SECONDS - (veARCA.end_time - current_time);
         };
 
         assert!(veARCA.end_time > current_time, ENoActiveStakes);
