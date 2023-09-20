@@ -985,6 +985,7 @@ module loa_game::game{
   // admin burn hero
   public entry fun get_hero_and_burn(game_cap: &GameCap, hero_address: address, obj_burn: &mut ObjBurn, config: &GameConfig) {
     check_game_cap(game_cap, config);
+    assert!(VERSION == obj_burn.version, EIncorrectVersion);
     let burn_hero = dof::remove<address, Hero>(&mut obj_burn.id, hero_address);
     hero::burn(burn_hero);
   }
@@ -1267,6 +1268,7 @@ module loa_game::game{
     ctx: &mut TxContext)
   {
     assert!(VERSION == gacha_config.version, EIncorrectVersion);
+    assert!(VERSION == game_config.version, EIncorrectVersion);
 
     let collection = *gacha::collection(&voucher);
     assert!(collection == string::utf8(b"Voucher"), EInvalidType);
@@ -1293,6 +1295,7 @@ module loa_game::game{
     ctx: &mut TxContext)
   {
     assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
+    assert!(VERSION == game_config.version, EIncorrectVersion);
 
     let collection = *gacha::collection(&discount);
     assert!(collection == string::utf8(b"Coupon"), EInvalidType);
@@ -1400,6 +1403,7 @@ module loa_game::game{
     ctx: &mut TxContext,
   ): Coin<ARCA> {
     assert!(VERSION == seen_messages.version, EIncorrectVersion);
+    assert!(VERSION == arca_counter.version, EIncorrectVersion);
     assert!(expire_at >= clock::timestamp_ms(clock) / 1000, ETimeExpired);
     let user_address = tx_context::sender(ctx);
     let msg: vector<u8> = address::to_bytes(user_address);
