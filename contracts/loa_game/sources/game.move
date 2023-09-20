@@ -963,12 +963,10 @@ module loa_game::game{
     let HeroTicket {id, main_hero, burn_heroes, user} = ticket;
     let l = vector::length(&burn_heroes);
     let i = 0;
-    if (l > 0) {
-      while (i < l) {
-        let burn_hero = vector::pop_back(&mut burn_heroes);
-        hero::burn(burn_hero);
-        i = i + 1;
-      };
+    while (i < l) {
+      let burn_hero = vector::pop_back(&mut burn_heroes);
+      hero::burn(burn_hero);
+      i = i + 1;
     };
 
     vector::destroy_empty<Hero>(burn_heroes);
