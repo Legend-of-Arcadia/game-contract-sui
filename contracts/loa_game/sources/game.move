@@ -54,6 +54,7 @@ module loa_game::game{
   const ECurrentTimeLTStartTime: u64 = 23;
   const ECurrentTimeGEEndTime: u64 = 24;
   const EInvalidType: u64 = 25;
+  const EInvalidTokenType: u64 = 25;
 
   //multisig type
   const WithdrawArca: u64 = 0;
@@ -581,6 +582,13 @@ module loa_game::game{
       assert!(end_time >= start_time, ETimeSet);
     };
 
+    let l = vector::length(&gacha_token_types);
+    let i = 0;
+    while (i < l) {
+      vector::borrow(&gacha_token_types, i);
+      assert!(token_type != *vector::borrow(&gacha_token_types, i), EInvalidTokenType);
+      i = i + 1;
+    };
     assert!(vector::length(&gacha_token_types) == vector::length(&gacha_token_types), EVectorLen);
     if (table::contains(&mut gacha_config_tb.config, token_type)) {
       let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
