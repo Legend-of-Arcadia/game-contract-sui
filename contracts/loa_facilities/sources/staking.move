@@ -562,8 +562,10 @@ module loa_facilities::staking {
 
         if(veARCA_amount >= *vector::borrow(vip_level_veARCA, l)) {
             vip_level = vector::length(vip_level_veARCA);
+            return vip_level
         } else if(veARCA_amount < *vector::borrow(vip_level_veARCA, 0)) {
             vip_level = 0;
+            return vip_level
         };
 
         l = l - 1;
