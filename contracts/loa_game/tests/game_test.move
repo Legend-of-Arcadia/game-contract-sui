@@ -1246,16 +1246,16 @@ module loa_game::test_game {
       174
     ];
     let signed_message: vector<u8> =   vector[
-      251,  67, 150,  99, 236,  54, 115,  62,   8, 221, 177,
-      102,  78,   7,  16,  71, 230,  63, 214,  16, 177, 100,
-      174, 193, 201, 187,   9,   6, 116,  32, 204, 190, 126,
-      198, 127,  63,  46, 113,   3,  11,  88, 176,  68,  38,
-      159, 157, 109,  98,  93,  93, 106,  91,  15, 187,  62,
-      156,  54, 140, 167, 140,  36, 125, 190, 155
+      206, 19,  26, 128,  42,  41, 136, 182,   6, 134, 236,
+      40, 49,  25, 155, 246, 193,  72, 166, 155, 223, 221,
+      134, 30, 209, 151, 186, 149, 147,  90, 163, 157,  91,
+      127, 23, 166, 130, 247,  26, 247,  80,   6,  59, 255,
+      150, 11, 108, 252, 140,  16,  67, 110, 146, 170, 194,
+      179, 68,  72, 217,  88, 225,  70, 105, 127
     ];
 
-    let token_type = 99999;
-    let amount = 10;
+    let token_types = vector[18888, 19999];
+    let amounts = vector[10, 2];
     let chain_id = 99;
     let package:address = @0xc69c87d31fc58cb07373997c285fffb113f513fedc26355e0fa036449f4573f3;
     let scenario = ts::begin(GAME);
@@ -1275,7 +1275,8 @@ module loa_game::test_game {
       let gacha_description = string::utf8(b"Grandia");
 
 
-      game::add_gacha_info(&cap, &mut gacha_config_tb, token_type, gacha_name, gacha_type, gacha_collection, gacha_description, &config);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 18888, gacha_name, gacha_type, gacha_collection, gacha_description, &config);
+      game::add_gacha_info(&cap, &mut gacha_config_tb, 19999, gacha_name, gacha_type, gacha_collection, gacha_description, &config);
 
       ts::return_to_sender<GameCap>(&scenario, cap);
       ts::return_shared(gacha_config_tb);
@@ -1304,7 +1305,8 @@ module loa_game::test_game {
       let gacha_config_tb = ts::take_shared<GachaConfigTable>(&mut scenario);
       let seen_messages = ts::take_shared<SeenMessages>(&mut scenario);
       let clock = ts::take_shared<clock::Clock>(&mut scenario);
-      game::withdraw_gacha(&gacha_config_tb, token_type, amount, 0, 1, chain_id, package, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
+      //let token_types = vector
+      game::withdraw_gacha(&gacha_config_tb, token_types, amounts, 0, 1, chain_id, package, signed_message, &mut seen_messages, &clock, ts::ctx(&mut scenario));
       ts::return_shared(gacha_config_tb);
       ts::return_shared(seen_messages);
       ts::return_shared(clock);

@@ -246,8 +246,8 @@ module loa_game::game{
 
   struct UserWithdrawGacha has copy, drop {
     user: address,
-    token_type: u64,
-    amount: u64,
+    token_types: vector<u64>,
+    amounts: vector<u64>,
     salt: u64
   }
 
@@ -1441,8 +1441,8 @@ module loa_game::game{
   // user withdraw gacha by admin signature
   public entry fun withdraw_gacha(
     gacha_config: &GachaConfigTable,
-    token_type: u64,
-    amount: u64,
+    token_types: vector<u64>,
+    amounts: vector<u64>,
     expire_at: u64,
     salt: u64,
     chain_id: u64,
@@ -1455,10 +1455,11 @@ module loa_game::game{
     assert!(VERSION == seen_messages.version, EIncorrectVersion);
     assert!(VERSION == gacha_config.version, EIncorrectVersion);
     assert!(expire_at >= clock::timestamp_ms(clock) / 1000, ETimeExpired);
+    assert!(vector::length(&token_types) == vector::length(&amounts), EVectorLen);
     let user_address = tx_context::sender(ctx);
     let msg: vector<u8> = address::to_bytes(user_address);
-    vector::append(&mut msg, bcs::to_bytes<u64>(&token_type));
-    vector::append(&mut msg, bcs::to_bytes<u64>(&amount));
+    vector::append(&mut msg, bcs::to_bytes<vector<u64>>(&token_types));
+    vector::append(&mut msg, bcs::to_bytes<vector<u64>>(&amounts));
     vector::append(&mut msg, bcs::to_bytes<u64>(&expire_at));
     vector::append(&mut msg, bcs::to_bytes<u64>(&salt));
     vector::append(&mut msg, bcs::to_bytes<u64>(&chain_id));
@@ -1471,16 +1472,26 @@ module loa_game::game{
     table::add(&mut seen_messages.salt_table, salt, true);
     //let coin_balance = balance::split<ARCA>(&mut arca_counter.arca_balance, amount - fee);
 
+    let l = vector::length(&token_types);
     let i = 0;
-    while (i < amount){
-      let gacha_ball = mint_by_token_type(gacha_config, token_type, ctx);
-      transfer::public_transfer(gacha_ball, user_address);
+    while (i < l) {
+      let token_type = vector::borrow(&token_types, i);
+      let amount = vector::borrow(&amounts, i);
+
+      let x = 0;
+      while (x < *amount){
+        let gacha_ball = mint_by_token_type(gacha_config, *token_type, ctx);
+        transfer::public_transfer(gacha_ball, user_address);
+        x = x + 1;
+      };
+
       i = i + 1;
     };
+
     event::emit(UserWithdrawGacha{
       user: user_address,
-      token_type,
-      amount,
+      token_types,
+      amounts,
       salt,
     });
   }

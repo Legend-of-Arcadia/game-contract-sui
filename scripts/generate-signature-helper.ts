@@ -21,6 +21,7 @@ function constructMessageToSign(
 
     const addressBytes: Uint8Array = new Uint8Array(Buffer.from(userAddress.slice(2), 'hex'));
 
+
     const amountBytes = bcs.ser(["u64", BCS.U64], amount).toString("base64");
     const expire_atBytes = bcs.ser(["u64", BCS.U64], expire_at).toString("base64");
     const saltBytes = bcs.ser(["u64", BCS.U64], salt).toString("base64");
@@ -44,8 +45,8 @@ function constructMessageToSign(
 
 function withdrawGachaMessageToSign(
     userAddress: string,
-    token_type: number,
-    amount: number,
+    token_types: number[],
+    amounts: number[],
     expire_at: number,
     salt: number,
     chain_id: number,
@@ -56,8 +57,8 @@ function withdrawGachaMessageToSign(
 
     const addressBytes: Uint8Array = new Uint8Array(Buffer.from(userAddress.slice(2), 'hex'));
 
-    const token_typeBytes = bcs.ser(["u64", BCS.U64], token_type).toString("base64");
-    const amountBytes = bcs.ser(["u64", BCS.U64], amount).toString("base64");
+    const token_typeBytes = bcs.ser(["vector", BCS.U64], token_types).toString("base64");
+    const amountBytes = bcs.ser(["vector", BCS.U64], amounts).toString("base64");
     const expire_atBytes = bcs.ser(["u64", BCS.U64], expire_at).toString("base64");
     const saltBytes = bcs.ser(["u64", BCS.U64], salt).toString("base64");
     const chain_idBytes = bcs.ser(["u64", BCS.U64], chain_id).toString("base64");
@@ -78,11 +79,12 @@ function withdrawGachaMessageToSign(
 }
 
 // put user address here
-const userAddress = "0xbe225c0731573a1a41afb36dd363754d24585cfc790929252656ea4e77435d6e";
+const userAddress = "0x0000000000000000000000000000000000000000000000000000000000000222";
+
 
 const amount = 1000;
 
-const expire_at = 169149259959;
+const expire_at = 0;
 const salt = 1;
 const fee = 0;
 const chain_id = 99;//1 mainnet 99 testnet
@@ -99,8 +101,8 @@ const packageAddress = "0xc69c87d31fc58cb07373997c285fffb113f513fedc26355e0fa036
 // );
 const msgToSign = withdrawGachaMessageToSign(
     userAddress,
-    188881,
-    10,
+    [18888, 19999],
+    [10, 2],
     expire_at,
     salt,
     chain_id,
