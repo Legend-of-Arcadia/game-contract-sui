@@ -54,7 +54,7 @@ module loa_game::game{
   const ECurrentTimeLTStartTime: u64 = 23;
   const ECurrentTimeGEEndTime: u64 = 24;
   const EInvalidType: u64 = 25;
-  const EInvalidTokenType: u64 = 25;
+  const EInvalidTokenType: u64 = 26;
 
   //multisig type
   const WithdrawArca: u64 = 0;
