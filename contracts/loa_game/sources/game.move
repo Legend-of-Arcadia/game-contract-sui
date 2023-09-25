@@ -585,11 +585,10 @@ module loa_game::game{
     let l = vector::length(&gacha_token_types);
     let i = 0;
     while (i < l) {
-      vector::borrow(&gacha_token_types, i);
       assert!(token_type != *vector::borrow(&gacha_token_types, i), EInvalidTokenType);
       i = i + 1;
     };
-    assert!(vector::length(&gacha_token_types) == vector::length(&gacha_token_types), EVectorLen);
+    assert!(vector::length(&gacha_token_types) == vector::length(&gacha_amounts), EVectorLen);
     if (table::contains(&mut gacha_config_tb.config, token_type)) {
       let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
       config.gacha_token_types = gacha_token_types;
