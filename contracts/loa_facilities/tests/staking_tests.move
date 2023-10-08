@@ -18,7 +18,7 @@ module loa_facilities::staking_tests {
     use std::debug;
 
 
-    const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
+    // const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
     const MONTH_TO_UNIX_SECONDS: u64 = 2_628_000; // rounded up
     const YEAR_TO_UNIX_SECONDS: u64 = 31_536_000;
     const GAME: address = @0x111;

@@ -65,7 +65,7 @@ module loa_game::game{
   const SetMugenPk: u64 = 4;
 
 
-  const Base:u64 = 10000;
+  //const Base:u64 = 10000;
 
 
   // config struct

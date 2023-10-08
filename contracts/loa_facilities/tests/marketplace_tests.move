@@ -25,8 +25,8 @@ module loa_facilities::marketplace_tests {
 
     const DECIMALS: u64 = 1_000_000_000;
 
-    const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
-    const MONTH_TO_UNIX_SECONDS: u64 = 2_628_000; // rounded up
+    // const WEEK_TO_UNIX_SECONDS: u64 = 604_800;
+    // const MONTH_TO_UNIX_SECONDS: u64 = 2_628_000; // rounded up
     const YEAR_TO_UNIX_SECONDS: u64 = 31_536_000;
 
     #[test]

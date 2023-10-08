@@ -20,7 +20,7 @@ module loa_game::test_game {
   // errors
   const EWrongGrowths: u64 = 0;
   const EWrongAppearance: u64 = 1;
-  const EWrongGameBalanceAfterUpgrade: u64 = 2;
+  //const EWrongGameBalanceAfterUpgrade: u64 = 2;
   const EWrongHeroPendingUpgrade: u64 = 3;
 
   const GAME: address = @0x111;
