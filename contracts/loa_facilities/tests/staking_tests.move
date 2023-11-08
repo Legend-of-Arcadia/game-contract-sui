@@ -39,7 +39,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
 
@@ -48,11 +48,11 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
             ts::next_tx(&mut scenario, USER1_ADDRESS);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS, 1);
 
             ts::return_shared(sp);
@@ -75,7 +75,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(5*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
 
@@ -84,11 +84,11 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
             ts::next_tx(&mut scenario, USER1_ADDRESS);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             //assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS * 100, 1);
             let lv= staking::calc_vip_level(&sp, USER1_ADDRESS, &clock);
             assert!(lv == 1, 1);
@@ -113,7 +113,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
             ts::return_to_sender<GameCap>(&scenario, cap);
@@ -121,8 +121,8 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
 
             ts::return_shared(sp);
@@ -130,9 +130,9 @@ module loa_facilities::staking_tests {
         };
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             let x= staking::get_amount_VeARCA(&ve_arca, &clock);
             assert!(x == 300 * DECIMALS, 1);
             let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
@@ -162,7 +162,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
             ts::return_to_sender<GameCap>(&scenario, cap);
@@ -170,8 +170,8 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
 
             ts::return_shared(sp);
@@ -179,9 +179,9 @@ module loa_facilities::staking_tests {
         };
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             let x= staking::get_amount_VeARCA(&ve_arca, &clock);
             assert!(x == 300 * DECIMALS, 1);
 
@@ -214,7 +214,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
 
@@ -223,8 +223,8 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
 
             ts::return_shared(sp);
@@ -232,9 +232,9 @@ module loa_facilities::staking_tests {
         };
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
 
             clock::increment_for_testing(&mut clock, YEAR_TO_UNIX_SECONDS * 1000);
             let coin = staking::unstake(ve_arca, &mut sp, &clock, ts::ctx(&mut scenario));
@@ -262,7 +262,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
 
@@ -272,9 +272,9 @@ module loa_facilities::staking_tests {
         ts::next_tx(&mut scenario, GAME);
         {
             //public fun create_week_reward(_: &mut TreasuryCap<ARCA>, name: String, merkle_root: vector<u8>, total_reward: u64, ctx: &mut TxContext){
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let config = ts::take_shared<GameConfig>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let config = ts::take_shared<GameConfig>(&scenario);
             let name = string::utf8(b"2023-7-19");
             let merkle_root = x"76355b7a319f1fa85e831800eea9d8e041801fab8c3daadc7ff0f416cc9d36ee";
             let total_reward = 1000*DECIMALS;
@@ -289,8 +289,8 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let week_reward = ts::take_shared<WeekReward>(&mut scenario);
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let week_reward = ts::take_shared<WeekReward>(&scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
             let name = string::utf8(b"2023-7-19");
             let amount = 30000000000;
             let proof = vector::empty<vector<u8>>();
@@ -320,7 +320,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(300*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
 
@@ -329,9 +329,9 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let config = ts::take_shared<GameConfig>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let config = ts::take_shared<GameConfig>(&scenario);
 
             staking::append_rewards(&cap, &mut sp, coin::into_balance(coin), &config);
             ts::next_tx(&mut scenario, GAME);
@@ -344,9 +344,9 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, GAME);
         {
-            let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
-            let config = ts::take_shared<GameConfig>(&mut scenario);
-            staking::withdraw_rewards_request(&mut config, &mut multi_signature, GAME, 30*DECIMALS,ts::ctx(&mut scenario));
+            let multi_signature = ts::take_shared<MultiSignature>(&scenario);
+            let config = ts::take_shared<GameConfig>(&scenario);
+            staking::withdraw_rewards_request(&config, &mut multi_signature, GAME, 30*DECIMALS,ts::ctx(&mut scenario));
 
             ts::return_shared(multi_signature);
             ts::return_shared(config);
@@ -354,19 +354,19 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, GAME);
         {
-            let multi_signature = ts::take_shared<MultiSignature>(&mut scenario);
-            let config = ts::take_shared<GameConfig>(&mut scenario);
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
+            let multi_signature = ts::take_shared<MultiSignature>(&scenario);
+            let config = ts::take_shared<GameConfig>(&scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
             multisig::vote(&mut multi_signature, 0, true, ts::ctx(&mut scenario));
-            let b = staking::withdraw_rewards_execute(&mut config, &mut multi_signature, 0, true, &mut sp,ts::ctx(&mut scenario));
+            let b = staking::withdraw_rewards_execute(&config, &mut multi_signature, 0, true, &mut sp,ts::ctx(&mut scenario));
 
             assert!(b, 1);
 
             ts::next_tx(&mut scenario, GAME);
-            let coin = ts::take_from_address<Coin<ARCA>>(&mut scenario, GAME);
+            let coin = ts::take_from_address<Coin<ARCA>>(&scenario, GAME);
             assert!(coin::value<ARCA>(&coin) == 30*DECIMALS, 1);
 
-            ts::return_to_sender(&mut scenario, coin);
+            ts::return_to_sender(&scenario, coin);
             ts::return_shared(multi_signature);
             ts::return_shared(config);
             ts::return_shared(sp);
@@ -389,7 +389,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(1000*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
 
@@ -398,11 +398,11 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
             ts::next_tx(&mut scenario, USER1_ADDRESS);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             let i = 0;
             let l = 12;
             while (i < l) {
@@ -414,7 +414,7 @@ module loa_facilities::staking_tests {
                 i = i + 1;
             };
             // ts::next_tx(&mut scenario, USER1_ADDRESS);
-            // let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            // let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             // assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS, 1);
 
             ts::return_shared(sp);
@@ -437,7 +437,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(1000*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
 
@@ -446,11 +446,11 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
             ts::next_tx(&mut scenario, USER1_ADDRESS);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             let i = 0;
             let l = 12;
             while (i < l ) {
@@ -467,7 +467,7 @@ module loa_facilities::staking_tests {
                 i = i + 1;
             };
             // ts::next_tx(&mut scenario, USER1_ADDRESS);
-            // let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            // let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             // assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS, 1);
 
             ts::return_shared(sp);
@@ -491,7 +491,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(1000*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
 
@@ -500,11 +500,11 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
             ts::next_tx(&mut scenario, USER1_ADDRESS);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             let i = 0;
             let l = 11;
             while (i < l ) {
@@ -522,7 +522,7 @@ module loa_facilities::staking_tests {
                 i = i + 1;
             };
             // ts::next_tx(&mut scenario, USER1_ADDRESS);
-            // let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            // let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             // assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS, 1);
 
             ts::return_shared(sp);
@@ -545,7 +545,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(1000*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
 
@@ -554,11 +554,11 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
             ts::next_tx(&mut scenario, USER1_ADDRESS);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             let i = 0;
             let l = 10;
             while (i < l ) {
@@ -577,7 +577,7 @@ module loa_facilities::staking_tests {
                 i = i + 1;
             };
             // ts::next_tx(&mut scenario, USER1_ADDRESS);
-            // let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            // let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             // assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS, 1);
 
             ts::return_shared(sp);
@@ -625,7 +625,7 @@ module loa_facilities::staking_tests {
         let coin = coin::mint_for_testing<ARCA>(1000*DECIMALS, ts::ctx(&mut scenario));
         ts::next_tx(&mut scenario, GAME);
         {
-            let cap = ts::take_from_sender<GameCap>(&mut scenario);
+            let cap = ts::take_from_sender<GameCap>(&scenario);
             staking::init_for_testing(&cap, ts::ctx(&mut scenario));
 
 
@@ -634,8 +634,8 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let sp = ts::take_shared<StakingPool>(&mut scenario);
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let sp = ts::take_shared<StakingPool>(&scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             staking::stake(&mut sp, coin, &clock, YEAR_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
             ts::next_tx(&mut scenario, user2);
             let coin2 = coin::mint_for_testing<ARCA>(100*DECIMALS, ts::ctx(&mut scenario));
@@ -648,7 +648,7 @@ module loa_facilities::staking_tests {
             ts::next_tx(&mut scenario, user4);
             let coin2 = coin::mint_for_testing<ARCA>(100*DECIMALS, ts::ctx(&mut scenario));
             staking::stake(&mut sp, coin2, &clock, 9*MONTH_TO_UNIX_SECONDS, ts::ctx(&mut scenario));
-            // let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            // let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             // let i = 0;
             // let l = 11;
             // while (i < l ) {
@@ -666,7 +666,7 @@ module loa_facilities::staking_tests {
             //     i = i + 1;
             // };
             // ts::next_tx(&mut scenario, USER1_ADDRESS);
-            // let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            // let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             // assert!(staking::get_amount_VeARCA(&ve_arca, &clock) == 300 * DECIMALS, 1);
 
             ts::return_shared(sp);
@@ -676,24 +676,24 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             ts::next_tx(&mut scenario, USER1_ADDRESS);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount1_1 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user2);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount2_1 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user3);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount3_1 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user4);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount4_1 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
@@ -702,25 +702,25 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             clock::increment_for_testing(&mut clock, MONTH_TO_UNIX_SECONDS * 1000);
             ts::next_tx(&mut scenario, USER1_ADDRESS);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount1_2 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user2);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount2_2 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user3);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount3_2 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user4);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount4_2 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
@@ -728,25 +728,25 @@ module loa_facilities::staking_tests {
         };
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             clock::increment_for_testing(&mut clock, MONTH_TO_UNIX_SECONDS * 1000);
             ts::next_tx(&mut scenario, USER1_ADDRESS);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount1_3 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user2);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount2_3 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user3);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount3_3 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user4);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount4_3 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
@@ -755,25 +755,25 @@ module loa_facilities::staking_tests {
 
         ts::next_tx(&mut scenario, USER1_ADDRESS);
         {
-            let clock = ts::take_shared<clock::Clock>(&mut scenario);
+            let clock = ts::take_shared<clock::Clock>(&scenario);
             clock::increment_for_testing(&mut clock, MONTH_TO_UNIX_SECONDS * 1000);
             ts::next_tx(&mut scenario, USER1_ADDRESS);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount1_4 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user2);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount2_4 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user3);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount3_4 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 
             ts::next_tx(&mut scenario, user4);
-            let ve_arca = ts::take_from_sender<VeARCA>(&mut scenario);
+            let ve_arca = ts::take_from_sender<VeARCA>(&scenario);
             amount4_4 =staking::get_amount_VeARCA(&ve_arca, &clock);
             ts::return_to_sender<VeARCA>(&scenario, ve_arca);
 

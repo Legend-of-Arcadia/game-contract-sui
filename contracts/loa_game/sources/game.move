@@ -388,7 +388,7 @@ module loa_game::game{
     event::emit(SetMintAddressEvent{new_address});
   }
 
-  public entry fun set_upgrade_address(game_cap: &GameCap, new_address: address, upgrader: &mut Upgrader, config: &mut GameConfig) {
+  public entry fun set_upgrade_address(game_cap: &GameCap, new_address: address, upgrader: &mut Upgrader, config: &GameConfig) {
     assert!(VERSION == upgrader.version, EIncorrectVersion);
     check_game_cap(game_cap, config);
     upgrader.upgrade_address = new_address;
@@ -520,7 +520,7 @@ module loa_game::game{
   }
 
   // Set the cost of power upgrades
-  public entry fun set_upgrade_price(game_cap: &GameCap, upgrader: &mut Upgrader , keys: vector<String>, values: vector<u64>, config: &mut GameConfig){
+  public entry fun set_upgrade_price(game_cap: &GameCap, upgrader: &mut Upgrader , keys: vector<String>, values: vector<u64>, config: &GameConfig){
     assert!(VERSION == upgrader.version, EIncorrectVersion);
     check_game_cap(game_cap, config);
     let i = 0;
@@ -529,7 +529,7 @@ module loa_game::game{
     while(i < len) {
       let key = vector::borrow(&keys, i);
       let value = vector::borrow(&values, i);
-      if(table::contains<String, u64>(&mut upgrader.power_prices, *key)) {
+      if(table::contains<String, u64>(&upgrader.power_prices, *key)) {
         table::remove<String, u64>(&mut upgrader.power_prices, *key);
       };
       table::add<String, u64>(&mut upgrader.power_prices, *key, *value);
@@ -537,7 +537,7 @@ module loa_game::game{
     }
   }
 
-  public entry fun add_arca(game_cap: &GameCap, payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, config: &mut GameConfig) {
+  public entry fun add_arca(game_cap: &GameCap, payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, config: &GameConfig) {
     assert!(VERSION == arca_counter.version, EIncorrectVersion);
     check_game_cap(game_cap, config);
     balance::join(&mut arca_counter.arca_balance, coin::into_balance<ARCA>(payment));
@@ -589,7 +589,7 @@ module loa_game::game{
       i = i + 1;
     };
     assert!(vector::length(&gacha_token_types) == vector::length(&gacha_amounts), EVectorLen);
-    if (table::contains(&mut gacha_config_tb.config, token_type)) {
+    if (table::contains(&gacha_config_tb.config, token_type)) {
       let config = table::borrow_mut(&mut gacha_config_tb.config, token_type);
       config.gacha_token_types = gacha_token_types;
       config.gacha_amounts = gacha_amounts;
@@ -635,7 +635,7 @@ module loa_game::game{
 
     assert!(VERSION == gacha_config_tb.version, EIncorrectVersion);
     check_game_cap(game_cap, config);
-    if (table::contains(&mut gacha_config_tb.gacha_info, token_type)) {
+    if (table::contains(&gacha_config_tb.gacha_info, token_type)) {
       let gacha_info = table::borrow_mut(&mut gacha_config_tb.gacha_info, token_type);
       gacha_info.gacha_name = gacha_name;
       gacha_info.gacha_type = gacha_type;
@@ -718,7 +718,7 @@ module loa_game::game{
   }
 
   /// multi signature func
-  public entry fun set_game_address_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, game_address: address, ctx: &mut TxContext) {
+  public entry fun set_game_address_request(game_config:&GameConfig, multi_signature : &mut MultiSignature, game_address: address, ctx: &mut TxContext) {
     // Only multi sig guardian
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
@@ -766,7 +766,7 @@ module loa_game::game{
   }
 
 
-  public entry fun set_mugen_pk_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, mugen_pk: vector<u8>, ctx: &mut TxContext) {
+  public entry fun set_mugen_pk_request(game_config: &GameConfig, multi_signature: &mut MultiSignature, mugen_pk: vector<u8>, ctx: &mut TxContext) {
     // Only multi sig guardian
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
@@ -783,8 +783,8 @@ module loa_game::game{
   }
 
   public entry fun set_mugen_pk_execute(
-    game_config:&mut GameConfig,
-    multi_signature : &mut MultiSignature,
+    game_config: &GameConfig,
+    multi_signature: &mut MultiSignature,
     proposal_id: u256,
     is_approve: bool,
     seen_messages: &mut SeenMessages,
@@ -814,7 +814,7 @@ module loa_game::game{
     abort ENeedVote
   }
 
-  public entry fun withdraw_arca_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, amount: u64, to: address, ctx: &mut TxContext) {
+  public entry fun withdraw_arca_request(game_config: &GameConfig, multi_signature: &mut MultiSignature, amount: u64, to: address, ctx: &mut TxContext) {
     // Only multi sig guardian
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
@@ -832,8 +832,8 @@ module loa_game::game{
   }
 
   public entry fun withdraw_arca_execute(
-    game_config:&mut GameConfig,
-    multi_signature : &mut MultiSignature,
+    game_config: &GameConfig,
+    multi_signature: &mut MultiSignature,
     proposal_id: u256,
     is_approve: bool,
     arca_counter: &mut ArcaCounter,
@@ -864,7 +864,7 @@ module loa_game::game{
     abort ENeedVote
   }
 
-  public entry fun withdraw_upgrade_profits_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
+  public entry fun withdraw_upgrade_profits_request(game_config: &GameConfig, multi_signature: &mut MultiSignature, to: address, ctx: &mut TxContext) {
     // Only multi sig guardian
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
@@ -881,8 +881,8 @@ module loa_game::game{
   }
 
   public entry fun withdraw_upgrade_profits_execute(
-    game_config:&mut GameConfig,
-    multi_signature : &mut MultiSignature,
+    game_config: &GameConfig,
+    multi_signature: &mut MultiSignature,
     proposal_id: u256,
     is_approve: bool,
     upgrader: &mut Upgrader,
@@ -913,7 +913,7 @@ module loa_game::game{
     abort ENeedVote
   }
 
-  public entry fun withdraw_discount_profits_request<COIN>(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
+  public entry fun withdraw_discount_profits_request<COIN>(game_config: &GameConfig, multi_signature: &mut MultiSignature, to: address, ctx: &mut TxContext) {
     // Only multi sig guardian
     only_multi_sig_scope(multi_signature, game_config);
     // Only participant
@@ -932,8 +932,8 @@ module loa_game::game{
   }
 
   public entry fun withdraw_discount_profits_execute<COIN>(
-    game_config:&mut GameConfig,
-    multi_signature : &mut MultiSignature,
+    game_config: &GameConfig,
+    multi_signature: &mut MultiSignature,
     proposal_id: u256,
     is_approve: bool,
     gacha_config_tb: &mut GachaConfigTable,
@@ -1087,7 +1087,7 @@ module loa_game::game{
     main_hero: Hero,
     to_burn: Hero,
     appearance_index: u64,
-    upgrader: &mut Upgrader,
+    upgrader: &Upgrader,
     ctx: &mut TxContext) {
     assert!(VERSION == upgrader.version, EIncorrectVersion);
     assert!(
@@ -1131,7 +1131,7 @@ module loa_game::game{
   public entry fun upgrade_hero(
     main_hero: Hero,
     to_burn: vector<Hero>,
-    upgrader: &mut Upgrader,
+    upgrader: &Upgrader,
     ctx: &mut TxContext)
   {
     assert!(VERSION == upgrader.version, EIncorrectVersion);
@@ -1183,7 +1183,7 @@ module loa_game::game{
     let l = vector::length<Hero>(&to_burn);
     assert!(l > 0, EMustBurnAtLeastOneHero);
     let main_rarity = *hero::rarity(&main_hero);
-    let correct_price: u64 = *table::borrow<String, u64>(&mut upgrader.power_prices, main_rarity) * l;
+    let correct_price: u64 = *table::borrow<String, u64>(&upgrader.power_prices, main_rarity) * l;
     let fee_value: u64 = coin::value(&fee);
     assert!(fee_value >= correct_price, EWrongPowerUpgradeFee);
     if (fee_value > correct_price) {
@@ -1223,7 +1223,7 @@ module loa_game::game{
     transfer::transfer(ticket, upgrader.upgrade_address);
   }
 
-  public entry fun charge_hero(to_burn: vector<Hero>, obj_burn: &mut ObjBurn, ctx: &mut TxContext){
+  public entry fun charge_hero(to_burn: vector<Hero>, obj_burn: &mut ObjBurn, ctx: &TxContext){
     assert!(VERSION == obj_burn.version, EIncorrectVersion);
 
     let l = vector::length<Hero>(&to_burn);
@@ -1248,13 +1248,13 @@ module loa_game::game{
   // whitelist claim
   public entry fun whitelist_claim(
     config: &mut GameConfig,
-    ctx: &mut TxContext
+    ctx: &TxContext
   )
   {
     assert!(VERSION == config.version, EIncorrectVersion);
 
     let sender: address = tx_context::sender(ctx);
-    assert!(df::exists_<address>(&mut config.id, sender), ENotWhitelisted);
+    assert!(df::exists_<address>(&config.id, sender), ENotWhitelisted);
     let rewards = df::remove<address, WhitelistRewards>(&mut config.id, sender);
     let WhitelistRewards {heroes, gacha_balls} = rewards;
     while(vector::length(&heroes) > 0) {
@@ -1323,7 +1323,7 @@ module loa_game::game{
     if (coin_value > price) {
       transfer::public_transfer(coin::split(&mut payment, coin_value - price, ctx), tx_context::sender(ctx));
     };
-    if (df::exists_with_type<TypeName, Balance<COIN>>(&mut gacha_config_tb.id, coin_type)) {
+    if (df::exists_with_type<TypeName, Balance<COIN>>(&gacha_config_tb.id, coin_type)) {
       let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut gacha_config_tb.id, coin_type);
       balance::join<COIN>(coin_balance, coin::into_balance<COIN>(payment));
     } else {
@@ -1385,7 +1385,7 @@ module loa_game::game{
   }
 
   // user deposit arca
-  public entry fun deposit(payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, ctx: &mut TxContext) {
+  public entry fun deposit(payment: Coin<ARCA>, arca_counter: &mut ArcaCounter, ctx: &TxContext) {
     assert!(VERSION == arca_counter.version, EIncorrectVersion);
 
     let amount = coin::value(&payment);
@@ -1497,7 +1497,7 @@ module loa_game::game{
 
   // === check permission functions ===
 
-  public fun only_participant (multi_signature: &MultiSignature, tx: &mut TxContext) {
+  public fun only_participant (multi_signature: &MultiSignature, tx: &TxContext) {
     assert!(multisig::is_participant(multi_signature, tx_context::sender(tx)), ENotParticipant);
   }
 

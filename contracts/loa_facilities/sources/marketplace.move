@@ -191,7 +191,7 @@ module loa_facilities::marketplace{
         assert!(VERSION == marketplace.version, EVersionMismatch);
 
         game::check_game_cap(game_cap, game_config);
-        if (table::contains(&mut marketplace.vip_fees, vip_level)) {
+        if (table::contains(&marketplace.vip_fees, vip_level)) {
             *table::borrow_mut<u64, u64>(&mut marketplace.vip_fees, vip_level) = fee;
         } else {
             table::add(&mut marketplace.vip_fees, vip_level, fee);
@@ -208,7 +208,7 @@ module loa_facilities::marketplace{
     public entry fun remove_vip_fees(game_cap: &GameCap, marketplace: &mut Marketplace, vip_level: u64, game_config: &GameConfig) {
         assert!(VERSION == marketplace.version, EVersionMismatch);
         game::check_game_cap(game_cap, game_config);
-        assert!(table::contains(&mut marketplace.vip_fees, vip_level), EVipLvNoExsit);
+        assert!(table::contains(&marketplace.vip_fees, vip_level), EVipLvNoExsit);
         table::remove(&mut marketplace.vip_fees, vip_level);
 
         let evt = VipFeeRemove {
@@ -285,7 +285,7 @@ module loa_facilities::marketplace{
         price: u64,
         expire_at: u64,
         clock: &Clock,
-        ctx: &mut TxContext
+        ctx: &TxContext
     )
     {
         assert!(VERSION == marketplace.version, EVersionMismatch);
@@ -320,7 +320,7 @@ module loa_facilities::marketplace{
         payment: Coin<ARCA>,
         marketplace: &mut Marketplace,
         listing_number: u64,
-        ctx: &mut TxContext
+        ctx: &TxContext
     ): Item
     {
         assert!(VERSION == marketplace.version, EVersionMismatch);
@@ -404,7 +404,7 @@ module loa_facilities::marketplace{
         price: u64,
         expire_at: u64,
         clock: &Clock,
-        ctx: &mut TxContext
+        ctx: &TxContext
     ) {
         assert!(VERSION == marketplace.version, EVersionMismatch);
         assert_list_expire(clock::timestamp_ms(clock) /1000, expire_at);
@@ -479,7 +479,7 @@ module loa_facilities::marketplace{
         payment: Coin<COIN>,
         listing_number: u64,
         marketplace: &mut Marketplace,
-        sp: &mut StakingPool,
+        sp: &StakingPool,
         clock: &Clock,
         ctx: &mut TxContext): Item
     {
@@ -594,7 +594,7 @@ module loa_facilities::marketplace{
         transfer::public_transfer(coin::from_balance<COIN>(balance_all, ctx), to);
     }
 
-    public entry fun withdraw_fee_profits_request<COIN>(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, ctx: &mut TxContext) {
+    public entry fun withdraw_fee_profits_request<COIN>(game_config: &GameConfig, multi_signature: &mut MultiSignature, to: address, ctx: &mut TxContext) {
         // Only multi sig guardian
         game::only_multi_sig_scope(multi_signature, game_config);
         // Only participant
@@ -613,8 +613,8 @@ module loa_facilities::marketplace{
     }
 
     public entry fun withdraw_fee_profits_execute<COIN>(
-        game_config:&mut GameConfig,
-        multi_signature : &mut MultiSignature,
+        game_config: &GameConfig,
+        multi_signature: &mut MultiSignature,
         proposal_id: u256,
         is_approve: bool,
         marketplace: &mut Marketplace,
@@ -649,7 +649,7 @@ module loa_facilities::marketplace{
     fun put_coin<COIN>(stand: &mut Stand<ARCA>, coin: Coin<COIN>,) {
         let coin_type = type_name::get<COIN>();
 
-        if (df::exists_with_type<TypeName, Balance<COIN>>(&mut stand.id, coin_type)) {
+        if (df::exists_with_type<TypeName, Balance<COIN>>(&stand.id, coin_type)) {
             let coin_balance = df::borrow_mut<TypeName, Balance<COIN>>(&mut stand.id, coin_type);
             balance::join<COIN>(coin_balance, coin::into_balance<COIN>(coin));
         } else {
@@ -658,7 +658,7 @@ module loa_facilities::marketplace{
     }
 
     // cancel list
-    public fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &mut TxContext): Item {
+    public fun take_item<Item: key+store>(listing_number: u64, marketplace: &mut Marketplace, ctx: &TxContext): Item {
         assert!(VERSION == marketplace.version, EVersionMismatch);
         let stand = &mut marketplace.main;
         assert!(table::contains<u64, Listing>(&stand.secondary_listings, listing_number), ENoListingFound);
