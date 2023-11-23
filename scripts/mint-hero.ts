@@ -51,7 +51,7 @@ async function mintHero() {
       txb.pure(skillValues),
       txb.pure(appearenceValues),
       txb.pure(growthValues),
-      //txb.pure(otherValues),
+      txb.pure(100),
       txb.pure("1337", "string"),
     ]
   });
@@ -199,7 +199,7 @@ async function main() {
   //   }
   // });
 
-  let mintGachaResult = await mintGacha();
+  let mintGachaResult = await mintHero();
   console.log(mintGachaResult)
 
   // let mintItemResult = await mintItem();
