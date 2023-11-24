@@ -1,6 +1,7 @@
 import {
     SerializedSignature,
     toSerializedSignature,
+    fromSerializedSignature,
     JsonRpcProvider,
     SuiAddress,
     SignerWithProvider,
@@ -39,24 +40,24 @@ export class KmsSigner extends SignerWithProvider {
 
     // 因为sui keytool sign-kms 签名工具签名intent意向值是在工具内处理的, signData接口是需要data里面有意向信息，暂无法兼容
     async signData(data: Uint8Array): Promise<SerializedSignature> {
-        const pubkey = await this.getPublicKey();
 
-        //const digest = blake2b(data, { dkLen: 32 });
-        // const result = await (await this.getSinger()).signTransaction(PATH, data);
-        // const signature = result.signature;
-        const tx_data = Buffer.from(data).toString('base64')
+        const intent = data.slice(0, 3)
+        let intentRole = ''
+        for (let i = 0; i < intent.length; i++) {
+            if (intent[i] > 10) {
+                intentRole = intentRole + intent[i].toString()
+            } else {
+                intentRole = intentRole + '0' + intent[i].toString()
+            }
+        }
+        const rawTx = data.slice(3)
+        const tx_data = Buffer.from(rawTx).toString('base64')
         const { serializedSigBase64 } = JSON.parse(
-            execSync(`${cliPath} keytool sign-kms --data ${tx_data} --keyid ${keyId} --base64pk ${base64pk} --json`),
+            execSync(`${cliPath} keytool sign-kms --data ${tx_data} --keyid ${keyId} --base64pk ${base64pk} --intent ${intentRole} --json`),
         );
 
-        const signature = serializedSigBase64
-        const signatureScheme = "Secp256k1";
 
-        return toSerializedSignature({
-            signatureScheme,
-            signature,
-            pubKey: pubkey,
-        });
+        return serializedSigBase64;
     }
 
     connect(provider: JsonRpcProvider): SignerWithProvider {
