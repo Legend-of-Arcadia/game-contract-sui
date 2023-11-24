@@ -1,17 +1,18 @@
-import { Ed25519Keypair, fromB64, testnetConnection, JsonRpcProvider, TransactionBlock, RawSigner } from "@mysten/sui.js";
+import { Secp256k1PublicKey, mainnetConnection, testnetConnection, JsonRpcProvider, TransactionBlock, RawSigner } from "@mysten/sui.js";
 const { execSync } = require('child_process');
 import * as dotenv from "dotenv";
+import { getProvider } from "./publish/index";
 dotenv.config();
 
 const packagePath: string = process.env.PACKAGE_PATH!;
 const cliPath: string = process.env.CLI_PATH!;
 
-
-const mugenAddress = process.env.KMS_ADDRESS!;
 const base64pk = process.env.KMS_BASE64PK!;
 const keyId = process.env.KMS_KEY_ID!;
+const pk = new Secp256k1PublicKey(Buffer.from(base64pk, 'base64').slice(1))
+const mugenAddress = pk.toSuiAddress();
 
-const provider = new JsonRpcProvider(testnetConnection);
+const provider = getProvider();
 const { modules, dependencies } = JSON.parse(
     execSync(`${cliPath} move build --dump-bytecode-as-base64 --with-unpublished-dependencies --path ${packagePath}`, {
         encoding: 'utf-8',
@@ -28,7 +29,7 @@ async function publish() {
 
     tx.setSender(mugenAddress);
 
-    const tx_bytes = await tx.build({provider: provider, onlyTransactionKind: false})
+    const tx_bytes = await tx.build({provider: provider})
 
     const tx_data = Buffer.from(tx_bytes).toString('base64')
     const { serializedSigBase64 } = JSON.parse(

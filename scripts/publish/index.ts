@@ -34,6 +34,10 @@ async function getSigner(): Promise<SignerWithProvider> {
     if (process.env.FORCE_HD === "true") {
       return new HDSigner(provider);
     }
+
+    // if (process.env.FORCE_KMS === "true") {
+    //   return new KmsSigner(provider);
+    // }
     return new RawSigner(
       Ed25519Keypair.fromSecretKey(Buffer.from(process.env.PRIVATE_KEY!.slice(2), "hex"), { skipValidation: true }),
       // new Ed25519Keypair({
