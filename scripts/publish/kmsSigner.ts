@@ -1,7 +1,5 @@
 import {
     SerializedSignature,
-    toSerializedSignature,
-    fromSerializedSignature,
     JsonRpcProvider,
     SuiAddress,
     SignerWithProvider,
@@ -38,7 +36,6 @@ export class KmsSigner extends SignerWithProvider {
         return (await this.getPublicKey()).toSuiAddress();
     }
 
-    // 因为sui keytool sign-kms 签名工具签名intent意向值是在工具内处理的, signData接口是需要data里面有意向信息，暂无法兼容
     async signData(data: Uint8Array): Promise<SerializedSignature> {
 
         const intent = data.slice(0, 3)
