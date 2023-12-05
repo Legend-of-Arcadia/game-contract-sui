@@ -5,7 +5,7 @@ version = "0.0.1"
 
 [dependencies]
 Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-framework/packages/sui-framework", rev = "mainnet" }
-loa = {git = "https://github.com/Legend-of-Arcadia/ARCA", subdir="token_contracts/arca", rev="master"}
+loa = {git = "https://github.com/Legend-of-Arcadia/ARCA", subdir="token_contracts/arca", rev="testnet"}
 loa_game = {local = "../loa_game"}
 
 [addresses]
