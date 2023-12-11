@@ -8,5 +8,5 @@ Sui = { git = "https://github.com/MystenLabs/sui.git", subdir = "crates/sui-fram
 loa = {git = "https://github.com/Legend-of-Arcadia/ARCA", subdir="token_contracts/arca", rev="testnet"}
 
 [addresses]
-loa_game = "0xe20c851b7222e16a5b3265eb29c6d273b068e674acbaba0096624f91e90ba8e6"
+loa_game = "0x0"
 # loa = "0x6cb26f10fc6175be29960d2be3150cba917a51f543fa32b9e0d010931e4a95c0"

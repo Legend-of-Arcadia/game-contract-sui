@@ -4,32 +4,34 @@ import {
     SuiAddress,
     SignerWithProvider,
     Secp256k1PublicKey,
+    toSerializedSignature
 } from "@mysten/sui.js";
 import * as dotenv from "dotenv";
-const { execSync } = require('child_process');
+import {KMSClient} from "@aws-sdk/client-kms";
+import {awsKmsGetPublicKey, awsKmsSign} from "../aws-kms/aws-kms-utils";
+import {blake2b} from "@noble/hashes/blake2b";
+import {SignatureScheme} from "@mysten/sui.js/dist/cryptography/signature";
 dotenv.config();
 
-const base64pk = process.env.KMS_BASE64PK!;
 const keyId = process.env.KMS_KEY_ID!;
-const cliPath: string = process.env.CLI_PATH!;
 
 export class KmsSigner extends SignerWithProvider {
-    //       this.sui = new Sui(await Transport.create());
-
-    readonly base64Pk: string;
-    readonly kmsKeyId: string;
-    //readonly suiAddress: string;
+    private readonly kmsKeyId: string;
+    private readonly awsCli: KMSClient;
+    private pubKey?: Secp256k1PublicKey;
 
     constructor(provider: JsonRpcProvider) {
         super(provider);
-        this.base64Pk = base64pk;
         this.kmsKeyId = keyId;
+        this.awsCli = new KMSClient({});
     }
 
     async getPublicKey(): Promise<Secp256k1PublicKey> {
-        const pk = new Secp256k1PublicKey(Buffer.from(this.base64Pk, 'base64').slice(1))
-        console.log("public key of KMS wallet: ", pk.toString(), pk.toSuiAddress());
-        return pk;
+        if (this.pubKey) {
+            return this.pubKey;
+        }
+        this.pubKey = await awsKmsGetPublicKey(this.awsCli, this.kmsKeyId);
+        return this.pubKey;
     }
 
     async getAddress(): Promise<SuiAddress> {
@@ -37,24 +39,15 @@ export class KmsSigner extends SignerWithProvider {
     }
 
     async signData(data: Uint8Array): Promise<SerializedSignature> {
-
-        const intent = data.slice(0, 3)
-        let intentRole = ''
-        for (let i = 0; i < intent.length; i++) {
-            if (intent[i] > 10) {
-                intentRole = intentRole + intent[i].toString()
-            } else {
-                intentRole = intentRole + '0' + intent[i].toString()
-            }
-        }
-        const rawTx = data.slice(3)
-        const tx_data = Buffer.from(rawTx).toString('base64')
-        const { serializedSigBase64 } = JSON.parse(
-            execSync(`${cliPath} keytool sign-kms --data ${tx_data} --keyid ${keyId} --base64pk ${base64pk} --intent ${intentRole} --json`),
-        );
-
-
-        return serializedSigBase64;
+        const pubKey = await this.getPublicKey();
+        const digest = blake2b(data, { dkLen: 32 });
+        const signature = await awsKmsSign(this.awsCli, this.kmsKeyId, digest);
+        const signatureScheme: SignatureScheme = 'Secp256k1';
+        return toSerializedSignature({
+            signatureScheme,
+            signature,
+            pubKey,
+        });
     }
 
     connect(provider: JsonRpcProvider): SignerWithProvider {
