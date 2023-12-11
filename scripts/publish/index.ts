@@ -27,7 +27,7 @@ export function getProvider(): JsonRpcProvider {
   }
 }
 
-async function getSigner(): Promise<SignerWithProvider> {
+export async function getSigner(): Promise<SignerWithProvider> {
   // if process.env.NETWORK in ['testnet', 'devnet'], return a RawSigner
   // else return a HDSigner
   const provider = getProvider();
