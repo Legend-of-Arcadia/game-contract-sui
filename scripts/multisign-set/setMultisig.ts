@@ -95,9 +95,9 @@ async function multisig_setting_execute(id:number) {
 
 async function main() {
 
-    // let result = await setMultiSig();
+    let result = await setMultiSig();
     // let result = await vote(0, true);
-    let result = await multisig_setting_execute(0);
+    // let result = await multisig_setting_execute(0);
     console.log(result);
 
 }
