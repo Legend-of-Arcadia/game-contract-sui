@@ -276,7 +276,7 @@ module loa_game::unit_tests {
 
         ts::next_tx(&mut scenario, SENDER);
         {
-            let hero = ts::take_from_sender<Hero>(&mut scenario);
+            let hero = ts::take_from_sender<Hero>(&scenario);
             assert!(hero::name(&hero) == &name, EWrongName);
             assert!(hero::class(&hero) == &class, EWrongClass);
             assert!(hero::faction(&hero) == &faction, EWrongFaction);
@@ -321,7 +321,7 @@ module loa_game::unit_tests {
 
         ts::next_tx(&mut scenario, SENDER);
         {
-            let hero = ts::take_from_sender<Hero>(&mut scenario);
+            let hero = ts::take_from_sender<Hero>(&scenario);
             hero::edit_fields<u16>(&mut hero, string::utf8(b"base"), new_base_values);
             hero::edit_fields<u16>(&mut hero, string::utf8(b"growth"), new_growth_values);
             hero::add_field<vector<u16>>(&mut hero, new_field, new_field_values);
@@ -330,7 +330,7 @@ module loa_game::unit_tests {
 
         ts::next_tx(&mut scenario, SENDER);
         {
-            let hero = ts::take_from_sender<Hero>(&mut scenario);
+            let hero = ts::take_from_sender<Hero>(&scenario);
             assert!(hero::base_values(&hero) == &new_base_values, EWrongBaseValues);
             assert!(hero::growth_values(&hero) == &new_growth_values, EWrongGrowthValues);
             assert!(hero::field(&hero, new_field) == &new_field_values, EWrongCustomValues);
@@ -340,7 +340,7 @@ module loa_game::unit_tests {
         // burn
         ts::next_tx(&mut scenario, SENDER);
         {
-            let hero = ts::take_from_sender<Hero>(&mut scenario);
+            let hero = ts::take_from_sender<Hero>(&scenario);
             hero::remove_field<vector<u16>>(&mut hero, new_field);
             hero::burn(hero);
         };

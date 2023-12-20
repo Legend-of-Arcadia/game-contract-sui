@@ -252,7 +252,7 @@ module loa_facilities::staking {
     }
 
     // user append arca token
-    public entry fun append(sp: &mut StakingPool, veARCA: &mut VeARCA, arca: Coin<ARCA>, clock: &Clock, ctx: &mut TxContext) {
+    public entry fun append(sp: &mut StakingPool, veARCA: &mut VeARCA, arca: Coin<ARCA>, clock: &Clock, ctx: &TxContext) {
 
         assert!(VERSION == sp.version, EVersionMismatch);
 
@@ -273,7 +273,7 @@ module loa_facilities::staking {
 
         veARCA.initial = veARCA.initial + appended_amount;
 
-        let lt_initial = *linked_table::borrow(&mut sp.veARCA_holders, tx_context::sender(ctx));
+        let lt_initial = *linked_table::borrow(&sp.veARCA_holders, tx_context::sender(ctx));
 
         *vector::borrow_mut<u64>(&mut lt_initial, 0) = veARCA.initial;
 
@@ -290,7 +290,7 @@ module loa_facilities::staking {
     }
 
     // user append stake time
-    public entry fun append_time(sp: &mut StakingPool, veARCA: &mut VeARCA, append_time: u64, clock: &Clock, ctx: &mut TxContext) {
+    public entry fun append_time(sp: &mut StakingPool, veARCA: &mut VeARCA, append_time: u64, clock: &Clock, ctx: &TxContext) {
 
         assert!(VERSION == sp.version, EVersionMismatch);
         assert!(append_time >= WEEK_TO_UNIX_SECONDS, ENotCorrectStakingPeriod);
@@ -311,7 +311,7 @@ module loa_facilities::staking {
         veARCA.initial = staked_amount;
         veARCA.locking_period_sec = staking_period;
 
-        let lt_initial = *linked_table::borrow(&mut sp.veARCA_holders, tx_context::sender(ctx));
+        let lt_initial = *linked_table::borrow(&sp.veARCA_holders, tx_context::sender(ctx));
 
         *vector::borrow_mut<u64>(&mut lt_initial, 0) = veARCA.initial;
         *vector::borrow_mut<u64>(&mut lt_initial, 1) = veARCA.end_time;
@@ -434,7 +434,7 @@ module loa_facilities::staking {
     ){
         assert!(VERSION == sp.version, EVersionMismatch);
         let user = tx_context::sender(ctx);
-        assert!(!table::contains(&mut week_reward.claimed_address, user), EClaimed);
+        assert!(!table::contains(&week_reward.claimed_address, user), EClaimed);
         if (vector::length(&week_reward.merkle_root) > 0) {
             let x = bcs::to_bytes<Leaf>(& Leaf{week_reward_name, user, amount});
             let leaf = hash::keccak256(&x);
@@ -473,7 +473,7 @@ module loa_facilities::staking {
         transfer::public_transfer(coin, to);
     }
 
-    public entry fun withdraw_rewards_request(game_config:&mut GameConfig, multi_signature : &mut MultiSignature, to: address, amount: u64, ctx: &mut TxContext) {
+    public entry fun withdraw_rewards_request(game_config: &GameConfig, multi_signature: &mut MultiSignature, to: address, amount: u64, ctx: &mut TxContext) {
         // Only multi sig guardian
         game::only_multi_sig_scope(multi_signature, game_config);
         // Only participant
@@ -491,8 +491,8 @@ module loa_facilities::staking {
     }
 
     public entry fun withdraw_rewards_execute(
-        game_config:&mut GameConfig,
-        multi_signature : &mut MultiSignature,
+        game_config: &GameConfig,
+        multi_signature: &mut MultiSignature,
         proposal_id: u256,
         is_approve: bool,
         sp: &mut StakingPool,
